@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.pass.diary.data.entity.Diary
 
-@Database(entities = [Diary::class], version = 1)
+@Database(entities = [Diary::class], version = 1, exportSchema =false)
 abstract class DiaryDataBase : RoomDatabase() {
     abstract fun diaryDao(): DiaryDao
 
