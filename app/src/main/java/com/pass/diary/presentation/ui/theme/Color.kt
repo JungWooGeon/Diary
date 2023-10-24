@@ -1,4 +1,4 @@
-package com.pass.diary.ui.theme
+package com.pass.diary.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

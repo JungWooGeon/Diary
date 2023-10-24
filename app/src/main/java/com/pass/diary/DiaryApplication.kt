@@ -1,9 +1,6 @@
 package com.pass.diary
 
 import android.app.Application
-import com.orhanobut.logger.AndroidLogAdapter
-import com.orhanobut.logger.Logger
-import com.orhanobut.logger.PrettyFormatStrategy
 import com.pass.diary.di.databaseModule
 import com.pass.diary.di.repositoryModule
 import com.pass.diary.di.useCaseModule
@@ -30,15 +27,5 @@ class DiaryApplication : Application() {
                 )
             )
         }
-
-        // logger 초기화
-        val formatStrategy = PrettyFormatStrategy.newBuilder()
-            .showThreadInfo(false)
-            .methodCount(2)
-            .methodOffset(0)
-            .tag("TEST_LOGGER")
-            .build()
-
-        Logger.addLogAdapter(AndroidLogAdapter(formatStrategy))
     }
 }

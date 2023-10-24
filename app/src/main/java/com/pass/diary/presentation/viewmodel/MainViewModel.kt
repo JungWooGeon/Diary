@@ -1,4 +1,4 @@
-package com.pass.diary.presentation.view.viewmodel
+package com.pass.diary.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 

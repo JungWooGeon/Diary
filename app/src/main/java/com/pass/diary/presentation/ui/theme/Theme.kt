@@ -1,4 +1,4 @@
-package com.pass.diary.ui.theme
+package com.pass.diary.presentation.ui.theme
 
 import android.app.Activity
 import android.os.Build

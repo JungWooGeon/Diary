@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">diary</string>
+
+    <string name="timeline">타임라인</string>
+    <string name="calendar">달력</string>
+    <string name="analysis">분석</string>
+    <string name="settings">설정</string>
 </resources>
