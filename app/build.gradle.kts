@@ -71,6 +71,7 @@ dependencies {
     implementation("androidx.compose.material:material")
     implementation("androidx.navigation:navigation-compose:2.7.4")
     implementation("androidx.test:runner:1.5.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // test
     testImplementation("junit:junit:4.13.2")
@@ -83,6 +84,8 @@ dependencies {
     testImplementation("io.mockk:mockk-agent:1.13.8")
     androidTestImplementation("io.mockk:mockk-android:1.13.8")
     androidTestImplementation("io.mockk:mockk-agent:1.13.8")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+
 
     // room
     implementation("androidx.room:room-runtime:2.6.0")
@@ -95,6 +98,7 @@ dependencies {
     // koin
     implementation("io.insert-koin:koin-core:3.5.0")
     implementation("io.insert-koin:koin-android:3.5.0")
+    implementation("io.insert-koin:koin-androidx-compose:3.5.0")
 
     // opensource
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
