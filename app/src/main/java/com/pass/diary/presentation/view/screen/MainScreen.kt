@@ -42,8 +42,8 @@ fun MainScreen() {
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
     val items = listOf(
-        BottomNavItems.Calendar,
         BottomNavItems.Timeline,
+        BottomNavItems.Calendar,
         BottomNavItems.Analysis,
         BottomNavItems.Settings
     )
