@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,11 +13,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,16 +31,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pass.diary.R
 import com.pass.diary.data.entity.Diary
 import com.pass.diary.presentation.intent.TimelineIntent
 import com.pass.diary.presentation.state.TimelineState
-import com.pass.diary.presentation.ui.theme.DiaryTheme
 import com.pass.diary.presentation.ui.theme.LineGray
 import com.pass.diary.presentation.viewmodel.TimelineViewModel
 import org.koin.compose.getKoin
@@ -48,80 +47,97 @@ import java.time.LocalDate
 fun TimelineScreen(viewModel: TimelineViewModel = getKoin().get()) {
     val state by viewModel.state.collectAsState()
 
-    val localDateTime = LocalDate.now().monthValue.toString()
-
     // key 로 Unit 을 전달하면, LaunchedEffect 는 한 번만 실행,
     LaunchedEffect(Unit) {
-        viewModel.processIntent(TimelineIntent.LoadDiaries(localDateTime))
+        viewModel.processIntent(TimelineIntent.LoadDiaries(LocalDate.now().monthValue.toString()))
     }
 
-    when (state) {
-        is TimelineState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(modifier = Modifier.testTag("LoadingIndicator"))
-            }
-        }
-
-        is TimelineState.Success -> {
-            val diaries = remember { (state as TimelineState.Success).diaries }
-            val date = LocalDate.now().year.toString() + "." + LocalDate.now().monthValue + "."
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(10.dp),
-                verticalArrangement = Arrangement.Top,
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (state) {
+            is TimelineState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        text = date
+                    CircularProgressIndicator(modifier = Modifier.testTag("LoadingIndicator"))
+                }
+            }
+
+            is TimelineState.Success -> {
+                val diaries = remember { (state as TimelineState.Success).diaries }
+                val date = LocalDate.now().year.toString() + "." + LocalDate.now().monthValue + "."
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(10.dp),
+                    verticalArrangement = Arrangement.Top,
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            text = date
+                        )
+
+                        IconButton(onClick = {}) {
+                            Icon(Icons.Default.ArrowDropDown, "Add Button")
+                        }
+                    }
+
+                    Divider(
+                        color = LineGray,
+                        thickness = 1.dp,
+                        modifier = Modifier.padding(top = 10.dp)
                     )
 
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Default.ArrowDropDown, "Add Button")
+                    LazyColumn() {
+                        items(diaries) { diary ->
+                            DiaryItem(diary)
+                        }
                     }
                 }
 
-                Divider(color = LineGray, thickness = 1.dp, modifier = Modifier.padding(top = 10.dp))
+            }
 
-                LazyColumn() {
-                    items(diaries) { diary ->
-                        DiaryItem(diary)
+            is TimelineState.Error -> {
+                val errorMessage = (state as TimelineState.Error).error.message
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (errorMessage != null) {
+                        Text(text = errorMessage)
                     }
                 }
             }
-
         }
 
-        is TimelineState.Error -> {
-            val errorMessage = (state as TimelineState.Error).error.message
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                if (errorMessage != null) {
-                    Text(text = errorMessage)
-                }
-            }
+        FloatingActionButton(
+            onClick = { /* Do something when clicked */ },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            contentColor = MaterialTheme.colorScheme.primary
+        ) {
+            Icon(Icons.Filled.Add, contentDescription = "Add button")
         }
     }
 }
 
 @Composable
 fun DiaryItem(diary: Diary) {
-    val diaryDate = diary.year + "년 " + diary.month + "월 " + diary.day + "일 " + diary.dayOfWeek + "요일"
+    val diaryDate =
+        diary.year + "년 " + diary.month + "월 " + diary.day + "일 " + diary.dayOfWeek + "요일"
 
-    Row (
-        modifier = Modifier.padding(horizontal = 20.dp).padding(top = 20.dp)
+    Row(
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .padding(top = 20.dp)
     ) {
         if (diary.emoticonId1 == null) {
             Image(
