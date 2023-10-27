@@ -26,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.pass.diary.presentation.intent.MainIntent
 import com.pass.diary.presentation.state.MainState
+import com.pass.diary.presentation.ui.theme.Fluorescent
 import com.pass.diary.presentation.viewmodel.MainViewModel
 import org.koin.compose.getKoin
 
@@ -68,6 +69,7 @@ fun BottomNavigationBar(
                     Icon(
                         painter = painterResource(id = item.icon),
                         contentDescription = stringResource(id = item.title),
+                        tint = if(state.selectedNavItem == item) Fluorescent else Color.Black,
                         modifier = Modifier
                             .width(26.dp)
                             .height(26.dp)
@@ -104,7 +106,7 @@ fun NavigationGraph(navController: NavHostController, state: MainState) {
 
     navController.navigate(state.selectedNavItem.screenRoute) {
         navController.graph.startDestinationRoute?.let {
-            popUpTo(it) { saveState = true }
+            popUpTo(it) { saveState = false }
         }
         launchSingleTop = true
         restoreState = true

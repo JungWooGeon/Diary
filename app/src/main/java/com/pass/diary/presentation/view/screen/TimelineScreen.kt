@@ -1,5 +1,8 @@
 package com.pass.diary.presentation.view.screen
 
+import android.app.DatePickerDialog
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,14 +16,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +31,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,17 +43,21 @@ import com.pass.diary.data.entity.Diary
 import com.pass.diary.presentation.intent.TimelineIntent
 import com.pass.diary.presentation.state.TimelineState
 import com.pass.diary.presentation.ui.theme.LineGray
+import com.pass.diary.presentation.view.activity.AddDiaryActivity
 import com.pass.diary.presentation.viewmodel.TimelineViewModel
-import org.koin.compose.getKoin
+import org.koin.androidx.compose.getViewModel
 import java.time.LocalDate
 
 @Composable
-fun TimelineScreen(viewModel: TimelineViewModel = getKoin().get()) {
-    val state by viewModel.state.collectAsState()
+fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
+    val context = LocalContext.current
 
-    // key 로 Unit 을 전달하면, LaunchedEffect 는 한 번만 실행,
-    LaunchedEffect(Unit) {
-        viewModel.processIntent(TimelineIntent.LoadDiaries(LocalDate.now().monthValue.toString()))
+    val state by viewModel.state.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
+
+    // selectedDate 변경 시마다 diary 업데이트
+    LaunchedEffect(selectedDate) {
+        viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.monthValue.toString()))
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -65,7 +73,7 @@ fun TimelineScreen(viewModel: TimelineViewModel = getKoin().get()) {
 
             is TimelineState.Success -> {
                 val diaries = remember { (state as TimelineState.Success).diaries }
-                val date = LocalDate.now().year.toString() + "." + LocalDate.now().monthValue + "."
+                val date = selectedDate.year.toString() + "." + selectedDate.monthValue + "."
 
                 Column(
                     modifier = Modifier
@@ -84,7 +92,9 @@ fun TimelineScreen(viewModel: TimelineViewModel = getKoin().get()) {
                             text = date
                         )
 
-                        IconButton(onClick = {}) {
+                        IconButton(onClick = {
+                            showDatePickerDialog(context, viewModel, selectedDate)
+                        }) {
                             Icon(Icons.Default.ArrowDropDown, "Add Button")
                         }
                     }
@@ -118,21 +128,25 @@ fun TimelineScreen(viewModel: TimelineViewModel = getKoin().get()) {
         }
 
         FloatingActionButton(
-            onClick = { /* Do something when clicked */ },
+            onClick = {
+                // 다이어리 추가 액티비티 실행
+                val intent = Intent(context, AddDiaryActivity::class.java)
+                context.startActivity(intent)
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
-            contentColor = MaterialTheme.colorScheme.primary
+            containerColor = Color.Black,
+            contentColor = Color.White
         ) {
-            Icon(Icons.Filled.Add, contentDescription = "Add button")
+            Icon(Icons.Filled.Create, contentDescription = "Add button")
         }
     }
 }
 
 @Composable
 fun DiaryItem(diary: Diary) {
-    val diaryDate =
-        diary.year + "년 " + diary.month + "월 " + diary.day + "일 " + diary.dayOfWeek + "요일"
+    val diaryDate = diary.year + "년 " + diary.month + "월 " + diary.day + "일 " + diary.dayOfWeek + "요일"
 
     Row(
         modifier = Modifier
@@ -176,4 +190,11 @@ fun DiaryItem(diary: Diary) {
         thickness = 1.dp,
         modifier = Modifier.padding(top = 20.dp)
     )
+}
+
+fun showDatePickerDialog(context: Context, viewModel: TimelineViewModel, selectedDate: LocalDate) {
+    DatePickerDialog(context, { _, year, month, dayOfMonth ->
+        // 사용자가 날짜를 선택하면 selectedDate 업데이트
+        viewModel.processIntent(TimelineIntent.UpdateMonth(LocalDate.of(year, month + 1, dayOfMonth)))
+    }, selectedDate.year, selectedDate.monthValue - 1, selectedDate.dayOfMonth).show()
 }

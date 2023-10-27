@@ -11,6 +11,7 @@ import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
+import java.time.LocalDate
 
 class TimelineViewModelTest {
 
@@ -22,6 +23,7 @@ class TimelineViewModelTest {
         viewModel = TimelineViewModel(getDiariesByMonthUseCase)
     }
 
+    // process state 변경 테스트
     @Test
     fun getDiariesByMonthUseCaseIsInvoked() = runBlocking {
         val month = "10"
@@ -33,5 +35,16 @@ class TimelineViewModelTest {
         coVerify { getDiariesByMonthUseCase.invoke(month) }
 
         assertEquals(TimelineState.Success(diaries), viewModel.state.value)
+    }
+
+    // selectedDate state 변경 테스트
+    @Test
+    fun updateMonthShouldUpdateSelectedDate() = runBlocking {
+        val expectedDate = LocalDate.now()
+
+        viewModel.processIntent(TimelineIntent.UpdateMonth(expectedDate))
+
+        val currentSelectedDate = viewModel.selectedDate.value
+        assertEquals(expectedDate, currentSelectedDate)
     }
 }

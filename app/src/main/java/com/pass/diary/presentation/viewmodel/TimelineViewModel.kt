@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class TimelineViewModel(
     private val getDiariesByMonthUseCase: GetDiariesByMonthUseCase
@@ -17,6 +18,9 @@ class TimelineViewModel(
     private val _state = MutableStateFlow<TimelineState>(TimelineState.Loading)
     val state: StateFlow<TimelineState> = _state
 
+    private val _selectedDate = MutableStateFlow(LocalDate.now())
+    val selectedDate: StateFlow<LocalDate> = _selectedDate
+
     fun processIntent(intent: TimelineIntent) {
         when (intent) {
             is TimelineIntent.LoadDiaries -> {
@@ -24,6 +28,10 @@ class TimelineViewModel(
                     val diaries = getDiariesByMonthUseCase(intent.month)
                     _state.value = TimelineState.Success(diaries)
                 }
+            }
+
+            is TimelineIntent.UpdateMonth -> {
+                _selectedDate.value = intent.month
             }
         }
     }
