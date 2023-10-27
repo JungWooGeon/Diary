@@ -63,7 +63,7 @@ class TimelineScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("LoadingIndicator").assertDoesNotExist()
-        composeTestRule.onNodeWithText("20231026목").assertIsDisplayed()
+        composeTestRule.onNodeWithText("2023년 10월 26일 목요일").assertIsDisplayed()
         composeTestRule.onNodeWithText("일기 내용 테스트 10/26").assertIsDisplayed()
     }
 }
