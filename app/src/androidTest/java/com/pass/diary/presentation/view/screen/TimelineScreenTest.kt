@@ -2,15 +2,16 @@ package com.pass.diary.presentation.view.screen
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import com.pass.diary.data.entity.Diary
 import com.pass.diary.presentation.state.TimelineState
 import com.pass.diary.presentation.viewmodel.TimelineViewModel
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -65,5 +66,46 @@ class TimelineScreenTest {
         composeTestRule.onNodeWithTag("LoadingIndicator").assertDoesNotExist()
         composeTestRule.onNodeWithText("2023년 10월 26일 목요일").assertIsDisplayed()
         composeTestRule.onNodeWithText("일기 내용 테스트 10/26").assertIsDisplayed()
+    }
+
+    @Test
+    fun timelineScreenDisplaysErrorState() {
+        val errorMessage = "An error occurred"
+        every { viewModel.state } returns MutableStateFlow(TimelineState.Error(Exception(errorMessage)))
+
+        composeTestRule.setContent {
+            TimelineScreen(viewModel = viewModel)
+        }
+
+        composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
+    }
+
+    // DatePicker 가 열리는지 테스트
+    @Test
+    fun timelineScreenOpensDatePicker() {
+        val diaries = listOf(Diary(null, "2023", "10", "26", "목", null, null, null, null, null, "일기 내용 테스트 10/26"))
+        every { viewModel.state } returns MutableStateFlow(TimelineState.Success(diaries))
+
+        composeTestRule.setContent {
+            TimelineScreen(viewModel = viewModel)
+        }
+
+        composeTestRule.onNodeWithContentDescription("DatePicker Button").performClick()
+        composeTestRule.onNodeWithText("2023").assertIsDisplayed()
+    }
+
+    // DatePicker 에서 연도가 제대로 변경되는지 테스트
+    @Test
+    fun timelineScreenUpdatesYearInDatePicker() {
+        val diaries = listOf(Diary(null, "2023", "10", "26", "목", null, null, null, null, null, "일기 내용 테스트 10/26"))
+        every { viewModel.state } returns MutableStateFlow(TimelineState.Success(diaries))
+
+        composeTestRule.setContent {
+            TimelineScreen(viewModel = viewModel)
+        }
+
+        composeTestRule.onNodeWithContentDescription("DatePicker Button").performClick()
+        composeTestRule.onNodeWithContentDescription("left button").performClick()
+        composeTestRule.onNodeWithText("2022").assertIsDisplayed()
     }
 }
