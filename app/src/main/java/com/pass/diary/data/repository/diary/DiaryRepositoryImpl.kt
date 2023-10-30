@@ -7,4 +7,8 @@ class DiaryRepositoryImpl(private val db: DiaryDataBase) : DiaryRepository {
     override suspend fun getDiariesByMonth(month: String): List<Diary> {
         return db.diaryDao().getDiariesByMonth(month)
     }
+
+    override suspend fun addDiary(diary: Diary) {
+        return db.diaryDao().addDiary(diary)
+    }
 }

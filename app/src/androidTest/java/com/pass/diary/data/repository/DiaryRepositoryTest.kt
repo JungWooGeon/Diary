@@ -4,8 +4,12 @@ import com.pass.diary.data.db.diary.DiaryDao
 import com.pass.diary.data.db.diary.DiaryDataBase
 import com.pass.diary.data.entity.Diary
 import com.pass.diary.data.repository.diary.DiaryRepositoryImpl
+import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.confirmVerified
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
@@ -73,5 +77,31 @@ class DiaryRepositoryTest {
 
         // 모든 예상된 동작이 검증되었는지 확인
         confirmVerified(diaryDataBase.diaryDao())
+    }
+
+    @Test
+    fun testAddDiary(): Unit = runBlocking {
+        val diary = Diary(
+            null,
+            "2023",
+            "10",
+            "30",
+            "일",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "일기 내용"
+        )
+
+        // addDiary 실행 시 실행만 되게 적용
+        coEvery { diaryDataBase.diaryDao().addDiary(diary) } just Runs
+
+        diaryRepository.addDiary(diary)
+
+        // addDiary 가 정확히 한 번만 실행되었는지 확인
+        coVerify(exactly = 1) { diaryDataBase.diaryDao().addDiary(diary) }
+
     }
 }

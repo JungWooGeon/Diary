@@ -1,5 +1,6 @@
 package com.pass.diary.di
 
+import com.pass.diary.presentation.viewmodel.AddDiaryViewModel
 import com.pass.diary.presentation.viewmodel.MainViewModel
 import com.pass.diary.presentation.viewmodel.TimelineViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -12,5 +13,9 @@ val viewModelModule = module {
 
     viewModel {
         TimelineViewModel(get())
+    }
+
+    viewModel {
+        AddDiaryViewModel(get())
     }
 }
