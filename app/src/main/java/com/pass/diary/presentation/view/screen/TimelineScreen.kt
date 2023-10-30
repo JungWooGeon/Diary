@@ -53,6 +53,7 @@ import com.pass.diary.presentation.intent.TimelineIntent
 import com.pass.diary.presentation.state.TimelineState
 import com.pass.diary.presentation.ui.theme.LineGray
 import com.pass.diary.presentation.view.activity.AddDiaryActivity
+import com.pass.diary.presentation.view.screen.Constants.INTENT_NAME_DATE
 import com.pass.diary.presentation.viewmodel.TimelineViewModel
 import org.koin.androidx.compose.getViewModel
 import java.time.LocalDate
@@ -150,6 +151,8 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
             onClick = {
                 // 다이어리 추가 액티비티 실행
                 val intent = Intent(context, AddDiaryActivity::class.java)
+                val date = LocalDate.now().year.toString() + "." + LocalDate.now().monthValue + "." + LocalDate.now().dayOfMonth
+                intent.putExtra(INTENT_NAME_DATE, date)
                 context.startActivity(intent)
             },
             modifier = Modifier
