@@ -41,18 +41,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.pass.diary.R
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.pass.diary.data.entity.Diary
 import com.pass.diary.presentation.intent.TimelineIntent
 import com.pass.diary.presentation.state.TimelineState
 import com.pass.diary.presentation.ui.theme.LineGray
 import com.pass.diary.presentation.view.activity.AddDiaryActivity
+import com.pass.diary.presentation.view.screen.Constants.EMOTICON_RAW_ID_LIST
 import com.pass.diary.presentation.view.screen.Constants.INTENT_NAME_DATE
 import com.pass.diary.presentation.viewmodel.TimelineViewModel
 import org.koin.androidx.compose.getViewModel
@@ -60,6 +63,8 @@ import java.time.LocalDate
 
 @Composable
 fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+
     val context = LocalContext.current
 
     val state by viewModel.state.collectAsState()
@@ -78,6 +83,15 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
         viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.monthValue.toString()))
     }
 
+    // onResume 상태 일 때 diary 업데이트
+    LaunchedEffect(lifecycle) {
+        lifecycle.addObserver(LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.monthValue.toString()))
+            }
+        })
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         when (state) {
             // Loading 상태 : Indicator
@@ -92,7 +106,7 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
 
             // 타임라인 diary 읽기 성공 상태
             is TimelineState.Success -> {
-                val diaries = remember { (state as TimelineState.Success).diaries }
+                val diaries = (state as TimelineState.Success).diaries
                 val date = selectedDate.year.toString() + "." + selectedDate.monthValue + "."
 
                 Column(
@@ -151,7 +165,8 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
             onClick = {
                 // 다이어리 추가 액티비티 실행
                 val intent = Intent(context, AddDiaryActivity::class.java)
-                val date = LocalDate.now().year.toString() + "." + LocalDate.now().monthValue + "." + LocalDate.now().dayOfMonth
+                val date =
+                    LocalDate.now().year.toString() + "." + LocalDate.now().monthValue + "." + LocalDate.now().dayOfMonth
                 intent.putExtra(INTENT_NAME_DATE, date)
                 context.startActivity(intent)
             },
@@ -203,7 +218,7 @@ fun DiaryItem(diary: Diary) {
     ) {
         if (diary.emoticonId1 == null) {
             Image(
-                painter = painterResource(id = R.drawable.em_smile),
+                painter = painterResource(id = EMOTICON_RAW_ID_LIST[0]),
                 contentDescription = "기본 이모지",
                 modifier = Modifier.size(50.dp)
             )

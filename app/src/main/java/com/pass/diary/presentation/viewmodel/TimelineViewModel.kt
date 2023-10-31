@@ -18,6 +18,7 @@ class TimelineViewModel(
     val state: StateFlow<TimelineState> = _state
 
     fun processIntent(intent: TimelineIntent) {
+        _state.value = TimelineState.Loading
         when (intent) {
             is TimelineIntent.LoadDiaries -> {
                 try {
