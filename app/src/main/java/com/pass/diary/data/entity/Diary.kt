@@ -1,9 +1,12 @@
 package com.pass.diary.data.entity
 
+import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 @Entity
 data class Diary (
     @PrimaryKey(autoGenerate = true) val id: Int?,
@@ -17,4 +20,4 @@ data class Diary (
     @ColumnInfo(name = "audioUri") val audioUri: String?,
     @ColumnInfo(name = "imageUri") val imageUri: String?,
     @ColumnInfo(name = "content") val content: String
-)
+) : Parcelable

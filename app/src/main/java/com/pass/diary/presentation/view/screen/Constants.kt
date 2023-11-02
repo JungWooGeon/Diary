@@ -8,7 +8,7 @@ object Constants {
     const val ANALYSIS = "ANALYSIS"
     const val SETTINGS = "SETTINGS"
 
-    const val INTENT_NAME_DATE = "DATE"
+    const val INTENT_NAME_DIARY = "DIARY"
 
     const val NOT_EDIT_INDEX = -1
 

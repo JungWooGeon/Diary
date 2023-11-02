@@ -1,5 +1,7 @@
-package com.pass.diary.presentation.view.screen
+package com.pass.diary.presentation.view.composable
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,11 +28,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import java.time.LocalDate
 import java.util.Calendar
 
 @Composable
 fun CustomSpinnerDatePicker(
-    onDismissRequest: (selectedYear: Int, selectedMonth: Int, selectedDayOfMonth: Int) -> Unit
+    context: Context,
+    onDismissRequest: (tmpDate: LocalDate, isComplete: Boolean) -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(10.dp),
@@ -61,7 +65,38 @@ fun CustomSpinnerDatePicker(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp),
-                onClick = { onDismissRequest(chosenYear.value, chosenMonth.value + 1, chosenDay.value) }
+                onClick = {
+                    val year = chosenYear.value
+                    val month = chosenMonth.value + 1
+                    val dayOfMonth = chosenDay.value
+                    val tmpDate = LocalDate.of(year, month, dayOfMonth)
+                    var isComplete = true
+
+                    if (((month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12) && dayOfMonth >= 31)) {
+                        Toast.makeText(context, "30일까지 선택할 수 있습니다.", Toast.LENGTH_SHORT).show()
+                        isComplete = false
+                    } else if (month == 2) {
+                        if (year % 4 == 0 && dayOfMonth >= 30) {
+                            // 윤년 확인
+                            Toast.makeText(context, "29일까지 선택할 수 있습니다.", Toast.LENGTH_SHORT)
+                                .show()
+                            isComplete = false
+                        } else if (year % 4 == 0 && dayOfMonth >= 29) {
+                            Toast.makeText(context, "28일까지 선택할 수 있습니다.", Toast.LENGTH_SHORT)
+                                .show()
+                            isComplete = false
+                        }
+                    } else {
+                        // 올바른 날짜 입력 시 UI 상태 반영
+                        if (tmpDate.isAfter(LocalDate.now())) {
+                            Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT)
+                                .show()
+                            isComplete = false
+                        }
+                    }
+
+                    onDismissRequest(tmpDate, isComplete)
+                }
             ) {
                 Text(
                     text = "확인",

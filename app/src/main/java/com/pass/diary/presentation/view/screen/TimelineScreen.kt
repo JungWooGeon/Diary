@@ -1,5 +1,6 @@
 package com.pass.diary.presentation.view.screen
 
+import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,21 +14,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,7 +43,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.pass.diary.data.entity.Diary
@@ -56,7 +51,8 @@ import com.pass.diary.presentation.state.TimelineState
 import com.pass.diary.presentation.ui.theme.LineGray
 import com.pass.diary.presentation.view.activity.AddDiaryActivity
 import com.pass.diary.presentation.view.screen.Constants.EMOTICON_RAW_ID_LIST
-import com.pass.diary.presentation.view.screen.Constants.INTENT_NAME_DATE
+import com.pass.diary.presentation.view.screen.Constants.INTENT_NAME_DIARY
+import com.pass.diary.presentation.view.composable.CustomYearDatePicker
 import com.pass.diary.presentation.viewmodel.TimelineViewModel
 import org.koin.androidx.compose.getViewModel
 import java.time.LocalDate
@@ -139,7 +135,7 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
 
                     LazyColumn {
                         items(diaries) { diary ->
-                            DiaryItem(diary)
+                            DiaryItem(diary = diary, context = context)
                         }
                     }
                 }
@@ -165,9 +161,6 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
             onClick = {
                 // 다이어리 추가 액티비티 실행
                 val intent = Intent(context, AddDiaryActivity::class.java)
-                val date =
-                    LocalDate.now().year.toString() + "." + LocalDate.now().monthValue + "." + LocalDate.now().dayOfMonth
-                intent.putExtra(INTENT_NAME_DATE, date)
                 context.startActivity(intent)
             },
             modifier = Modifier
@@ -189,7 +182,7 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
                 .clickable { isDatePickerOpen = false },  // 배경을 클릭하면 다이얼로그를 닫음
         )
 
-        CustomDatePicker(
+        CustomYearDatePicker(
             datePickerYear = datePickerYear,
             onDatePickerYearChange = { newYear ->
                 datePickerYear = newYear
@@ -207,7 +200,7 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
 }
 
 @Composable
-fun DiaryItem(diary: Diary) {
+fun DiaryItem(diary: Diary, context: Context) {
     val diaryDate =
         diary.year + "년 " + diary.month + "월 " + diary.day + "일 " + diary.dayOfWeek + "요일"
 
@@ -215,6 +208,12 @@ fun DiaryItem(diary: Diary) {
         modifier = Modifier
             .padding(horizontal = 20.dp)
             .padding(top = 20.dp)
+            .clickable {
+                // 다이어리 편집 액티비티 실행
+                val intent = Intent(context, AddDiaryActivity::class.java)
+                intent.putExtra(INTENT_NAME_DIARY, diary)
+                context.startActivity(intent)
+            }
     ) {
         if (diary.emoticonId1 == null) {
             Image(
@@ -253,74 +252,4 @@ fun DiaryItem(diary: Diary) {
         thickness = 1.dp,
         modifier = Modifier.padding(top = 20.dp)
     )
-}
-
-@Composable
-fun CustomDatePicker(
-    datePickerYear: Int,
-    onDatePickerYearChange: (newYear: Int) -> Unit,
-    onDateSelected: (selectedMonth: Int) -> Unit,
-    onDismissRequest: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismissRequest) {
-        Surface(shape = RoundedCornerShape(10.dp)) {
-            Box(
-                modifier = Modifier
-                    .background(Color.White)
-                    .wrapContentSize()
-                    .padding(20.dp)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            Icons.Default.KeyboardArrowLeft,
-                            contentDescription = "left button",
-                            modifier = Modifier.clickable { onDatePickerYearChange(datePickerYear - 1) }
-                        )
-                        Text(text = datePickerYear.toString(), fontSize = 20.sp)
-                        Icon(
-                            Icons.Default.KeyboardArrowRight,
-                            contentDescription = "right button",
-                            modifier = Modifier.clickable { onDatePickerYearChange(datePickerYear + 1) }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.size(20.dp))
-
-                    DatePickerRow(listOf(1, 2, 3, 4), onDateSelected)
-
-                    Spacer(modifier = Modifier.size(20.dp))
-
-                    DatePickerRow(listOf(5, 6, 7, 8), onDateSelected)
-
-                    Spacer(modifier = Modifier.size(20.dp))
-
-                    DatePickerRow(listOf(9, 10, 11, 12), onDateSelected)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun DatePickerRow(dates: List<Int>, onDateSelected: (selectedDate: Int) -> Unit) {
-    Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        dates.forEach { date ->
-            Box(modifier = Modifier
-                .size(20.dp)
-                .clickable { onDateSelected(date) }) {
-                Text(text = date.toString(), fontSize = 15.sp)
-            }
-        }
-    }
 }
