@@ -25,9 +25,7 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".presentation.view.activity.AddDiaryActivity"
-            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar" />
+        <activity android:name=".presentation.view.activity.AddDiaryActivity" />
     </application>
 
 </manifest>

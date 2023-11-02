@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -64,7 +63,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.google.android.material.datepicker.MaterialDatePicker
 import com.pass.diary.R
 import com.pass.diary.data.entity.Diary
 import com.pass.diary.presentation.intent.AddDiaryIntent
@@ -77,22 +75,17 @@ import com.pass.diary.presentation.view.screen.Constants.DAY_OF_WEEK_TO_KOREAN
 import com.pass.diary.presentation.view.screen.Constants.EMOTICON_RAW_ID_LIST
 import com.pass.diary.presentation.view.screen.Constants.INTENT_NAME_DATE
 import com.pass.diary.presentation.view.screen.Constants.NOT_EDIT_INDEX
+import com.pass.diary.presentation.view.screen.CustomSpinnerDatePicker
 import com.pass.diary.presentation.viewmodel.AddDiaryViewModel
 import org.koin.androidx.compose.getViewModel
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 
-class AddDiaryActivity : AppCompatActivity() {
+class AddDiaryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        var date = intent.getStringExtra(INTENT_NAME_DATE)
-
-        if (date == null) {
-            date =
-                LocalDate.now().year.toString() + "." + LocalDate.now().monthValue + "." + LocalDate.now().dayOfMonth.toString()
-        }
+        val date = intent.getStringExtra(INTENT_NAME_DATE)
+            ?: (LocalDate.now().year.toString() + "." + LocalDate.now().monthValue + "." + LocalDate.now().dayOfMonth.toString())
 
         setContent {
             DiaryTheme {
@@ -230,7 +223,8 @@ fun AddDiaryScreen(date: String, viewModel: AddDiaryViewModel = getViewModel()) 
                             if (emoticonIdList.size < 3) {
                                 emoticonIdList.add(emoticonId)
                             } else {
-                                Toast.makeText(context, "3개까지 추가할 수 있습니다.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "3개까지 추가할 수 있습니다.", Toast.LENGTH_SHORT)
+                                    .show()
                             }
                             isDialogAdd = false
                         } else {
@@ -251,22 +245,35 @@ fun AddDiaryScreen(date: String, viewModel: AddDiaryViewModel = getViewModel()) 
                         .clickable { isDatePickerOpen = false },  // 배경을 클릭하면 다이얼로그를 닫음
                 )
 
-                val datePicker =
-                    MaterialDatePicker.Builder.datePicker()
-                        .setTitleText("Select date")
-                        .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
-                        .build()
+                Dialog(onDismissRequest = { isDatePickerOpen = false }) {
+                    CustomSpinnerDatePicker { year, month, dayOfMonth ->
+                        isDatePickerOpen = false
 
-                datePicker.addOnPositiveButtonClickListener {
-                    selectedDateWithLocalDate = Instant.ofEpochMilli(it)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate()
+                        if (((month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12) && dayOfMonth >= 31)){
+                            Toast.makeText(context, "30일까지 선택할 수 있습니다.", Toast.LENGTH_SHORT).show()
+                        } else if (month == 2) {
+                            if (year % 4 == 0 && dayOfMonth >= 30) {
+                                // 윤년 확인
+                                Toast.makeText(context, "29일까지 선택할 수 있습니다.", Toast.LENGTH_SHORT).show()
+                            } else if (year % 4 == 0 && dayOfMonth >= 29) {
+                                Toast.makeText(context, "28일까지 선택할 수 있습니다.", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            // 올바른 날짜 입력 시 UI 상태 반영
+
+                            val tmpDate = LocalDate.of(year, month, dayOfMonth)
+                            if (tmpDate.isAfter(LocalDate.now())) {
+                                Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                            }
+                            selectedDateWithLocalDate = tmpDate
+                        }
+                    }
                 }
-                datePicker.show((context as AppCompatActivity).supportFragmentManager, "DATE_PICKER")
             }
         }
 
         is AddDiaryState.Complete -> {
+            Toast.makeText(context, "작성이 완료되었습니다.", Toast.LENGTH_SHORT).show()
             (context as Activity).finish()
         }
 
