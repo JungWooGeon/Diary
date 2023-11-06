@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.lang.Exception
 
 class AddDiaryViewModel(
@@ -26,40 +27,44 @@ class AddDiaryViewModel(
         when (intent) {
             is AddDiaryIntent.AddDiary -> {
                 _state.value = AddDiaryState.Loading
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
 
-                try {
-                    viewModelScope.launch(Dispatchers.IO) {
                         addDiaryUseCase(intent.diary)
-                        _state.value = AddDiaryState.Complete
+                        withContext(Dispatchers.Main) {
+                            _state.value = AddDiaryState.Complete
+                        }
+                    } catch (e: Exception) {
+                        _state.value = AddDiaryState.Error(e)
                     }
-                } catch (e: Exception) {
-                    _state.value = AddDiaryState.Error(e)
                 }
             }
 
             is AddDiaryIntent.UpdateDiary -> {
                 _state.value = AddDiaryState.Loading
-
-                try {
-                    viewModelScope.launch(Dispatchers.IO) {
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
                         updateDiaryUseCase(intent.diary)
-                        _state.value = AddDiaryState.Complete
+                        withContext(Dispatchers.Main) {
+                            _state.value = AddDiaryState.Complete
+                        }
+                    } catch (e: Exception) {
+                        _state.value = AddDiaryState.Error(e)
                     }
-                } catch (e: Exception) {
-                    _state.value = AddDiaryState.Error(e)
                 }
             }
 
             is AddDiaryIntent.DeleteDiary -> {
                 _state.value = AddDiaryState.Loading
-
-                try {
-                    viewModelScope.launch(Dispatchers.IO) {
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
                         deleteDiaryUseCase(intent.diary)
-                        _state.value = AddDiaryState.Complete
+                        withContext(Dispatchers.Main) {
+                            _state.value = AddDiaryState.Complete
+                        }
+                    } catch (e: Exception) {
+                        _state.value = AddDiaryState.Error(e)
                     }
-                } catch (e: Exception) {
-                    _state.value = AddDiaryState.Error(e)
                 }
             }
         }

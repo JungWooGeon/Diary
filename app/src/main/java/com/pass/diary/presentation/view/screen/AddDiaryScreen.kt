@@ -275,7 +275,12 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
         }
 
         is AddDiaryState.Complete -> {
-            Toast.makeText(context, "작성이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+            if (diary == null) {
+                Toast.makeText(context, "일기 작성이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "일기 수정/삭제가 완료되었습니다.", Toast.LENGTH_SHORT).show()
+            }
+
             (context as Activity).finish()
         }
 

@@ -53,10 +53,8 @@ fun AddDiaryAppBar(
                 text = date.year.toString() + "년 " + date.monthValue + "월 " + date.dayOfMonth + "일"
             )
 
-            if (!isEdit) {
-                IconButton(onClick = { onOpenDatePicker() }) {
-                    Icon(Icons.Default.ArrowDropDown, "DatePicker Button")
-                }
+            IconButton(onClick = { onOpenDatePicker() }) {
+                Icon(Icons.Default.ArrowDropDown, "DatePicker Button")
             }
         }
 
