@@ -65,7 +65,7 @@ fun AddDiaryAppBar(
             }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_delete),
-                    contentDescription = "삭제",
+                    contentDescription = "Delete Button",
                     tint = Color.Red
                 )
             }
