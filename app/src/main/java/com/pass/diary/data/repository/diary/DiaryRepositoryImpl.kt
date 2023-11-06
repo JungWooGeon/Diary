@@ -11,4 +11,12 @@ class DiaryRepositoryImpl(private val db: DiaryDataBase) : DiaryRepository {
     override suspend fun addDiary(diary: Diary) {
         return db.diaryDao().addDiary(diary)
     }
+
+    override suspend fun updateDiary(diary: Diary) {
+        return db.diaryDao().updateDiary(diary)
+    }
+
+    override suspend fun deleteDiary(diary: Diary) {
+        return db.diaryDao().deleteDiary(diary)
+    }
 }

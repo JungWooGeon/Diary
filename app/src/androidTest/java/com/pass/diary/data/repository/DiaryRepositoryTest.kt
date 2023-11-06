@@ -102,6 +102,57 @@ class DiaryRepositoryTest {
 
         // addDiary 가 정확히 한 번만 실행되었는지 확인
         coVerify(exactly = 1) { diaryDataBase.diaryDao().addDiary(diary) }
+    }
 
+    @Test
+    fun testUpdateDiary(): Unit = runBlocking {
+        val month = "11"
+        val diary = Diary(
+            null,
+            "2023",
+            month,
+            "06",
+            "월",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "일기 내용 테스트 11/06"
+        )
+
+        // updateDiary 실행 시 실행만 되게 적용
+        coEvery { diaryDataBase.diaryDao().updateDiary(diary) } just Runs
+
+        diaryRepository.updateDiary(diary)
+
+        // updateDiary 가 정확히 한 번만 실행되었는지 확인
+        coVerify(exactly = 1) { diaryDataBase.diaryDao().updateDiary(diary) }
+    }
+
+    @Test
+    fun testDeleteDiary(): Unit = runBlocking {
+        val month = "11"
+        val diary = Diary(
+            null,
+            "2023",
+            month,
+            "06",
+            "월",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "일기 내용 테스트 11/06"
+        )
+
+        // deleteDiary 실행 시 실행만 되게 적용
+        coEvery { diaryDataBase.diaryDao().deleteDiary(diary) } just Runs
+
+        diaryRepository.deleteDiary(diary)
+
+        // deleteDiary 가 정확히 한 번만 실행되었는지 확인
+        coVerify(exactly = 1) { diaryDataBase.diaryDao().deleteDiary(diary) }
     }
 }
