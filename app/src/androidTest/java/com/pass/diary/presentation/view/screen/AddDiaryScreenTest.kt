@@ -76,7 +76,7 @@ class AddDiaryScreenTest {
         composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
     }
 
-    // '일기 추가 화면'에서 '완료' 버튼 클릭 시 일기 정보가 올바르게 저장되고, 화면이 꺼지는 상태까지 동작하는지 테스트
+    // '일기 추가 화면'에서 '완료' 버튼 클릭 시 일기 정보가 올바르게 저장되고, Complete 상태까지 도달하는지 테스트
     @Test
     fun addDiaryScreenCallsOnAddDiaryWhenDiaryIsProvided() {
         // viewModel의 AddDiary 함수가 호출되었을 때 state 을 Complete 만 나오도록 설정
@@ -121,5 +121,47 @@ class AddDiaryScreenTest {
 
         // diary가 null일 때 우측 상단 아이콘이 '쓰레기통' 아이콘인지 확인
         composeTestRule.onNodeWithContentDescription("Delete Button").assertExists()
+    }
+
+    // '일기 편집 화면'에서 '수정 완료' 클릭 시 일기 정보가 올바르게 수정되고, Complete 상태까지 도달하는지 테스트
+    @Test
+    fun addDiaryScreenCallsOnUpdateDiaryWhenDiaryIsProvided() {
+        // viewModel의 UpdateDiary 함수가 호출되었을 때 state 을 Complete 만 나오도록 설정
+        every { viewModel.processIntent(AddDiaryIntent.UpdateDiary(diary)) } answers {
+            every { viewModel.state } returns MutableStateFlow(AddDiaryState.Complete)
+        }
+
+        every { viewModel.state } returns MutableStateFlow(AddDiaryState.Standby)
+
+        composeTestRule.setContent {
+            AddDiaryScreen(diary = diary, viewModel = viewModel)
+        }
+
+        // '수정 완료' 텍스트 클릭
+        composeTestRule.onNodeWithText("수정 완료").performClick()
+
+        // state 가 Complete 로 변경되었는지 확인
+        assert(viewModel.state.value is AddDiaryState.Complete)
+    }
+
+    // '일기 편집 화면'에서 'Delete Button' 클릭 시 일기 정보가 올바르게 삭제되고, Complete 상태까지 도달하는지 테스트
+    @Test
+    fun addDiaryScreenCallsOnDeleteDiaryWhenDiaryIsProvided() {
+        // viewModel의 DeleteDiary 함수가 호출되었을 때 state 을 Complete 만 나오도록 설정
+        every { viewModel.processIntent(AddDiaryIntent.DeleteDiary(diary)) } answers {
+            every { viewModel.state } returns MutableStateFlow(AddDiaryState.Complete)
+        }
+
+        every { viewModel.state } returns MutableStateFlow(AddDiaryState.Standby)
+
+        composeTestRule.setContent {
+            AddDiaryScreen(diary = diary, viewModel = viewModel)
+        }
+
+        // 'Delete Button' 텍스트 클릭
+        composeTestRule.onNodeWithContentDescription("Delete Button").performClick()
+
+        // state 가 Complete 로 변경되었는지 확인
+        assert(viewModel.state.value is AddDiaryState.Complete)
     }
 }

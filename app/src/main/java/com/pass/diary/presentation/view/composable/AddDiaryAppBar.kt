@@ -30,7 +30,8 @@ fun AddDiaryAppBar(
     date: LocalDate,
     onAddDiary: () -> Unit,
     onOpenDatePicker: () -> Unit,
-    isEdit: Boolean
+    isEdit: Boolean,
+    onDeleteDiary: () -> Unit
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -60,9 +61,7 @@ fun AddDiaryAppBar(
         }
 
         if (isEdit) {
-            IconButton(onClick = {
-                //@TODO 삭제
-            }) {
+            IconButton(onClick = { onDeleteDiary() }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_delete),
                     contentDescription = "Delete Button",

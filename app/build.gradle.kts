@@ -21,7 +21,6 @@ android {
             useSupportLibrary = true
         }
     }
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -85,7 +84,8 @@ dependencies {
     androidTestImplementation("io.mockk:mockk-android:1.13.8")
     androidTestImplementation("io.mockk:mockk-agent:1.13.8")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-
+    androidTestImplementation("androidx.test:core-ktx:1.5.0")
+    debugImplementation("androidx.test:core:1.5.0")
 
     // room
     implementation("androidx.room:room-runtime:2.6.0")

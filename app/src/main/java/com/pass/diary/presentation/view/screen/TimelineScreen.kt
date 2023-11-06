@@ -223,7 +223,7 @@ fun DiaryItem(diary: Diary, context: Context) {
             )
         } else {
             Image(
-                painter = painterResource(id = diary.emoticonId1),
+                painter = painterResource(id = diary.emoticonId1!!),
                 contentDescription = "이모지",
                 modifier = Modifier.size(50.dp)
             )

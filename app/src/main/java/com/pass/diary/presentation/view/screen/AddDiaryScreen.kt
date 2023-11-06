@@ -142,6 +142,10 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     },
                     onOpenDatePicker = {
                         isDatePickerOpen = true
+                    },
+                    onDeleteDiary = {
+                        // 삭제
+                        diary?.let { viewModel.processIntent(AddDiaryIntent.DeleteDiary(diary)) }
                     }
                 )
 
@@ -167,7 +171,33 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                         if (diary == null) {
                             //@TODO 요약
                         } else {
-                            //@TODO 수정
+                            // 수정하기
+                            var emoticonId1: Int? = null
+                            var emoticonId2: Int? = null
+                            var emoticonId3: Int? = null
+
+                            if (emoticonIdList.size >= 1)
+                                emoticonId1 = emoticonIdList[0]
+
+                            if (emoticonIdList.size >= 2)
+                                emoticonId2 = emoticonIdList[1]
+
+                            if (emoticonIdList.size >= 3)
+                                emoticonId3 = emoticonIdList[2]
+
+                            diary.year = selectedDateWithLocalDate.year.toString()
+                            diary.month = selectedDateWithLocalDate.monthValue.toString()
+                            diary.day = selectedDateWithLocalDate.dayOfMonth.toString()
+                            diary.dayOfWeek =
+                                Constants.DAY_OF_WEEK_TO_KOREAN[selectedDateWithLocalDate.dayOfWeek.toString()]!!
+                            diary.emoticonId1 = emoticonId1
+                            diary.emoticonId2 = emoticonId2
+                            diary.emoticonId3 = emoticonId3
+                            diary.audioUri = null
+                            diary.imageUri = null
+                            diary.content = contentText
+
+                            viewModel.processIntent(AddDiaryIntent.UpdateDiary(diary))
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
@@ -193,12 +223,16 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
-                        .clickable { isDialogAdd = false },  // 배경을 클릭하면 다이얼로그를 닫음
+                        .clickable {
+                            isDialogAdd = false
+                            isDialogEdit = Constants.NOT_EDIT_INDEX
+                        }  // 배경을 클릭하면 다이얼로그를 닫음
                 )
 
                 AddEmoticonDialog(
                     onDismissRequest = {
                         isDialogAdd = false
+                        isDialogEdit = Constants.NOT_EDIT_INDEX
                     },
                     onSelectEmoticon = { emoticonId ->
                         if (isDialogEdit == Constants.NOT_EDIT_INDEX) {
