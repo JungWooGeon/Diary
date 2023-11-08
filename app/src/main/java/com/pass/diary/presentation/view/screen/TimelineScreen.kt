@@ -2,6 +2,7 @@ package com.pass.diary.presentation.view.screen
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,6 +54,7 @@ import com.pass.diary.presentation.view.activity.AddDiaryActivity
 import com.pass.diary.presentation.view.screen.Constants.EMOTICON_RAW_ID_LIST
 import com.pass.diary.presentation.view.screen.Constants.INTENT_NAME_DIARY
 import com.pass.diary.presentation.view.composable.CustomYearDatePicker
+import com.pass.diary.presentation.view.composable.DiaryItem
 import com.pass.diary.presentation.viewmodel.TimelineViewModel
 import org.koin.androidx.compose.getViewModel
 import java.time.LocalDate
@@ -89,68 +91,78 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        when (state) {
-            // Loading 상태 : Indicator
-            is TimelineState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.testTag("LoadingIndicator"))
-                }
-            }
-
-            // 타임라인 diary 읽기 성공 상태
-            is TimelineState.Success -> {
-                val diaries = (state as TimelineState.Success).diaries
-                val date = selectedDate.year.toString() + "." + selectedDate.monthValue + "."
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(10.dp),
-                    verticalArrangement = Arrangement.Top,
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+        // 상태에 따라 자연스러운 화면 전환을 위해 Crossfase 사용
+        Crossfade(targetState = state, label = "") { state ->
+            when (state) {
+                // Loading 상태 : Indicator
+                is TimelineState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            text = date
+                        CircularProgressIndicator(modifier = Modifier.testTag("LoadingIndicator"))
+                    }
+                }
+
+                // 타임라인 diary 읽기 성공 상태
+                is TimelineState.Success -> {
+                    val diaries = state.diaries
+                    val date = selectedDate.year.toString() + "." + selectedDate.monthValue + "."
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(10.dp),
+                        verticalArrangement = Arrangement.Top,
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                text = date
+                            )
+
+                            IconButton(onClick = { isDatePickerOpen = true }) {
+                                Icon(Icons.Default.ArrowDropDown, "DatePicker Button")
+                            }
+                        }
+
+                        Divider(
+                            color = LineGray,
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(top = 10.dp)
                         )
 
-                        IconButton(onClick = { isDatePickerOpen = true }) {
-                            Icon(Icons.Default.ArrowDropDown, "DatePicker Button")
-                        }
-                    }
-
-                    Divider(
-                        color = LineGray,
-                        thickness = 1.dp,
-                        modifier = Modifier.padding(top = 10.dp)
-                    )
-
-                    LazyColumn {
-                        items(diaries) { diary ->
-                            DiaryItem(diary = diary, context = context)
+                        LazyColumn {
+                            items(diaries) { diary ->
+                                DiaryItem(
+                                    diary = diary,
+                                    onClickItem = { clickDiary ->
+                                        // 다이어리 편집 액티비티 실행
+                                        val intent = Intent(context, AddDiaryActivity::class.java)
+                                        intent.putExtra(INTENT_NAME_DIARY, clickDiary)
+                                        context.startActivity(intent)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
 
-            }
-
-            // 타임라인 읽기 실패 상태 : errorMessage
-            is TimelineState.Error -> {
-                val errorMessage = (state as TimelineState.Error).error.message
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (errorMessage != null) {
-                        Text(text = errorMessage)
+                // 타임라인 읽기 실패 상태 : errorMessage
+                is TimelineState.Error -> {
+                    val errorMessage = state.error.message
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (errorMessage != null) {
+                            Text(text = errorMessage)
+                        }
                     }
                 }
             }
@@ -197,59 +209,4 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
             }
         )
     }
-}
-
-@Composable
-fun DiaryItem(diary: Diary, context: Context) {
-    val diaryDate =
-        diary.year + "년 " + diary.month + "월 " + diary.day + "일 " + diary.dayOfWeek + "요일"
-
-    Row(
-        modifier = Modifier
-            .padding(horizontal = 20.dp)
-            .padding(top = 20.dp)
-            .clickable {
-                // 다이어리 편집 액티비티 실행
-                val intent = Intent(context, AddDiaryActivity::class.java)
-                intent.putExtra(INTENT_NAME_DIARY, diary)
-                context.startActivity(intent)
-            }
-    ) {
-        if (diary.emoticonId1 == null) {
-            Image(
-                painter = painterResource(id = EMOTICON_RAW_ID_LIST[0]),
-                contentDescription = "기본 이모지",
-                modifier = Modifier.size(50.dp)
-            )
-        } else {
-            Image(
-                painter = painterResource(id = diary.emoticonId1!!),
-                contentDescription = "이모지",
-                modifier = Modifier.size(50.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.size(30.dp))
-
-        Column {
-            Text(
-                text = diaryDate,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp
-            )
-
-            Spacer(modifier = Modifier.size(10.dp))
-
-            Text(
-                text = diary.content,
-                fontSize = 10.sp
-            )
-        }
-    }
-
-    Divider(
-        color = LineGray,
-        thickness = 1.dp,
-        modifier = Modifier.padding(top = 20.dp)
-    )
 }
