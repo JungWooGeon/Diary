@@ -2,6 +2,7 @@ package com.pass.diary.presentation.view.screen
 
 import android.app.Activity
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,12 +45,12 @@ import com.pass.diary.presentation.view.composable.CalendarWeekdaysTitle
 import com.pass.diary.presentation.view.composable.CurrentMonthWithCalendar
 import com.pass.diary.presentation.view.composable.CustomYearDatePicker
 import com.pass.diary.presentation.view.composable.DiaryItem
-import com.pass.diary.presentation.viewmodel.CalendarViewModel
+import com.pass.diary.presentation.viewmodel.TimelineViewModel
 import org.koin.androidx.compose.getViewModel
 import java.time.LocalDate
 
 @Composable
-fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
+fun CalendarScreen(viewModel: TimelineViewModel = getViewModel()) {
     val context = LocalContext.current
 
     val state by viewModel.state.collectAsState()
@@ -65,7 +66,7 @@ fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
 
     // selectedDate '월' 변경 시마다 diary 업데이트
     LaunchedEffect(selectedDate.monthValue) {
-        viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.monthValue.toString()))
+        viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.year.toString(), selectedDate.monthValue.toString()))
     }
 
     // selectedDate '년' 변경 시마다 Custom Date Picker 에서 사용될 연도 업데이트
@@ -76,7 +77,7 @@ fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
     // 일기 추가/수정 마치고 왔을 경우 업데이트
     val startForResult = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
         if (result.resultCode == Activity.RESULT_OK) {
-            viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.monthValue.toString()))
+            viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.year.toString(), selectedDate.monthValue.toString()))
         }
     }
 
@@ -106,7 +107,12 @@ fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
                                 selectedDate = selectedDate.minusMonths(1)
                             },
                             onSelectNextMonth = {
-                                selectedDate = selectedDate.plusMonths(1)
+                                val newDate = selectedDate.plusMonths(1)
+                                if (newDate.isAfter(LocalDate.now())) {
+                                    Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    selectedDate = newDate
+                                }
                             },
                             onClickSelectMonth = {
                                 isDatePickerOpen = true
@@ -121,13 +127,23 @@ fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
                             dayOfMonth = selectedDate.dayOfMonth,
                             diaries = diaries,
                             onClickTheCurrentMonthDate = { date ->
-                                selectedDate = selectedDate.withDayOfMonth(date)
+                                val newDate = selectedDate.withDayOfMonth(date)
+                                if (newDate.isAfter(LocalDate.now())) {
+                                    Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    selectedDate = newDate
+                                }
                             },
                             onClickThePreviousMonthDate = { date ->
                                 selectedDate = selectedDate.minusMonths(1).withDayOfMonth(date)
                             },
                             onClickTheNextMonthDate = { date ->
-                                selectedDate = selectedDate.plusMonths(1).withDayOfMonth(date)
+                                val newDate = selectedDate.plusMonths(1).withDayOfMonth(date)
+                                if (newDate.isAfter(LocalDate.now())) {
+                                    Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    selectedDate = newDate
+                                }
                             }
                         )
 
@@ -202,7 +218,12 @@ fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
                 },
                 onDateSelected = { selectedMonth ->
                     isDatePickerOpen = false
-                    selectedDate = LocalDate.of(datePickerYear, selectedMonth, 1)
+                    val newDate = LocalDate.of(datePickerYear, selectedMonth, 1)
+                    if (newDate.isAfter(LocalDate.now())) {
+                        Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        selectedDate = newDate
+                    }
                 },
                 onDismissRequest = {
                     isDatePickerOpen = false

@@ -34,7 +34,7 @@ class DiaryDaoTest {
 
     @Test
     fun testGetDiariesWhenNoDiaryInserted(): Unit = runBlocking {
-        val diaries = dao.getDiariesByMonth("10")
+        val diaries = dao.getDiariesByMonth("2023", "10")
         assertTrue(diaries.isEmpty())
     }
 
@@ -56,7 +56,7 @@ class DiaryDaoTest {
 
         dao.addDiary(newDiary)
 
-        val diaries = dao.getDiariesByMonth("10")
+        val diaries = dao.getDiariesByMonth("2023", "10")
         assertTrue(diaries.isNotEmpty())
         assertEquals("2023", diaries[0].year)
     }

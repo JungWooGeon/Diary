@@ -1,20 +1,17 @@
 package com.pass.diary.presentation.view.screen
 
-import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -40,21 +37,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.pass.diary.data.entity.Diary
 import com.pass.diary.presentation.intent.TimelineIntent
 import com.pass.diary.presentation.state.TimelineState
 import com.pass.diary.presentation.ui.theme.LineGray
 import com.pass.diary.presentation.view.activity.AddDiaryActivity
-import com.pass.diary.presentation.view.screen.Constants.EMOTICON_RAW_ID_LIST
-import com.pass.diary.presentation.view.screen.Constants.INTENT_NAME_DIARY
 import com.pass.diary.presentation.view.composable.CustomYearDatePicker
 import com.pass.diary.presentation.view.composable.DiaryItem
+import com.pass.diary.presentation.view.screen.Constants.INTENT_NAME_DIARY
 import com.pass.diary.presentation.viewmodel.TimelineViewModel
 import org.koin.androidx.compose.getViewModel
 import java.time.LocalDate
@@ -78,14 +72,14 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
 
     // selectedDate 변경 시마다 diary 업데이트
     LaunchedEffect(selectedDate) {
-        viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.monthValue.toString()))
+        viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.year.toString(), selectedDate.monthValue.toString()))
     }
 
     // onResume 상태 일 때 diary 업데이트
     LaunchedEffect(lifecycle) {
         lifecycle.addObserver(LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.monthValue.toString()))
+                viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.year.toString(), selectedDate.monthValue.toString()))
             }
         })
     }
@@ -201,7 +195,12 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
             },
             onDateSelected = { selectedMonth ->
                 isDatePickerOpen = false
-                selectedDate = LocalDate.of(datePickerYear, selectedMonth, 1)
+                val newDate = LocalDate.of(datePickerYear, selectedMonth, 1)
+                if (newDate.isAfter(LocalDate.now())) {
+                    Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                } else {
+                    selectedDate = newDate
+                }
             },
             onDismissRequest = {
                 isDatePickerOpen = false

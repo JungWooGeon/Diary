@@ -8,7 +8,7 @@ import androidx.compose.ui.test.performClick
 import com.pass.diary.data.entity.Diary
 import com.pass.diary.presentation.intent.TimelineIntent
 import com.pass.diary.presentation.state.TimelineState
-import com.pass.diary.presentation.viewmodel.CalendarViewModel
+import com.pass.diary.presentation.viewmodel.TimelineViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -23,7 +23,7 @@ class CalendarScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val viewModel: CalendarViewModel = mockk(relaxed = true)
+    private val viewModel: TimelineViewModel = mockk(relaxed = true)
 
     // 현재 날짜로 모킹 데이터 설정
     private val mockData = listOf(

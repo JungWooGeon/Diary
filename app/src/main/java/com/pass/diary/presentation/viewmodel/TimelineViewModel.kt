@@ -24,7 +24,7 @@ class TimelineViewModel(
             is TimelineIntent.LoadDiaries -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     try {
-                        val diaries = getDiariesByMonthUseCase(intent.month)
+                        val diaries = getDiariesByMonthUseCase(intent.year, intent.month)
                         withContext(Dispatchers.Main) {
                             _state.value = TimelineState.Success(diaries.sortedBy { -it.day.toInt() })
                         }

@@ -65,15 +65,15 @@ class DiaryRepositoryTest {
             )
         )
 
-        every { diaryDataBase.diaryDao().getDiariesByMonth(month) } returns fakeDiaries
+        every { diaryDataBase.diaryDao().getDiariesByMonth("2023", month) } returns fakeDiaries
 
-        val result = diaryRepository.getDiariesByMonth(month)
+        val result = diaryRepository.getDiariesByMonth("2023", month)
 
         // 예상값과 기대값 비교 확인
         assertEquals(fakeDiaries, result)
 
         // 정확히 한 번만 호출되는지 확인
-        verify(exactly = 1) { diaryDataBase.diaryDao().getDiariesByMonth(month) }
+        verify(exactly = 1) { diaryDataBase.diaryDao().getDiariesByMonth("2023", month) }
 
         // 모든 예상된 동작이 검증되었는지 확인
         confirmVerified(diaryDataBase.diaryDao())

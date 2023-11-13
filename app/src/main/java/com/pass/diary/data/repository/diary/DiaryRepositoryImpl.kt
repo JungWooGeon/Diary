@@ -4,8 +4,8 @@ import com.pass.diary.data.db.diary.DiaryDataBase
 import com.pass.diary.data.entity.Diary
 
 class DiaryRepositoryImpl(private val db: DiaryDataBase) : DiaryRepository {
-    override suspend fun getDiariesByMonth(month: String): List<Diary> {
-        return db.diaryDao().getDiariesByMonth(month)
+    override suspend fun getDiariesByMonth(year: String, month: String): List<Diary> {
+        return db.diaryDao().getDiariesByMonth(year, month)
     }
 
     override suspend fun addDiary(diary: Diary) {

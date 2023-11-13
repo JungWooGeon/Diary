@@ -27,9 +27,9 @@ class TimelineViewModelTest {
     fun getDiariesByMonthUseCaseIsInvoked() = runBlocking {
         val month = "10"
         val diaries = listOf<Diary>()
-        coEvery { getDiariesByMonthUseCase.invoke(month) } returns diaries
+        coEvery { getDiariesByMonthUseCase.invoke("2023", month) } returns diaries
 
-        viewModel.processIntent(TimelineIntent.LoadDiaries(month))
+        viewModel.processIntent(TimelineIntent.LoadDiaries("2023", month))
 
         coVerify { getDiariesByMonthUseCase.invoke(month) }
 

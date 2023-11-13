@@ -9,8 +9,8 @@ import com.pass.diary.data.entity.Diary
 
 @Dao
 interface DiaryDao {
-    @Query("SELECT * FROM diary WHERE month = :month")
-    fun getDiariesByMonth(month: String): List<Diary>
+    @Query("SELECT * FROM diary WHERE month = :month and year = :year")
+    fun getDiariesByMonth(year: String, month: String): List<Diary>
 
     @Insert
     fun addDiary(diary: Diary)
