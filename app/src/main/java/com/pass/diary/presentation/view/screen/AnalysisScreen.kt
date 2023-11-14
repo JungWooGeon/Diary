@@ -22,8 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.tooling.preview.Preview
-import com.pass.diary.data.entity.Diary
 import com.pass.diary.presentation.intent.TimelineIntent
 import com.pass.diary.presentation.state.TimelineState
 import com.pass.diary.presentation.view.composable.CurrentMonthWithCalendar
@@ -32,7 +30,6 @@ import com.pass.diary.presentation.view.composable.HorizontalBarChartView
 import com.pass.diary.presentation.viewmodel.TimelineViewModel
 import org.koin.androidx.compose.getViewModel
 import java.time.LocalDate
-
 
 @Composable
 fun AnalysisScreen(viewModel: TimelineViewModel = getViewModel()) {
@@ -51,7 +48,12 @@ fun AnalysisScreen(viewModel: TimelineViewModel = getViewModel()) {
 
     // selectedDate 변경 시마다 diary 업데이트
     LaunchedEffect(selectedDate) {
-        viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.year.toString(), selectedDate.monthValue.toString()))
+        viewModel.processIntent(
+            TimelineIntent.LoadDiaries(
+                selectedDate.year.toString(),
+                selectedDate.monthValue.toString()
+            )
+        )
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -82,7 +84,11 @@ fun AnalysisScreen(viewModel: TimelineViewModel = getViewModel()) {
                             onSelectNextMonth = {
                                 val newDate = selectedDate.plusMonths(1)
                                 if (newDate.isAfter(LocalDate.now())) {
-                                    Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        context,
+                                        "오지 않은 날짜는 설정할 수 없습니다.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 } else {
                                     selectedDate = newDate
                                 }
@@ -140,52 +146,4 @@ fun AnalysisScreen(viewModel: TimelineViewModel = getViewModel()) {
             }
         )
     }
-}
-
-@Preview
-@Composable
-fun test() {
-    val diaries = listOf(
-        Diary(
-            null,
-            LocalDate.now().year.toString(),
-            LocalDate.now().monthValue.toString(),
-            LocalDate.now().dayOfMonth.toString(),
-            Constants.DAY_OF_WEEK_TO_KOREAN[LocalDate.now().dayOfWeek.toString()].toString(),
-            Constants.EMOTICON_RAW_ID_LIST[0],
-            null,
-            null,
-            null,
-            null,
-            ""
-        ),
-        Diary(
-            null,
-            LocalDate.now().year.toString(),
-            LocalDate.now().monthValue.toString(),
-            LocalDate.now().dayOfMonth.toString(),
-            Constants.DAY_OF_WEEK_TO_KOREAN[LocalDate.now().dayOfWeek.toString()].toString(),
-            Constants.EMOTICON_RAW_ID_LIST[0],
-            null,
-            null,
-            null,
-            null,
-            ""
-        ),
-        Diary(
-            null,
-            LocalDate.now().year.toString(),
-            LocalDate.now().monthValue.toString(),
-            LocalDate.now().dayOfMonth.toString(),
-            Constants.DAY_OF_WEEK_TO_KOREAN[LocalDate.now().dayOfWeek.toString()].toString(),
-            Constants.EMOTICON_RAW_ID_LIST[1],
-            null,
-            null,
-            null,
-            null,
-            ""
-        )
-    )
-
-    HorizontalBarChartView(diaries)
 }
