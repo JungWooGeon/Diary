@@ -29,12 +29,6 @@ fun SettingDefault(
     )
 
     SettingRow(
-        iconResource = R.drawable.ic_darkmode,
-        iconDescription = "다크 모드",
-        onClick = { onClick(SettingState.DarkModeSetting) }
-    )
-
-    SettingRow(
         iconResource = R.drawable.ic_theme,
         iconDescription = "테마",
         onClick = {
