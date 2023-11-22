@@ -14,6 +14,7 @@ val TextSizeKey = floatPreferencesKey("text_size")
 
 class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
 
+    //@TODO 의존성 주입을 통해 module 에서 dadtaStore instance가 한 번만 생성될 수 있도록
     override suspend fun updateCurrentTextSize(textSize: Float) {
         context.dataStore.edit { preferences ->
             preferences[TextSizeKey] = textSize
