@@ -15,7 +15,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import com.pass.diary.R
-import com.pass.diary.presentation.intent.MainIntent
+import com.pass.diary.presentation.state.MainState
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
@@ -36,24 +36,24 @@ class MainActivityInstrumentedTest {
 
     @Test
     fun bottomNavigationBarIsDisplayed() {
-        composeTestRule.onNodeWithContentDescription(context.getString(MainIntent.Timeline.title)).assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription(context.getString(MainIntent.Calendar.title)).assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription(context.getString(MainIntent.Analysis.title)).assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription(context.getString(MainIntent.Settings.title)).assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription(context.getString(MainState.Timeline.title)).assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription(context.getString(MainState.Calendar.title)).assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription(context.getString(MainState.Analysis.title)).assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription(context.getString(MainState.Settings.title)).assertIsDisplayed()
     }
 
     @Test
     fun bottomNavigationBarNavigationWorksCorrectly() {
-        composeTestRule.onNodeWithContentDescription(context.getString(MainIntent.Timeline.title)).performClick()
+        composeTestRule.onNodeWithContentDescription(context.getString(MainState.Timeline.title)).performClick()
         composeTestRule.onNodeWithText(context.getString(R.string.timeline)).assertExists()
 
-        composeTestRule.onNodeWithContentDescription(context.getString(MainIntent.Calendar.title)).performClick()
+        composeTestRule.onNodeWithContentDescription(context.getString(MainState.Calendar.title)).performClick()
         composeTestRule.onNodeWithText(context.getString(R.string.calendar)).assertExists()
 
-        composeTestRule.onNodeWithContentDescription(context.getString(MainIntent.Analysis.title)).performClick()
+        composeTestRule.onNodeWithContentDescription(context.getString(MainState.Analysis.title)).performClick()
         composeTestRule.onNodeWithText(context.getString(R.string.analysis)).assertExists()
 
-        composeTestRule.onNodeWithContentDescription(context.getString(MainIntent.Settings.title)).performClick()
+        composeTestRule.onNodeWithContentDescription(context.getString(MainState.Settings.title)).performClick()
         composeTestRule.onNodeWithText(context.getString(R.string.settings)).assertExists()
     }
 }

@@ -11,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,40 +22,38 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.pass.diary.presentation.intent.MainIntent
 import com.pass.diary.presentation.state.MainState
 import com.pass.diary.presentation.ui.theme.Fluorescent
-import com.pass.diary.presentation.viewmodel.MainViewModel
-import org.koin.compose.getKoin
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
-    val viewModel: MainViewModel = getKoin().get()
-    val state by viewModel.state.collectAsState()
-
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     Scaffold(
-        bottomBar = { BottomNavigationBar(viewModel, state) }
+        bottomBar = { BottomNavigationBar(navController, currentRoute) }
     ) {
         Box(Modifier.padding(it)) {
-            NavigationGraph(navController = navController, state = state)
+            NavigationGraph(navController = navController)
         }
     }
 }
 
 @Composable
 fun BottomNavigationBar(
-    viewModel: MainViewModel,
-    state: MainState
+    navController: NavHostController,
+    currentRoute: String?
 ) {
     val items = listOf(
-        MainIntent.Timeline,
-        MainIntent.Calendar,
-        MainIntent.Analysis,
-        MainIntent.Settings
+        MainState.Timeline,
+        MainState.Calendar,
+        MainState.Analysis,
+        MainState.Settings
     )
 
     androidx.compose.material.BottomNavigation(
@@ -69,7 +66,7 @@ fun BottomNavigationBar(
                     Icon(
                         painter = painterResource(id = item.icon),
                         contentDescription = stringResource(id = item.title),
-                        tint = if(state.selectedNavItem == item) Fluorescent else Color.Black,
+                        tint = if (currentRoute == item.screenRoute) Fluorescent else Color.Black,
                         modifier = Modifier
                             .width(26.dp)
                             .height(26.dp)
@@ -78,37 +75,37 @@ fun BottomNavigationBar(
                 label = { Text(stringResource(id = item.title), fontSize = 9.sp) },
                 selectedContentColor = MaterialTheme.colors.primary,
                 unselectedContentColor = Gray,
-                selected = state.selectedNavItem == item,
+                selected = currentRoute == item.screenRoute,
                 alwaysShowLabel = false,
 
-                onClick= { viewModel.onNavItemSelected(item) }
+                onClick = {
+                    navController.navigate(item.screenRoute) {
+                        navController.graph.startDestinationRoute?.let {
+                            popUpTo(it) { saveState = true }
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
         }
     }
 }
 
 @Composable
-fun NavigationGraph(navController: NavHostController, state: MainState) {
-    NavHost(navController = navController, startDestination = MainIntent.Timeline.screenRoute) {
-        composable(MainIntent.Timeline.screenRoute) {
+fun NavigationGraph(navController: NavHostController) {
+    NavHost(navController = navController, startDestination = MainState.Timeline.screenRoute) {
+        composable(MainState.Timeline.screenRoute) {
             TimelineScreen()
         }
-        composable(MainIntent.Calendar.screenRoute) {
+        composable(MainState.Calendar.screenRoute) {
             CalendarScreen()
         }
-        composable(MainIntent.Analysis.screenRoute) {
+        composable(MainState.Analysis.screenRoute) {
             AnalysisScreen()
         }
-        composable(MainIntent.Settings.screenRoute) {
+        composable(MainState.Settings.screenRoute) {
             SettingsScreen()
         }
-    }
-
-    navController.navigate(state.selectedNavItem.screenRoute) {
-        navController.graph.startDestinationRoute?.let {
-            popUpTo(it) { saveState = false }
-        }
-        launchSingleTop = true
-        restoreState = true
     }
 }
