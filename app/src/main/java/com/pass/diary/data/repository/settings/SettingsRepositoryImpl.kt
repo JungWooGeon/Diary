@@ -5,25 +5,42 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
-val TextSizeKey = floatPreferencesKey("text_size")
-
 class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
 
-    //@TODO 의존성 주입을 통해 module 에서 dadtaStore instance가 한 번만 생성될 수 있도록
+    companion object {
+        private val TEXT_SIZE_KEY = floatPreferencesKey("text_size")
+        private val FONT_KEY = stringPreferencesKey("text_font")
+    }
+
+    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+    private val Context.fontDataStore: DataStore<Preferences> by preferencesDataStore(name = "font_settings")
+
     override suspend fun updateCurrentTextSize(textSize: Float) {
         context.dataStore.edit { preferences ->
-            preferences[TextSizeKey] = textSize
+            preferences[TEXT_SIZE_KEY] = textSize
         }
     }
 
     override suspend fun getCurrentTextSize(): Flow<Float> {
         return context.dataStore.data.map { preferences ->
-            preferences[TextSizeKey] ?: 16f
+            preferences[TEXT_SIZE_KEY] ?: 16f
+        }
+    }
+
+    override suspend fun updateCurrentFont(font: String) {
+        context.fontDataStore.edit { preferences ->
+            preferences[FONT_KEY] = font
+        }
+    }
+
+    override suspend fun getCurrentFont(): Flow<String> {
+        return context.fontDataStore.data.map { preferences ->
+            preferences[FONT_KEY] ?: "default"
         }
     }
 }

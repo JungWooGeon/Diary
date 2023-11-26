@@ -34,6 +34,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
     var screenState by remember { mutableStateOf<SettingState>(SettingState.DefaultSetting) }
 
     val textSize by viewModel.textSize.collectAsState()
+    val textFont by viewModel.textFont.collectAsState()
 
     Box(
         modifier = Modifier
@@ -67,9 +68,14 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
                 SettingState.FontSetting -> {
                     SettingFont(
                         textSize = textSize,
+                        textFont = textFont,
                         onChangeFinishTextSize = {
-                            viewModel.processIntent(SettingsIntent.GetCurrentFont(it))
-                        })
+                            viewModel.processIntent(SettingsIntent.UpdateCurrentTextSize(it))
+                        },
+                        onChangeFont = {
+                            viewModel.processIntent(SettingsIntent.UpdateCurrentFont(it))
+                        }
+                    )
                 }
 
                 SettingState.BackupSetting -> {

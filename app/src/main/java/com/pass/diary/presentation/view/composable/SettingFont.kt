@@ -5,10 +5,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.RadioButton
-import androidx.compose.material.Slider
-import androidx.compose.material.Text
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -23,11 +22,12 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SettingFont(
     textSize: Float,
-    onChangeFinishTextSize: (textSize: Float) -> Unit
+    textFont: String,
+    onChangeFinishTextSize: (textSize: Float) -> Unit,
+    onChangeFont: (font: String) -> Unit
 ) {
-    val fontOptions = listOf("Font1", "Font2", "Font3")
-    var selectedFont by remember { mutableStateOf(fontOptions[0]) }
-
+    val fontOptions = listOf("default", "garam", "hippy", "restart")
+    var selectedFont by remember { mutableStateOf(textFont) }
     var sliderValue by remember { mutableFloatStateOf(textSize) }
 
     Column {
@@ -44,18 +44,24 @@ fun SettingFont(
                     .padding(horizontal = 16.dp)
                     .selectable(
                         selected = (font == selectedFont),
-                        onClick = { selectedFont = font }
+                        onClick = {
+                            selectedFont = font
+                            onChangeFont(font)
+                        }
                     ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RadioButton(
                     selected = (font == selectedFont),
-                    onClick = { selectedFont = font }
+                    onClick = {
+                        selectedFont = font
+                        onChangeFont(font)
+                    }
                 )
 
                 Text(
                     text = font,
-                    style = MaterialTheme.typography.body1.merge().copy(fontSize = sliderValue.sp),
+                    fontSize = sliderValue.sp,
                     modifier = Modifier.padding(start = 16.dp)
                 )
             }

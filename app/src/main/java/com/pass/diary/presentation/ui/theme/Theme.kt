@@ -2,7 +2,6 @@ package com.pass.diary.presentation.ui.theme
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -26,12 +25,9 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.floatPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import com.pass.diary.R
-import kotlinx.coroutines.flow.map
+import com.pass.diary.presentation.viewmodel.ThemeViewModel
+import org.koin.androidx.compose.getViewModel
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -55,23 +51,20 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
-val Context.fontDataStore: DataStore<Preferences> by preferencesDataStore(name = "font_settings")
-val FontKey = floatPreferencesKey("text_size")
-
 @SuppressLint("FlowOperatorInvokedInComposition")
 @Composable
 fun DiaryTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
+    viewModel: ThemeViewModel = getViewModel(),
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
-    val fontSetting by context.fontDataStore.data.map { preferences ->
-        preferences[FontKey] ?: "default"
-    }.collectAsState("default")
 
-    val fontFamily = when (fontSetting) {
+    val fontState by viewModel.currentFont.collectAsState()
+
+    val fontFamily = when (fontState) {
         "default" -> FontFamily.Default
 
         "garam" -> FontFamily(
@@ -100,7 +93,6 @@ fun DiaryTheme(
 
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 

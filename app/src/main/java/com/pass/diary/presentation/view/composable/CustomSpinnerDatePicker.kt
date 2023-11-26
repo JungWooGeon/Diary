@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -100,7 +99,6 @@ fun CustomSpinnerDatePicker(
             ) {
                 Text(
                     text = "확인",
-                    style = MaterialTheme.typography.button,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
@@ -171,7 +169,6 @@ fun InfiniteItemsPicker(
                     Text(
                         text = items[index],
                         modifier = Modifier.alpha(if (it == listState.firstVisibleItemIndex + 1) 1f else 0.3f),
-                        style = MaterialTheme.typography.body1,
                         textAlign = TextAlign.Center
                     )
 
