@@ -4,9 +4,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -48,11 +56,31 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "설정",
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 20.sp,
-            )
+            Row (
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ){
+                if (screenState != SettingState.DefaultSetting) {
+                    IconButton(
+                        onClick = {
+                            screenState = SettingState.DefaultSetting
+                        },
+                        modifier = Modifier.weight(0.2f)
+                    ) {
+                        Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "이전 화면")
+                    }
+                    Spacer(modifier = Modifier.weight(0.8f))
+                } else {
+                    Spacer(Modifier.weight(1f))
+                }
+                Text(
+                    text = "설정",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp
+                )
+                Spacer(Modifier.weight(1f))
+            }
 
             Divider(
                 color = LineGray,

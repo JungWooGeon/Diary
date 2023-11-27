@@ -74,9 +74,9 @@ fun DiaryTheme(
             )
         )
 
-        "hippy" -> FontFamily(
+        "skybori" -> FontFamily(
             Font(
-                resId = R.font.hippy, weight = FontWeight.Normal,
+                resId = R.font.skybori, weight = FontWeight.Normal,
                 style = FontStyle.Normal
             )
         )

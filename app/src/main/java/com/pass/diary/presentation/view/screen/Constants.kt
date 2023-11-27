@@ -39,4 +39,11 @@ object Constants {
         "FRIDAY" to "금",
         "SATURDAY" to "토"
     )
+
+    val FONT_TO_KOREAN = mapOf(
+        "default" to "기본",
+        "garam" to "가람연꽃",
+        "restart" to "다시 시작해",
+        "skybori" to "하늘보리"
+    )
 }

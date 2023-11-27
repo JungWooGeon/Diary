@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.pass.diary.domain.diary.AddDiaryUseCase
 import com.pass.diary.domain.diary.DeleteDiaryUseCase
 import com.pass.diary.domain.diary.UpdateDiaryUseCase
+import com.pass.diary.domain.settings.font.GetCurrentTextSizeUseCase
 import com.pass.diary.presentation.intent.AddDiaryIntent
 import com.pass.diary.presentation.state.AddDiaryState
 import kotlinx.coroutines.Dispatchers
@@ -17,11 +18,23 @@ import java.lang.Exception
 class AddDiaryViewModel(
     private val addDiaryUseCase: AddDiaryUseCase,
     private val updateDiaryUseCase: UpdateDiaryUseCase,
-    private val deleteDiaryUseCase: DeleteDiaryUseCase
+    private val deleteDiaryUseCase: DeleteDiaryUseCase,
+    private val getCurrentTextSizeUseCase: GetCurrentTextSizeUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<AddDiaryState>(AddDiaryState.Standby)
     val state: StateFlow<AddDiaryState> = _state
+
+    private val _testSizeState = MutableStateFlow(13f)
+    val textSizeState: StateFlow<Float> = _testSizeState
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            getCurrentTextSizeUseCase().collect { size ->
+                _testSizeState.value = size
+            }
+        }
+    }
 
     fun processIntent(intent: AddDiaryIntent) {
         when (intent) {
@@ -29,7 +42,6 @@ class AddDiaryViewModel(
                 _state.value = AddDiaryState.Loading
                 viewModelScope.launch(Dispatchers.IO) {
                     try {
-
                         addDiaryUseCase(intent.diary)
                         withContext(Dispatchers.Main) {
                             _state.value = AddDiaryState.Complete

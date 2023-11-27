@@ -51,6 +51,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
     val context = LocalContext.current
 
     val addDiaryState by viewModel.state.collectAsState()
+    val textSizeState by viewModel.textSizeState.collectAsState()
 
     // DatePicker 에서 사용될 selected date
     val dateArray = if (diary != null) {
@@ -162,10 +163,12 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
 
                 ContentBox(
                     contentText = contentText,
-                    modifier = Modifier.weight(1F)
-                ) { changedText ->
-                    contentText = changedText
-                }
+                    modifier = Modifier.weight(1F),
+                    textSize = textSizeState,
+                    onTextChanged = { changedText ->
+                        contentText = changedText
+                    }
+                )
 
                 Button(
                     onClick = {
