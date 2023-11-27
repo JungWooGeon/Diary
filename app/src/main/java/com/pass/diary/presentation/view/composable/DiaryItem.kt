@@ -1,7 +1,5 @@
 package com.pass.diary.presentation.view.composable
 
-import android.content.Context
-import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -63,7 +61,7 @@ fun DiaryItem(
             Spacer(modifier = Modifier.size(10.dp))
 
             Text(
-                text = diary.content,
+                text = diary.title,
                 fontSize = 10.sp
             )
         }

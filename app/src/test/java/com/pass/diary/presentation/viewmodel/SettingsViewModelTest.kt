@@ -1,6 +1,8 @@
 package com.pass.diary.presentation.viewmodel
 
+import com.pass.diary.domain.settings.font.GetCurrentFontUseCase
 import com.pass.diary.domain.settings.font.GetCurrentTextSizeUseCase
+import com.pass.diary.domain.settings.font.UpdateCurrentFontUseCase
 import com.pass.diary.domain.settings.font.UpdateCurrentTextSizeUseCase
 import com.pass.diary.presentation.intent.SettingsIntent
 import io.mockk.Runs
@@ -18,6 +20,8 @@ class SettingsViewModelTest {
 
     private val getCurrentTextSizeUseCase = mockk<GetCurrentTextSizeUseCase>()
     private val updateCurrentTextSizeUseCase = mockk<UpdateCurrentTextSizeUseCase>()
+    private val getCurrentFontUseCase = mockk<GetCurrentFontUseCase>()
+    private val updateCurrentFontUseCase = mockk<UpdateCurrentFontUseCase>()
 
     private lateinit var viewModel: SettingsViewModel
 
@@ -30,7 +34,7 @@ class SettingsViewModelTest {
         coEvery { getCurrentTextSizeUseCase() } returns flowOf(testTextSize)
         coEvery { updateCurrentTextSizeUseCase(any()) } just Runs
 
-        viewModel = SettingsViewModel(getCurrentTextSizeUseCase, updateCurrentTextSizeUseCase)
+        viewModel = SettingsViewModel(getCurrentTextSizeUseCase, updateCurrentTextSizeUseCase, getCurrentFontUseCase, updateCurrentFontUseCase)
 
         delay(1000)
 
@@ -41,7 +45,7 @@ class SettingsViewModelTest {
         coVerify { getCurrentTextSizeUseCase() }
 
         // Intent 전달
-        viewModel.processIntent(SettingsIntent.GetCurrentFont(testTextSize))
+        viewModel.processIntent(SettingsIntent.UpdateCurrentFont(testTextSize.toString()))
 
         // UseCase 함수가 호출되었는지 확인
         coVerify { updateCurrentTextSizeUseCase(testTextSize) }

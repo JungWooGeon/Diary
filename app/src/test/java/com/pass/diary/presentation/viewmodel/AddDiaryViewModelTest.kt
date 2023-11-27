@@ -4,6 +4,7 @@ import com.pass.diary.data.entity.Diary
 import com.pass.diary.domain.diary.AddDiaryUseCase
 import com.pass.diary.domain.diary.DeleteDiaryUseCase
 import com.pass.diary.domain.diary.UpdateDiaryUseCase
+import com.pass.diary.domain.settings.font.GetCurrentTextSizeUseCase
 import com.pass.diary.presentation.intent.AddDiaryIntent
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -19,10 +20,11 @@ class AddDiaryViewModelTest {
     private val addDiaryUseCase = mockk<AddDiaryUseCase>()
     private val updateDiaryUseCase = mockk<UpdateDiaryUseCase>()
     private val deleteDiaryUseCase = mockk<DeleteDiaryUseCase>()
+    private val getCurrentTextSizeUseCase = mockk<GetCurrentTextSizeUseCase>()
 
     @Before
     fun setup() {
-        viewModel = AddDiaryViewModel(addDiaryUseCase, updateDiaryUseCase, deleteDiaryUseCase)
+        viewModel = AddDiaryViewModel(addDiaryUseCase, updateDiaryUseCase, deleteDiaryUseCase, getCurrentTextSizeUseCase)
     }
 
     @Test
@@ -38,6 +40,7 @@ class AddDiaryViewModelTest {
             null,
             null,
             null,
+            "",
             "일기 내용"
         )
 
@@ -63,6 +66,7 @@ class AddDiaryViewModelTest {
             null,
             null,
             null,
+            "",
             "일기 내용 테스트 11/06"
         )
 
@@ -89,6 +93,7 @@ class AddDiaryViewModelTest {
             null,
             null,
             null,
+            "",
             "일기 내용 테스트 11/06"
         )
 

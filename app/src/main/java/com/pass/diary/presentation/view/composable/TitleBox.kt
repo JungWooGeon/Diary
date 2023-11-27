@@ -24,7 +24,9 @@ import com.pass.diary.presentation.ui.theme.BoxGray
 import com.pass.diary.presentation.ui.theme.TextColor
 
 @Composable
-fun RecordBox() {
+fun TitleBox(
+    titleText: String
+) {
     Surface(
         shape = RoundedCornerShape(10.dp),
         modifier = Modifier
@@ -41,13 +43,7 @@ fun RecordBox() {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Canvas(modifier = Modifier.size(18.dp)) {
-                    drawCircle(
-                        color = Color.Red,
-                        radius = size.minDimension / 2,
-                        center = Offset(size.width / 2, size.height / 2)
-                    )
-                }
+
 
                 Spacer(modifier = Modifier.size(20.dp))
 

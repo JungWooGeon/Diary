@@ -40,7 +40,6 @@ import com.pass.diary.presentation.view.composable.BottomEditor
 import com.pass.diary.presentation.view.composable.ContentBox
 import com.pass.diary.presentation.view.composable.CustomSpinnerDatePicker
 import com.pass.diary.presentation.view.composable.EmoticonBox
-import com.pass.diary.presentation.view.composable.RecordBox
 import com.pass.diary.presentation.viewmodel.AddDiaryViewModel
 import org.koin.androidx.compose.getViewModel
 import java.time.LocalDate
@@ -92,6 +91,9 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
         )
     }
 
+    // 일기 제목
+    var titleText by remember { mutableStateOf(diary?.title ?: "") }
+
     // 일기 내용
     var contentText by remember { mutableStateOf(diary?.content ?: "") }
 
@@ -113,6 +115,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     context = context,
                     date = selectedDateWithLocalDate,
                     onAddDiary = {
+                        // 추가
                         var emoticonId1: Int? = null
                         var emoticonId2: Int? = null
                         var emoticonId3: Int? = null
@@ -137,7 +140,8 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                             emoticonId3 = emoticonId3,
                             null,
                             null,
-                            content = contentText
+                            content = contentText,
+                            title = titleText
                         )
 
                         viewModel.processIntent(AddDiaryIntent.AddDiary(addDiary))
@@ -159,11 +163,22 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     }
                 )
 
-                RecordBox()
+                // 제목
+                ContentBox(
+                    contentText = titleText,
+                    hintText = "제목을 입력해주세요.",
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    textSize = textSizeState,
+                    onTextChanged = { changedText ->
+                        titleText = changedText
+                    }
+                )
 
+                // 본문
                 ContentBox(
                     contentText = contentText,
-                    modifier = Modifier.weight(1F),
+                    hintText = "오늘은 무슨 일이 있었나요?",
+                    modifier = Modifier.weight(1F).padding(20.dp),
                     textSize = textSizeState,
                     onTextChanged = { changedText ->
                         contentText = changedText
@@ -200,6 +215,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                             diary.audioUri = null
                             diary.imageUri = null
                             diary.content = contentText
+                            diary.title = titleText
 
                             viewModel.processIntent(AddDiaryIntent.UpdateDiary(diary))
                         }

@@ -19,5 +19,6 @@ data class Diary (
     @ColumnInfo(name = "emoticonId3") var emoticonId3: Int?,
     @ColumnInfo(name = "audioUri") var audioUri: String?,
     @ColumnInfo(name = "imageUri") var imageUri: String?,
+    @ColumnInfo(name = "title") var title: String,
     @ColumnInfo(name = "content") var content: String
 ) : Parcelable

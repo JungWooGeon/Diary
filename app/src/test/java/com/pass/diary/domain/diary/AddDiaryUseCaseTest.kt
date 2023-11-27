@@ -28,6 +28,7 @@ class AddDiaryUseCaseTest {
             null,
             null,
             null,
+            "",
             "일기 내용 테스트 10/24"
         )
 

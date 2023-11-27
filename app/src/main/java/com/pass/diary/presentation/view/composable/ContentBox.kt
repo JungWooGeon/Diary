@@ -23,6 +23,7 @@ import com.pass.diary.presentation.ui.theme.TextColor
 @Composable
 fun ContentBox(
     modifier: Modifier,
+    hintText: String,
     contentText: String,
     onTextChanged: (changedText: String) -> Unit,
     textSize: Float
@@ -31,7 +32,6 @@ fun ContentBox(
         shape = RoundedCornerShape(10.dp),
         modifier = modifier
             .fillMaxWidth()
-            .padding(20.dp)
     ) {
         Box(
             modifier = Modifier
@@ -51,7 +51,7 @@ fun ContentBox(
                     if (contentText.isEmpty()) {
                         // 입력된 텍스트가 없는 경우에만 플레이스홀더 보여주기
                         Text(
-                            text = "오늘은 무슨 일이 있었나요?",
+                            text = hintText,
                             style = LocalTextStyle.current.copy(color = TextColor, lineHeight = textSize.sp * 1.5),
                             fontSize = textSize.sp,
                             fontWeight = FontWeight.Normal,
