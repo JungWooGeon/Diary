@@ -66,13 +66,13 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
                         onClick = {
                             screenState = SettingState.DefaultSetting
                         },
-                        modifier = Modifier.weight(0.2f)
+                        modifier = Modifier.weight(0.2f).size(20.dp)
                     ) {
                         Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "이전 화면")
                     }
                     Spacer(modifier = Modifier.weight(0.8f))
                 } else {
-                    Spacer(Modifier.weight(1f))
+                    Spacer(Modifier.weight(1f).size(20.dp))
                 }
                 Text(
                     text = "설정",

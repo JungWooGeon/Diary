@@ -77,15 +77,15 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
     var isDatePickerOpen by remember { mutableStateOf(false) }
 
     // 현재 선택된 이모티콘 리스트
-    val emoticonIdList by remember {
+    var emoticonIdList by remember {
         mutableStateOf(
             if (diary == null) {
                 arrayListOf(Constants.EMOTICON_RAW_ID_LIST[0])
             } else {
                 arrayListOf<Int>().apply {
-                    diary.emoticonId1?.let { add(it) }
-                    diary.emoticonId2?.let { add(it) }
-                    diary.emoticonId3?.let { add(it) }
+                    (if (diary.emoticonId1 == null) -1 else diary.emoticonId1)?.let { add(it) }
+                    (if (diary.emoticonId2 == null) -1 else diary.emoticonId2)?.let { add(it) }
+                    (if (diary.emoticonId3 == null) -1 else diary.emoticonId3)?.let { add(it) }
                 }
             }
         )
@@ -120,13 +120,13 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                         var emoticonId2: Int? = null
                         var emoticonId3: Int? = null
 
-                        if (emoticonIdList.size >= 1)
+                        if (emoticonIdList[0] != -1)
                             emoticonId1 = emoticonIdList[0]
 
-                        if (emoticonIdList.size >= 2)
+                        if (emoticonIdList[1] != -1)
                             emoticonId2 = emoticonIdList[1]
 
-                        if (emoticonIdList.size >= 3)
+                        if (emoticonIdList[2] != -1)
                             emoticonId3 = emoticonIdList[2]
 
                         val addDiary = Diary(
@@ -160,6 +160,36 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     onDatePickerOpen = { isDialogAdd = true },
                     onEmoticonChange = {
                         isDialogEdit = it
+                    },
+                    onEmotionDelete = {
+                        if (emoticonIdList[1] == -1) {
+                            Toast.makeText(context, "1개까지 삭제할 수 있습니다.", Toast.LENGTH_SHORT).show()
+                        } else {
+                            val tmpList = arrayListOf<Int>()
+                            when (it) {
+                                0 -> {
+                                    tmpList.add(emoticonIdList[1])
+                                    tmpList.add(emoticonIdList[2])
+                                    tmpList.add(-1)
+                                }
+
+                                1 -> {
+                                    tmpList.add(emoticonIdList[0])
+                                    tmpList.add(emoticonIdList[2])
+                                    tmpList.add(-1)
+                                }
+
+                                2 -> {
+                                    tmpList.add(emoticonIdList[0])
+                                    tmpList.add(emoticonIdList[1])
+                                    tmpList.add(-1)
+                                }
+                            }
+
+                            emoticonIdList = tmpList
+
+                            Toast.makeText(context, "삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 )
 
@@ -178,7 +208,9 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                 ContentBox(
                     contentText = contentText,
                     hintText = "오늘은 무슨 일이 있었나요?",
-                    modifier = Modifier.weight(1F).padding(20.dp),
+                    modifier = Modifier
+                        .weight(1F)
+                        .padding(20.dp),
                     textSize = textSizeState,
                     onTextChanged = { changedText ->
                         contentText = changedText
@@ -195,13 +227,13 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                             var emoticonId2: Int? = null
                             var emoticonId3: Int? = null
 
-                            if (emoticonIdList.size >= 1)
+                            if (emoticonIdList[0] != -1)
                                 emoticonId1 = emoticonIdList[0]
 
-                            if (emoticonIdList.size >= 2)
+                            if (emoticonIdList[1] != -1)
                                 emoticonId2 = emoticonIdList[1]
 
-                            if (emoticonIdList.size >= 3)
+                            if (emoticonIdList[2] != -1)
                                 emoticonId3 = emoticonIdList[2]
 
                             diary.year = selectedDateWithLocalDate.year.toString()
@@ -257,8 +289,16 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     onSelectEmoticon = { emoticonId ->
                         if (isDialogEdit == Constants.NOT_EDIT_INDEX) {
                             // emoticon 추가
-                            if (emoticonIdList.size < 3) {
-                                emoticonIdList.add(emoticonId)
+                            var index = -1
+                            for (i in 0..<emoticonIdList.size) {
+                                if (emoticonIdList[i] == -1) {
+                                    index = i
+                                    break
+                                }
+                            }
+
+                            if (index != -1) {
+                                emoticonIdList[index] = emoticonId
                             } else {
                                 Toast.makeText(context, "3개까지 추가할 수 있습니다.", Toast.LENGTH_SHORT)
                                     .show()

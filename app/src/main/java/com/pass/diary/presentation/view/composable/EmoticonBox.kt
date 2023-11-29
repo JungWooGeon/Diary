@@ -2,6 +2,8 @@ package com.pass.diary.presentation.view.composable
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,20 +20,30 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
+import androidx.compose.ui.window.Popup
 import com.pass.diary.presentation.ui.theme.BoxGray
 
 @Composable
 fun EmoticonBox(
     emoticonIdList: ArrayList<Int>,
     onDatePickerOpen: () -> Unit,
-    onEmoticonChange: (index: Int) -> Unit
+    onEmoticonChange: (index: Int) -> Unit,
+    onEmotionDelete: (index: Int) -> Unit
 ) {
     Surface(
         shape = RoundedCornerShape(10.dp),
@@ -65,8 +77,16 @@ fun EmoticonBox(
 
                 LazyRow {
                     itemsIndexed(emoticonIdList) { index, emoticonId ->
-                        EmoticonItem(emoticonId) {
-                            onEmoticonChange(index)
+                        if (emoticonId != -1) {
+                            EmoticonItem(
+                                emoticonId = emoticonId,
+                                onEmoticonChange = {
+                                    onEmoticonChange(index)
+                                },
+                                onEmotionDelete = {
+                                    onEmotionDelete(index)
+                                }
+                            )
                         }
                     }
                 }
@@ -80,13 +100,47 @@ fun EmoticonBox(
 @Composable
 fun EmoticonItem(
     emoticonId: Int,
-    onEmoticonChange: () -> Unit
+    onEmoticonChange: () -> Unit,
+    onEmotionDelete: () -> Unit
 ) {
-    IconButton(onClick = { onEmoticonChange() }) {
-        Image(
-            painter = painterResource(id = emoticonId),
-            contentDescription = "이모티콘",
-            modifier = Modifier.size(50.dp)
-        )
+    var touchPosition by remember { mutableStateOf(IntOffset.Zero) }
+    var showPopup by remember { mutableStateOf(false) }
+
+    Image(
+        painter = painterResource(id = emoticonId),
+        contentDescription = "이모티콘",
+        modifier = Modifier
+            .size(70.dp)
+            .padding(horizontal = 10.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        onEmoticonChange()
+                    },
+                    onLongPress = { offset ->
+                        touchPosition = offset.round()
+                        showPopup = true
+                    }
+                )
+            }
+    )
+
+    if (showPopup) {
+        Popup(
+            alignment = Alignment.TopStart,
+            offset = IntOffset(touchPosition.x, touchPosition.y),
+            onDismissRequest = { showPopup = false }
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(Color.White)
+                    .padding(10.dp)
+            ) {
+                Text("삭제", modifier = Modifier.clickable {
+                    showPopup = false
+                    onEmotionDelete()
+                })
+            }
+        }
     }
 }
