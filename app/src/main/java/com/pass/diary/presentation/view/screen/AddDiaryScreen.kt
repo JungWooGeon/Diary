@@ -40,6 +40,7 @@ import com.pass.diary.presentation.view.composable.BottomEditor
 import com.pass.diary.presentation.view.composable.ContentBox
 import com.pass.diary.presentation.view.composable.CustomSpinnerDatePicker
 import com.pass.diary.presentation.view.composable.EmoticonBox
+import com.pass.diary.presentation.view.composable.RecordDialog
 import com.pass.diary.presentation.viewmodel.AddDiaryViewModel
 import org.koin.androidx.compose.getViewModel
 import java.time.LocalDate
@@ -80,7 +81,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
     var emoticonIdList by remember {
         mutableStateOf(
             if (diary == null) {
-                arrayListOf(Constants.EMOTICON_RAW_ID_LIST[0])
+                arrayListOf(Constants.EMOTICON_RAW_ID_LIST[0], -1, -1)
             } else {
                 arrayListOf<Int>().apply {
                     (if (diary.emoticonId1 == null) -1 else diary.emoticonId1)?.let { add(it) }
@@ -100,6 +101,8 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
     // 이모티콘 다이얼로그 추가 / 수정 상태
     var isDialogAdd by remember { mutableStateOf(false) }
     var isDialogEdit by remember { mutableIntStateOf(Constants.NOT_EDIT_INDEX) }
+    // 녹음 다이얼로그
+    var isRecordDialogState by remember { mutableStateOf(false) }
 
     when (addDiaryState) {
         is AddDiaryState.Standby -> {
@@ -267,7 +270,9 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     )
                 }
 
-                BottomEditor()
+                BottomEditor {
+                    isRecordDialogState = true
+                }
             }
 
             if (isDialogAdd || isDialogEdit != Constants.NOT_EDIT_INDEX) {
@@ -330,6 +335,20 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                             selectedDateWithLocalDate = tmpDate
                         }
                     }
+                }
+            }
+
+            // Record Dialog open / hide
+            if (isRecordDialogState) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
+                        .clickable {
+                            isRecordDialogState = false
+                        }  // 배경을 클릭하면 다이얼로그를 닫음
+                ) {
+                    RecordDialog(onDismissRequest = { isRecordDialogState = false })
                 }
             }
         }

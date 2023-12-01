@@ -19,7 +19,10 @@ import com.pass.diary.R
 import com.pass.diary.presentation.ui.theme.LineGray
 
 @Composable
-fun BottomEditor() {
+fun BottomEditor(
+    onOpenRecordDialog: () -> Unit
+) {
+
     Divider(
         color = LineGray,
         thickness = 1.dp,
@@ -45,12 +48,14 @@ fun BottomEditor() {
             )
         }
 
-        Canvas(modifier = Modifier.size(18.dp)) {
-            drawCircle(
-                color = Color.Red,
-                radius = size.minDimension / 2,
-                center = Offset(size.width / 2, size.height / 2)
-            )
+        IconButton(onClick = { onOpenRecordDialog() }) {
+            Canvas(modifier = Modifier.size(18.dp)) {
+                drawCircle(
+                    color = Color.Red,
+                    radius = size.minDimension / 2,
+                    center = Offset(size.width / 2, size.height / 2)
+                )
+            }
         }
     }
 }

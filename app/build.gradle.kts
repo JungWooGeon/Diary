@@ -107,4 +107,10 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("androidx.datastore:datastore-preferences-core:1.0.0")
     implementation("androidx.datastore:datastore-core:1.0.0")
+
+    // lottie
+    implementation("com.airbnb.android:lottie-compose:6.2.0")
+
+    // compose permission
+    implementation("com.google.accompanist:accompanist-permissions:0.33.2-alpha")
 }
