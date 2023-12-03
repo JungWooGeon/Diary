@@ -8,6 +8,7 @@ import android.provider.Settings
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,7 +49,10 @@ import com.pass.diary.presentation.ui.theme.BoxGray
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun RecordDialog(onDismissRequest: () -> Unit) {
+fun RecordDialog(
+    onDismissRequest: () -> Unit,
+    onCompleteRecording: (text: String) -> Unit
+) {
     val context = LocalContext.current
     val recordPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
@@ -70,35 +74,67 @@ fun RecordDialog(onDismissRequest: () -> Unit) {
     )
     intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR")
 
-    val listener = object: RecognitionListener {
-        override fun onReadyForSpeech(params: Bundle?) { }
+    val listener = object : RecognitionListener {
+        override fun onReadyForSpeech(params: Bundle?) {}
 
-        override fun onBeginningOfSpeech() { }
+        override fun onBeginningOfSpeech() {}
 
-        override fun onRmsChanged(rmsdB: Float) { }
+        override fun onRmsChanged(rmsdB: Float) {}
 
-        override fun onBufferReceived(buffer: ByteArray?) { }
+        override fun onBufferReceived(buffer: ByteArray?) {}
 
-        override fun onEndOfSpeech() { }
+        override fun onEndOfSpeech() {}
 
         override fun onError(error: Int) {
+            isPlaying = false
             val message = when (error) {
-                SpeechRecognizer.ERROR_AUDIO -> { "오디오 에러" }
-                SpeechRecognizer.ERROR_CLIENT -> { "클라이언트 에러" }
-                SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> { "퍼미션 없음" }
-                SpeechRecognizer.ERROR_NETWORK -> { "네트워크 에러" }
-                SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> { "네트워크 타임아웃" }
-                SpeechRecognizer.ERROR_NO_MATCH -> { "찾을 수 없음" }
-                SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> { "RECOGNIZER가 바쁨" }
-                SpeechRecognizer.ERROR_SERVER -> { "서버가 이상함" }
-                SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> { "말하는 시간초과" }
-                else -> { "알 수 없는 오류" }
+                SpeechRecognizer.ERROR_AUDIO -> {
+                    "오디오 에러"
+                }
+
+                SpeechRecognizer.ERROR_CLIENT -> {
+                    "클라이언트 에러"
+                }
+
+                SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> {
+                    "퍼미션 없음"
+                }
+
+                SpeechRecognizer.ERROR_NETWORK -> {
+                    "네트워크 에러"
+                }
+
+                SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> {
+                    "네트워크 타임아웃"
+                }
+
+                SpeechRecognizer.ERROR_NO_MATCH -> {
+                    "찾을 수 없음"
+                }
+
+                SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> {
+                    "RECOGNIZER가 바쁨"
+                }
+
+                SpeechRecognizer.ERROR_SERVER -> {
+                    "서버가 이상함"
+                }
+
+                SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
+                    "말하는 시간초과"
+                }
+
+                else -> {
+                    "알 수 없는 오류"
+                }
             }
-            Toast.makeText(context, "오류가 발생하였습니다. : $message", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "녹음을 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+            Log.d("녹음 오류", message)
         }
 
         override fun onResults(results: Bundle) {
-            val matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) //인식 결과를 담은 ArrayList
+            val matches =
+                results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) //인식 결과를 담은 ArrayList
 
             var newText = ""
             if (matches != null) {
@@ -110,13 +146,12 @@ fun RecordDialog(onDismissRequest: () -> Unit) {
             isResult = newText
 
             // 사용자가 중지할 때까지 계속 녹음해야 하므로 녹음 재개
-            speechRecognizer.startListening(intent)
-
+            // speechRecognizer.startListening(intent)
         }
 
-        override fun onPartialResults(partialResults: Bundle?) { }
+        override fun onPartialResults(partialResults: Bundle?) {}
 
-        override fun onEvent(eventType: Int, params: Bundle?) { }
+        override fun onEvent(eventType: Int, params: Bundle?) {}
     }
 
 
@@ -129,35 +164,33 @@ fun RecordDialog(onDismissRequest: () -> Unit) {
                     .padding(20.dp)
             ) {
                 if (isResult != "") {
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth()
+                    // 녹음 멈추기
+                    speechRecognizer.stopListening()
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .background(BoxGray)
-                                .padding(25.dp)
-                                .fillMaxWidth()
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column(
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(text = isResult)
-                                Button(
-                                    onClick = {
-
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 20.dp),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Text(text = "본문에 반영하기")
-                                }
-                            }
+                            Box(
+                                modifier = Modifier
+                                    .background(BoxGray)
+                                    .padding(25.dp)
+                                    .fillMaxWidth()
+                            ) { Text(text = isResult) }
                         }
+
+                        Button(
+                            onClick = { onCompleteRecording(isResult) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp)
+                                .padding(top = 10.dp),
+                            shape = RoundedCornerShape(10.dp)
+                        ) { Text(text = "본문에 반영하기") }
                     }
                 } else {
                     Column(
@@ -167,10 +200,15 @@ fun RecordDialog(onDismissRequest: () -> Unit) {
                         if (!recordPermissionState.status.isGranted) {
                             if (recordPermissionState.status.shouldShowRationale) {
                                 // 사용자가 권한 요청을 거부했지만 근거를 제시할 수 있는 경우, 앱에 이 권한이 필요한 이유를 친절하게 설명합니다.
-                                Toast.makeText(context, "녹음 기능을 사용하려면 마이크 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
-                                val settingIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).setData(
-                                    Uri.parse("package:${context.packageName}")
-                                )
+                                Toast.makeText(
+                                    context,
+                                    "녹음 기능을 사용하려면 마이크 권한이 필요합니다.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                val settingIntent =
+                                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).setData(
+                                        Uri.parse("package:${context.packageName}")
+                                    )
                                 context.startActivity(settingIntent)
                                 onDismissRequest()
                             } else {

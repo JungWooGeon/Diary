@@ -348,7 +348,13 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                             isRecordDialogState = false
                         }  // 배경을 클릭하면 다이얼로그를 닫음
                 ) {
-                    RecordDialog(onDismissRequest = { isRecordDialogState = false })
+                    RecordDialog(
+                        onDismissRequest = { isRecordDialogState = false },
+                        onCompleteRecording = {
+                            isRecordDialogState = false
+                            contentText += "\n" + it + "\n"
+                        }
+                    )
                 }
             }
         }
