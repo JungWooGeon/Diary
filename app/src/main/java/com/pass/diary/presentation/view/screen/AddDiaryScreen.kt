@@ -3,7 +3,6 @@ package com.pass.diary.presentation.view.screen
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,9 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -44,6 +42,9 @@ import com.pass.diary.presentation.view.composable.CustomSpinnerDatePicker
 import com.pass.diary.presentation.view.composable.EmoticonBox
 import com.pass.diary.presentation.view.composable.RecordDialog
 import com.pass.diary.presentation.viewmodel.AddDiaryViewModel
+import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState
+import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonType
+import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSJetPackComposeProgressButton
 import org.koin.androidx.compose.getViewModel
 import java.time.LocalDate
 
@@ -77,6 +78,8 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
         )
     }
 
+    var submitButtonState by remember { mutableStateOf(SSButtonState.IDLE) }
+
     // DatePicker show / hide 상태
     var isDatePickerOpen by remember { mutableStateOf(false) }
 
@@ -98,9 +101,12 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
     // 일기 제목
     var titleText by remember { mutableStateOf(diary?.title ?: "") }
     LaunchedEffect(summaryState) {
-        Log.d("요약 성공", summaryState)
-        // 요약 시 제목 변경
-        titleText = summaryState
+        // 요약 시 제목 변경 (실패 시 토스트 메시지 출력)
+        submitButtonState = if (summaryState == "ERROR") { SSButtonState.FAILIURE } else if (summaryState != "") { SSButtonState.SUCCESS } else { SSButtonState.IDLE }
+        if (submitButtonState == SSButtonState.FAILIURE) Toast.makeText(context, "오류가 발생하였습니다.", Toast.LENGTH_SHORT).show()
+
+        // 요약 제목 반영
+        if (summaryState != "") titleText = summaryState
     }
 
     // 일기 내용
@@ -228,54 +234,70 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     }
                 )
 
-                Button(
-                    onClick = {
-                        if (diary == null) {
-                            // 요약하기
-                            viewModel.processIntent(AddDiaryIntent.SummaryContent(titleText, contentText))
-                        } else {
-                            // 수정하기
-                            var emoticonId1: Int? = null
-                            var emoticonId2: Int? = null
-                            var emoticonId3: Int? = null
-
-                            if (emoticonIdList[0] != -1)
-                                emoticonId1 = emoticonIdList[0]
-
-                            if (emoticonIdList[1] != -1)
-                                emoticonId2 = emoticonIdList[1]
-
-                            if (emoticonIdList[2] != -1)
-                                emoticonId3 = emoticonIdList[2]
-
-                            diary.year = selectedDateWithLocalDate.year.toString()
-                            diary.month = selectedDateWithLocalDate.monthValue.toString()
-                            diary.day = selectedDateWithLocalDate.dayOfMonth.toString()
-                            diary.dayOfWeek =
-                                Constants.DAY_OF_WEEK_TO_KOREAN[selectedDateWithLocalDate.dayOfWeek.toString()]!!
-                            diary.emoticonId1 = emoticonId1
-                            diary.emoticonId2 = emoticonId2
-                            diary.emoticonId3 = emoticonId3
-                            diary.audioUri = null
-                            diary.imageUri = null
-                            diary.content = contentText
-                            diary.title = titleText
-
-                            viewModel.processIntent(AddDiaryIntent.UpdateDiary(diary))
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp),
-                    shape = RoundedCornerShape(10.dp)
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = if (diary == null) {
-                            "내용 요약하기"
-                        } else {
-                            "수정 완료"
-                        }
+                    SSJetPackComposeProgressButton(
+                        type = SSButtonType.ZOOM_IN_OUT_CIRCLE,
+                        width = LocalConfiguration.current.screenWidthDp.dp,
+                        height = 50.dp,
+                        onClick = {
+                            if (submitButtonState != SSButtonState.IDLE && submitButtonState != SSButtonState.SUCCESS) {
+                                // 요약 중에는 버튼 클릭 방지
+                                return@SSJetPackComposeProgressButton
+                            }
+
+                            if (contentText.length < 20) {
+                                // 내용이 너무 적을 경우 예외 처리
+                                Toast.makeText(context, "최소 20자이상 작성해주세요.", Toast.LENGTH_SHORT)
+                                    .show()
+                                return@SSJetPackComposeProgressButton
+                            }
+
+                            submitButtonState = SSButtonState.LOADING
+
+                            if (diary == null) {
+                                // 요약하기
+                                titleText = ""
+                                viewModel.processIntent(AddDiaryIntent.SummaryContent(titleText, contentText))
+                            } else {
+                                // 수정하기
+                                var emoticonId1: Int? = null
+                                var emoticonId2: Int? = null
+                                var emoticonId3: Int? = null
+
+                                if (emoticonIdList[0] != -1)
+                                    emoticonId1 = emoticonIdList[0]
+
+                                if (emoticonIdList[1] != -1)
+                                    emoticonId2 = emoticonIdList[1]
+
+                                if (emoticonIdList[2] != -1)
+                                    emoticonId3 = emoticonIdList[2]
+
+                                diary.year = selectedDateWithLocalDate.year.toString()
+                                diary.month = selectedDateWithLocalDate.monthValue.toString()
+                                diary.day = selectedDateWithLocalDate.dayOfMonth.toString()
+                                diary.dayOfWeek =
+                                    Constants.DAY_OF_WEEK_TO_KOREAN[selectedDateWithLocalDate.dayOfWeek.toString()]!!
+                                diary.emoticonId1 = emoticonId1
+                                diary.emoticonId2 = emoticonId2
+                                diary.emoticonId3 = emoticonId3
+                                diary.audioUri = null
+                                diary.imageUri = null
+                                diary.content = contentText
+                                diary.title = titleText
+
+                                viewModel.processIntent(AddDiaryIntent.UpdateDiary(diary))
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black, contentColor = Color.White),
+                        assetColor = Color.White,
+                        buttonState = submitButtonState,
+                        text = if (diary == null) { "내용 요약하기" } else { "수정 완료" }
                     )
                 }
 

@@ -92,16 +92,16 @@ class AddDiaryViewModel(
             }
 
             is AddDiaryIntent.SummaryContent -> {
+                _summaryState.value = ""
                 viewModelScope.launch(Dispatchers.Main) {
                     try {
                         withContext(Dispatchers.IO) {
                             summaryDiaryUseCase(intent.content)
                         }.collect { summary ->
-                            Log.d("viewmodel", summary)
-                            _summaryState.value = summary
+                            _summaryState.value = if (summary == "") { "ERROR" } else { summary }
                         }
                     } catch (e: Exception) {
-                        Log.e("viewmodel", "Error in summaryDiaryUseCase", e)
+                        _summaryState.value = "ERROR"
                     }
                 }
             }
