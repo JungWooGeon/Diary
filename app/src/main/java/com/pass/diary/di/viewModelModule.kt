@@ -13,7 +13,7 @@ val viewModelModule = module {
     }
 
     viewModel {
-        AddDiaryViewModel(get(), get(), get(), get())
+        AddDiaryViewModel(get(), get(), get(), get(), get())
     }
 
     viewModel {

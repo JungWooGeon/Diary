@@ -3,6 +3,7 @@ package com.pass.diary.presentation.view.screen
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,6 +19,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -52,6 +54,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
 
     val addDiaryState by viewModel.state.collectAsState()
     val textSizeState by viewModel.textSizeState.collectAsState()
+    val summaryState by viewModel.summaryState.collectAsState()
 
     // DatePicker 에서 사용될 selected date
     val dateArray = if (diary != null) {
@@ -94,6 +97,11 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
 
     // 일기 제목
     var titleText by remember { mutableStateOf(diary?.title ?: "") }
+    LaunchedEffect(summaryState) {
+        Log.d("요약 성공", summaryState)
+        // 요약 시 제목 변경
+        titleText = summaryState
+    }
 
     // 일기 내용
     var contentText by remember { mutableStateOf(diary?.content ?: "") }
@@ -223,7 +231,8 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                 Button(
                     onClick = {
                         if (diary == null) {
-                            //@TODO 요약
+                            // 요약하기
+                            viewModel.processIntent(AddDiaryIntent.SummaryContent(titleText, contentText))
                         } else {
                             // 수정하기
                             var emoticonId1: Int? = null
@@ -352,7 +361,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                         onDismissRequest = { isRecordDialogState = false },
                         onCompleteRecording = {
                             isRecordDialogState = false
-                            contentText += "\n" + it + "\n"
+                            contentText += "\n" + it
                         }
                     )
                 }

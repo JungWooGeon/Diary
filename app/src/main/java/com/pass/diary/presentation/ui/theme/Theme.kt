@@ -116,8 +116,8 @@ fun DiaryTheme(
             bodyLarge = TextStyle(
                 fontFamily = fontFamily,
                 fontWeight = FontWeight.Normal,
-                fontSize = 16.sp,
-                lineHeight = 24.sp,
+                fontSize = 18.sp,
+                lineHeight = 18.sp,
                 letterSpacing = 0.5.sp
             )
         ),

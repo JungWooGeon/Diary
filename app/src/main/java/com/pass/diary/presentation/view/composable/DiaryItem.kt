@@ -55,14 +55,14 @@ fun DiaryItem(
             Text(
                 text = diaryDate,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp
+                fontSize = 16.sp
             )
 
             Spacer(modifier = Modifier.size(10.dp))
 
             Text(
                 text = diary.title,
-                fontSize = 10.sp
+                fontSize = 14.sp
             )
         }
     }

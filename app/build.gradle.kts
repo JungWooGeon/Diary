@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.konan.properties.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -20,6 +22,22 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val localProperties = Properties().apply {
+            load(File("local.properties").inputStream())
+        }
+
+        val naverClientId: String? = localProperties["naver_client_id"] as String?
+        val naverClientPw: String? = localProperties["naver_client_pw"] as String?
+
+        if (naverClientId != null) {
+            buildConfigField("String", "naver_client_id", naverClientId)
+        }
+
+        if (naverClientPw != null) {
+            buildConfigField("String", "naver_client_pw", naverClientPw)
+        }
+
     }
     buildTypes {
         release {
@@ -39,6 +57,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
@@ -113,4 +132,8 @@ dependencies {
 
     // compose permission
     implementation("com.google.accompanist:accompanist-permissions:0.33.2-alpha")
+
+    // retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }

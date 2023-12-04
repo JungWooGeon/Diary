@@ -3,6 +3,7 @@ package com.pass.diary.di
 import com.pass.diary.domain.diary.AddDiaryUseCase
 import com.pass.diary.domain.diary.DeleteDiaryUseCase
 import com.pass.diary.domain.diary.GetDiariesByMonthUseCase
+import com.pass.diary.domain.diary.SummaryDiaryUseCase
 import com.pass.diary.domain.diary.UpdateDiaryUseCase
 import com.pass.diary.domain.settings.font.GetCurrentFontUseCase
 import com.pass.diary.domain.settings.font.GetCurrentTextSizeUseCase
@@ -15,6 +16,7 @@ val useCaseModule = module {
     factory { AddDiaryUseCase(get()) }
     factory { UpdateDiaryUseCase(get()) }
     factory { DeleteDiaryUseCase(get()) }
+    factory { SummaryDiaryUseCase(get()) }
 
     factory { GetCurrentTextSizeUseCase(get()) }
     factory { UpdateCurrentTextSizeUseCase(get()) }

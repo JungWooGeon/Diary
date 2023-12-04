@@ -1,9 +1,11 @@
 package com.pass.diary.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pass.diary.domain.diary.AddDiaryUseCase
 import com.pass.diary.domain.diary.DeleteDiaryUseCase
+import com.pass.diary.domain.diary.SummaryDiaryUseCase
 import com.pass.diary.domain.diary.UpdateDiaryUseCase
 import com.pass.diary.domain.settings.font.GetCurrentTextSizeUseCase
 import com.pass.diary.presentation.intent.AddDiaryIntent
@@ -13,13 +15,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.lang.Exception
 
 class AddDiaryViewModel(
     private val addDiaryUseCase: AddDiaryUseCase,
     private val updateDiaryUseCase: UpdateDiaryUseCase,
     private val deleteDiaryUseCase: DeleteDiaryUseCase,
-    private val getCurrentTextSizeUseCase: GetCurrentTextSizeUseCase
+    private val getCurrentTextSizeUseCase: GetCurrentTextSizeUseCase,
+    private val summaryDiaryUseCase: SummaryDiaryUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<AddDiaryState>(AddDiaryState.Standby)
@@ -28,10 +30,19 @@ class AddDiaryViewModel(
     private val _testSizeState = MutableStateFlow(13f)
     val textSizeState: StateFlow<Float> = _testSizeState
 
+    private val _summaryState = MutableStateFlow("")
+    val summaryState: StateFlow<String> = _summaryState
+
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            getCurrentTextSizeUseCase().collect { size ->
-                _testSizeState.value = size
+        viewModelScope.launch(Dispatchers.Main) {
+            try {
+                withContext(Dispatchers.IO) {
+                    getCurrentTextSizeUseCase()
+                }.collect { size ->
+                    _testSizeState.value = size
+                }
+            } catch (e: Exception) {
+
             }
         }
     }
@@ -76,6 +87,21 @@ class AddDiaryViewModel(
                         }
                     } catch (e: Exception) {
                         _state.value = AddDiaryState.Error(e)
+                    }
+                }
+            }
+
+            is AddDiaryIntent.SummaryContent -> {
+                viewModelScope.launch(Dispatchers.Main) {
+                    try {
+                        withContext(Dispatchers.IO) {
+                            summaryDiaryUseCase(intent.content)
+                        }.collect { summary ->
+                            Log.d("viewmodel", summary)
+                            _summaryState.value = summary
+                        }
+                    } catch (e: Exception) {
+                        Log.e("viewmodel", "Error in summaryDiaryUseCase", e)
                     }
                 }
             }

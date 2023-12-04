@@ -45,7 +45,7 @@ fun SettingFont(
         Text(
             text = "폰트",
             modifier = Modifier.padding(top = 20.dp, start = 20.dp),
-            fontSize = 16.sp
+            fontSize = 18.sp
         )
 
         fontOptions.forEach { font ->
@@ -73,7 +73,7 @@ fun SettingFont(
                 FONT_TO_KOREAN[font]?.let {
                     Text(
                         text = it,
-                        fontSize = 13.sp,
+                        fontSize = 16.sp,
                         modifier = Modifier.padding(start = 16.dp)
                     )
                 }
@@ -85,7 +85,7 @@ fun SettingFont(
         Text(
             text = "일기 내용 텍스트 크기",
             modifier = Modifier.padding(top = 8.dp, start = 20.dp),
-            fontSize = 16.sp
+            fontSize = 18.sp
         )
 
         Slider(
