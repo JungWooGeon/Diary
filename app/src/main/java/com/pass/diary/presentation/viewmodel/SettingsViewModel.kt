@@ -1,7 +1,14 @@
 package com.pass.diary.presentation.viewmodel
 
+import androidx.activity.result.ActivityResult
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.pass.diary.domain.settings.font.GetCurrentFontUseCase
 import com.pass.diary.domain.settings.font.GetCurrentTextSizeUseCase
 import com.pass.diary.domain.settings.font.UpdateCurrentFontUseCase
@@ -25,6 +32,9 @@ class SettingsViewModel(
 
     private val _textFont = MutableStateFlow("default")
     val textFont: StateFlow<String> = _textFont
+
+    private val _isFailState = mutableStateOf(false)
+    val isFailState: State<Boolean> = _isFailState
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -53,6 +63,23 @@ class SettingsViewModel(
                     updateCurrentFontUseCase(intent.font)
                 }
             }
+        }
+    }
+
+    fun login(
+        activityResult: ActivityResult,
+        onSuccess: () -> Unit
+    ) {
+        try {
+            val account = GoogleSignIn.getSignedInAccountFromIntent(activityResult.data)
+                .getResult(ApiException::class.java)
+            val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+            FirebaseAuth.getInstance().signInWithCredential(credential)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) onSuccess()
+                }
+        } catch (e: Exception) {
+            _isFailState.value = true
         }
     }
 }

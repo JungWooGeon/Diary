@@ -1,5 +1,8 @@
 package com.pass.diary.presentation.view.screen
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,9 +28,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.pass.diary.R
 import com.pass.diary.presentation.intent.SettingsIntent
 import com.pass.diary.presentation.state.SettingState
 import com.pass.diary.presentation.ui.theme.LineGray
@@ -43,6 +51,16 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
 
     val textSize by viewModel.textSize.collectAsState()
     val textFont by viewModel.textFont.collectAsState()
+
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        viewModel.login(activityResult = it) {
+            Toast.makeText(context, "로그인이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
+    val token = stringResource(id = R.string.default_web_client_id)
 
     Box(
         modifier = Modifier
@@ -107,7 +125,16 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
                 }
 
                 SettingState.BackupSetting -> {
-                    SettingBackup()
+                    SettingBackup {
+                        val googleSignInOptions = GoogleSignInOptions
+                            .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                            .requestIdToken(token)
+                            .requestEmail()
+                            .build()
+
+                        val googleSignInClient = GoogleSignIn.getClient(context, googleSignInOptions)
+                        launcher.launch(googleSignInClient.signInIntent)
+                    }
                 }
 
                 SettingState.LicenseSetting -> {

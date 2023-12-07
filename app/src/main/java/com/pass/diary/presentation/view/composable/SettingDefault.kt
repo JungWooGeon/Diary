@@ -55,9 +55,7 @@ fun SettingDefault(
     SettingRow(
         iconResource = R.drawable.ic_theme,
         iconDescription = "백업 / 복원",
-        onClick = {
-            //@TODO 백업 / 복원 설정 화면 전환
-        }
+        onClick = { onClick(SettingState.BackupSetting) }
     )
 
     Divider(
