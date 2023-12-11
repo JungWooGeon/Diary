@@ -53,11 +53,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
     val context = LocalContext.current
 
     val loginState by viewModel.loginState.collectAsState()
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
         viewModel.login(
-            activityResult = it,
+            activityResultData = it.data,
             onSuccess = {
                 Toast.makeText(context, "로그인이 완료되었습니다.", Toast.LENGTH_SHORT).show()
             },
