@@ -1,11 +1,11 @@
 package com.pass.diary.presentation.view.screen
 
+import android.app.Activity
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,15 +27,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.pass.diary.R
+import com.pass.diary.BuildConfig
 import com.pass.diary.presentation.intent.SettingsIntent
 import com.pass.diary.presentation.state.SettingState
 import com.pass.diary.presentation.ui.theme.LineGray
@@ -53,113 +51,132 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
     val textFont by viewModel.textFont.collectAsState()
 
     val context = LocalContext.current
+
+    val loginState by viewModel.loginState.collectAsState()
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
-        viewModel.login(activityResult = it) {
-            Toast.makeText(context, "로그인이 완료되었습니다.", Toast.LENGTH_SHORT).show()
-        }
+        viewModel.login(
+            activityResult = it,
+            onSuccess = {
+                Toast.makeText(context, "로그인이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+            },
+            onFail = {
+                Toast.makeText(context, "로그인에 실패하였습니다.", Toast.LENGTH_SHORT).show()
+            }
+        )
     }
-    val token = stringResource(id = R.string.default_web_client_id)
 
-    Box(
+    val token = BuildConfig.default_web_client_id
+
+    // 로그인 화면 요청
+    val googleSignInOptions = GoogleSignInOptions
+        .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(token)
+        .requestEmail()
+        .build()
+
+    val googleSignInClient = GoogleSignIn.getClient(context, googleSignInOptions)
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .padding(10.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(10.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row (
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ){
-                if (screenState != SettingState.DefaultSetting) {
-                    IconButton(
-                        onClick = {
-                            screenState = SettingState.DefaultSetting
-                        },
-                        modifier = Modifier.weight(0.2f).size(20.dp)
-                    ) {
-                        Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "이전 화면")
-                    }
-                    Spacer(modifier = Modifier.weight(0.8f))
-                } else {
-                    Spacer(Modifier.weight(1f).size(20.dp))
+            if (screenState != SettingState.DefaultSetting) {
+                IconButton(
+                    onClick = {
+                        screenState = SettingState.DefaultSetting
+                    },
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .size(20.dp)
+                ) {
+                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "이전 화면")
                 }
-                Text(
-                    text = "설정",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 20.sp
-                )
-                Spacer(Modifier.weight(1f))
+                Spacer(modifier = Modifier.weight(0.8f))
+            } else {
+                Spacer(
+                    Modifier
+                        .weight(1f)
+                        .size(20.dp))
+            }
+            Text(
+                text = "설정",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 20.sp
+            )
+            Spacer(Modifier.weight(1f))
+        }
+
+        Divider(
+            color = LineGray,
+            thickness = 1.dp,
+            modifier = Modifier.padding(top = 10.dp)
+        )
+
+        when (screenState) {
+            SettingState.DefaultSetting -> {
+                SettingDefault { screenState = it }
             }
 
-            Divider(
-                color = LineGray,
-                thickness = 1.dp,
-                modifier = Modifier.padding(top = 10.dp)
-            )
-
-            when (screenState) {
-                SettingState.DefaultSetting -> {
-                    SettingDefault { screenState = it }
-                }
-
-                SettingState.FontSetting -> {
-                    SettingFont(
-                        textSize = textSize,
-                        textFont = textFont,
-                        onChangeFinishTextSize = {
-                            viewModel.processIntent(SettingsIntent.UpdateCurrentTextSize(it))
-                        },
-                        onChangeFont = {
-                            viewModel.processIntent(SettingsIntent.UpdateCurrentFont(it))
-                        }
-                    )
-                }
-
-                SettingState.BackupSetting -> {
-                    SettingBackup {
-                        val googleSignInOptions = GoogleSignInOptions
-                            .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                            .requestIdToken(token)
-                            .requestEmail()
-                            .build()
-
-                        val googleSignInClient = GoogleSignIn.getClient(context, googleSignInOptions)
-                        launcher.launch(googleSignInClient.signInIntent)
+            SettingState.FontSetting -> {
+                SettingFont(
+                    textSize = textSize,
+                    textFont = textFont,
+                    onChangeFinishTextSize = {
+                        viewModel.processIntent(SettingsIntent.UpdateCurrentTextSize(it))
+                    },
+                    onChangeFont = {
+                        viewModel.processIntent(SettingsIntent.UpdateCurrentFont(it))
                     }
-                }
+                )
+            }
 
-                SettingState.LicenseSetting -> {
+            SettingState.BackupSetting -> {
+                SettingBackup(
+                    loginState = loginState,
+                    signIn = {
+                        launcher.launch(googleSignInClient.signInIntent)
+                    },
+                    signOut = {
+                        viewModel.logout()
+                        googleSignInClient.signOut().addOnCompleteListener {
+                            Toast.makeText(context, "로그아웃이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
 
-                }
+            SettingState.LicenseSetting -> {
 
-                SettingState.NotificationSetting -> {
+            }
 
-                }
+            SettingState.NotificationSetting -> {
 
-                SettingState.PrivacyPolicySetting -> {
+            }
 
-                }
+            SettingState.PrivacyPolicySetting -> {
 
-                SettingState.ScreenLockSetting -> {
+            }
 
-                }
+            SettingState.ScreenLockSetting -> {
 
-                SettingState.StartDateSetting -> {
+            }
 
-                }
+            SettingState.StartDateSetting -> {
 
-                SettingState.ThemeSetting -> {
+            }
 
-                }
+            SettingState.ThemeSetting -> {
+
             }
         }
     }

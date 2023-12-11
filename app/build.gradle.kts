@@ -30,6 +30,7 @@ android {
 
         val naverClientId: String? = localProperties["naver_client_id"] as String?
         val naverClientPw: String? = localProperties["naver_client_pw"] as String?
+        val default_web_client_id: String? = localProperties["default_web_client_id"] as String?
 
         if (naverClientId != null) {
             buildConfigField("String", "naver_client_id", naverClientId)
@@ -39,6 +40,9 @@ android {
             buildConfigField("String", "naver_client_pw", naverClientPw)
         }
 
+        if (default_web_client_id != null) {
+            buildConfigField("String", "default_web_client_id", default_web_client_id)
+        }
     }
     buildTypes {
         release {

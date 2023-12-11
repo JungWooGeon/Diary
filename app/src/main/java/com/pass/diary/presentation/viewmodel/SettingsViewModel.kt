@@ -1,5 +1,6 @@
 package com.pass.diary.presentation.viewmodel
 
+import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -33,8 +34,8 @@ class SettingsViewModel(
     private val _textFont = MutableStateFlow("default")
     val textFont: StateFlow<String> = _textFont
 
-    private val _isFailState = mutableStateOf(false)
-    val isFailState: State<Boolean> = _isFailState
+    private val _loginState = MutableStateFlow((FirebaseAuth.getInstance().currentUser != null))
+    var loginState: StateFlow<Boolean> = _loginState
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -68,7 +69,8 @@ class SettingsViewModel(
 
     fun login(
         activityResult: ActivityResult,
-        onSuccess: () -> Unit
+        onSuccess: () -> Unit,
+        onFail: () -> Unit
     ) {
         try {
             val account = GoogleSignIn.getSignedInAccountFromIntent(activityResult.data)
@@ -76,10 +78,22 @@ class SettingsViewModel(
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)
             FirebaseAuth.getInstance().signInWithCredential(credential)
                 .addOnCompleteListener { task ->
-                    if (task.isSuccessful) onSuccess()
+                    if (task.isSuccessful) {
+                        onSuccess()
+                        _loginState.value = true
+                    } else {
+                        Log.d("로그인 실패", "아이디 비밀번호 불일치")
+                        onFail()
+                    }
                 }
         } catch (e: Exception) {
-            _isFailState.value = true
+            Log.d("로그인 실패", e.message.toString())
+            onFail()
         }
+    }
+
+    fun logout() {
+        _loginState.value = false
+        FirebaseAuth.getInstance().signOut()
     }
 }

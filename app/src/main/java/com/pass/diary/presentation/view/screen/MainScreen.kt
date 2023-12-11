@@ -1,12 +1,12 @@
 package com.pass.diary.presentation.view.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,7 +28,6 @@ import com.pass.diary.presentation.state.MainState
 import com.pass.diary.presentation.ui.theme.Fluorescent
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
@@ -38,7 +37,7 @@ fun MainScreen() {
     Scaffold(
         bottomBar = { BottomNavigationBar(navController, currentRoute) }
     ) {
-        Box(Modifier.padding(it)) {
+        Box(Modifier.padding(it).background(Color.White)) {
             NavigationGraph(navController = navController)
         }
     }

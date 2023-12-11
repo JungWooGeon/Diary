@@ -53,7 +53,7 @@ fun SettingDefault(
     )
 
     SettingRow(
-        iconResource = R.drawable.ic_theme,
+        iconResource = R.drawable.ic_cloud,
         iconDescription = "백업 / 복원",
         onClick = { onClick(SettingState.BackupSetting) }
     )
