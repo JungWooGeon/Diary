@@ -4,6 +4,6 @@ import com.pass.diary.data.repository.google.GoogleManagerRepository
 
 class LogOutForGoogleUseCase(private val repository: GoogleManagerRepository) {
     suspend operator fun invoke() {
-        return repository.logOutForGoogleUseCase()
+        return repository.logOutForGoogle()
     }
 }

@@ -155,8 +155,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                             emoticonId1 = emoticonId1,
                             emoticonId2 = emoticonId2,
                             emoticonId3 = emoticonId3,
-                            null,
-                            null,
+                            imageUri = null,
                             content = contentText,
                             title = titleText
                         )
@@ -286,7 +285,6 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                                 diary.emoticonId1 = emoticonId1
                                 diary.emoticonId2 = emoticonId2
                                 diary.emoticonId3 = emoticonId3
-                                diary.audioUri = null
                                 diary.imageUri = null
                                 diary.content = contentText
                                 diary.title = titleText

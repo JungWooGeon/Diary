@@ -9,4 +9,5 @@ interface DiaryRepository {
     suspend fun updateDiary(diary: Diary)
     suspend fun deleteDiary(diary: Diary)
     suspend fun summaryDiary(content: String): Flow<String>
+    suspend fun getAllDiaries(): List<Diary>
 }

@@ -14,5 +14,5 @@ val repositoryModule = module {
 
     single<SettingsRepository> { SettingsRepositoryImpl(androidContext()) }
 
-    single<GoogleManagerRepository> { GoogleManagerRepositoryImpl() }
+    single<GoogleManagerRepository> { GoogleManagerRepositoryImpl(androidContext()) }
 }

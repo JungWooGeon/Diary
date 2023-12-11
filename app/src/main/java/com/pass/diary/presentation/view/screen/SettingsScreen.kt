@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,8 +32,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.Scope
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import com.google.api.services.drive.DriveScopes
 import com.pass.diary.BuildConfig
 import com.pass.diary.presentation.intent.SettingsIntent
 import com.pass.diary.presentation.state.SettingState
@@ -67,6 +72,31 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
             }
         )
     }
+
+    var drivePendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val driveLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
+        drivePendingAction = if (result.resultCode == Activity.RESULT_OK && drivePendingAction != null) {
+            // 권한 요청이 승인되었을 때 대기 중인 작업을 실행
+            drivePendingAction?.invoke()
+            null
+        } else {
+            // 권한 요청이 거부되었을 때의 처리 코드
+            Toast.makeText(context, "권한 요청이 거부되었습니다.", Toast.LENGTH_SHORT).show()
+            null
+        }
+    }
+
+    val error by viewModel.error.collectAsState()
+
+    LaunchedEffect(error) {
+        if (error == null) return@LaunchedEffect
+
+        Log.d("오류", "권한 요청 해보자")
+        drivePendingAction = { viewModel.backup() }
+        // 사용자에게 권한 부여 요청
+        driveLauncher.launch(error)
+    }
+
 
     val token = BuildConfig.default_web_client_id
 
@@ -151,6 +181,27 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
                         viewModel.logout()
                         googleSignInClient.signOut().addOnCompleteListener {
                             Toast.makeText(context, "로그아웃이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    backUp = {
+                        try {
+                            viewModel.backup()
+                        } catch (e: UserRecoverableAuthException) {
+                            Log.d("테스트", "로그인 권한 요청 거부")
+                            // 백업 작업을 대기 상태로 설정
+                            drivePendingAction = { viewModel.backup() }
+                            // 사용자에게 권한 부여 요청
+                            driveLauncher.launch(e.intent)
+                        }
+                    },
+                    restore = {
+                        try {
+                            viewModel.restore()
+                        } catch (e: UserRecoverableAuthIOException) {
+                            // 복원 작업을 대기 상태로 설정
+                            drivePendingAction = { viewModel.restore() }
+                            // 사용자에게 권한 부여 요청
+                            driveLauncher.launch(e.intent)
                         }
                     }
                 )

@@ -28,7 +28,9 @@ import com.pass.diary.R
 fun SettingBackup(
     loginState: Boolean,
     signIn: () -> Unit,
-    signOut: () -> Unit
+    signOut: () -> Unit,
+    backUp: () -> Unit,
+    restore: () -> Unit
 ) {
     val buttonText = if (loginState) { "Sign out with Google" } else { "Sign in with Google" }
     val titleText = if (loginState) { "" } else { "구글 드라이브 사용을 위해 구글 로그인이 필요합니다." }
@@ -44,17 +46,13 @@ fun SettingBackup(
                 SettingRow(
                     iconResource = R.drawable.ic_backup,
                     iconDescription = "백업",
-                    onClick = {
-                        //@TODO 백업
-                    }
+                    onClick = { backUp() }
                 )
 
                 SettingRow(
                     iconResource = R.drawable.ic_restore,
                     iconDescription = "복원",
-                    onClick = {
-                        //@TODO 복원
-                    }
+                    onClick = { restore() }
                 )
             }
         }

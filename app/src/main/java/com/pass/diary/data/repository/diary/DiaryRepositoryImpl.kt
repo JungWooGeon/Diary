@@ -84,4 +84,8 @@ class DiaryRepositoryImpl(private val db: DiaryDataBase) : DiaryRepository {
         // close 가 실행될 때 까지 기다림
         awaitClose()
     }
+
+    override suspend fun getAllDiaries(): List<Diary> {
+        return db.diaryDao().getAllDiaries()
+    }
 }

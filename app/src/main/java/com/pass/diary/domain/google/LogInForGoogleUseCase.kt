@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 class LogInForGoogleUseCase(private val repository: GoogleManagerRepository) {
     suspend operator fun invoke(activityResultData: Intent): Flow<Boolean> {
-        return repository.logInForGoogleUseCase(activityResultData)
+        return repository.logInForGoogle(activityResultData)
     }
 }

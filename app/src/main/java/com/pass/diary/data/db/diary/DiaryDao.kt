@@ -20,4 +20,7 @@ interface DiaryDao {
 
     @Delete
     fun deleteDiary(diary: Diary)
+
+    @Query("SELECT * FROM diary")
+    fun getAllDiaries(): List<Diary>
 }
