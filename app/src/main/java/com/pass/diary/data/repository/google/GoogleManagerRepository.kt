@@ -8,6 +8,6 @@ interface GoogleManagerRepository {
     suspend fun logInForGoogle(activityResultData: Intent): Flow<Boolean>
     suspend fun logOutForGoogle()
     suspend fun isLoggedIn(): Boolean
-    suspend fun restoreDiariesForGoogleDrive(): List<Diary>
+    suspend fun restoreDiariesForGoogleDrive(): List<Diary>?
     suspend fun backupDiariesToGoogleDrive(diaries: List<Diary>)
 }

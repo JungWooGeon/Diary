@@ -27,7 +27,6 @@ class DeleteDiaryUseCaseTest {
             null,
             null,
             null,
-            null,
             "",
             "일기 내용 테스트 11/06"
         )

@@ -1,5 +1,12 @@
 package com.pass.diary.presentation.viewmodel
 
+import com.pass.diary.domain.diary.AddDiaryUseCase
+import com.pass.diary.domain.diary.GetAllDiariesUseCase
+import com.pass.diary.domain.google.BackupDiariesToGoogleDriveUseCase
+import com.pass.diary.domain.google.IsLoggedInUseCase
+import com.pass.diary.domain.google.LogInForGoogleUseCase
+import com.pass.diary.domain.google.LogOutForGoogleUseCase
+import com.pass.diary.domain.google.RestoreDiariesForGoogleDriveUseCase
 import com.pass.diary.domain.settings.font.GetCurrentFontUseCase
 import com.pass.diary.domain.settings.font.GetCurrentTextSizeUseCase
 import com.pass.diary.domain.settings.font.UpdateCurrentFontUseCase
@@ -22,6 +29,13 @@ class SettingsViewModelTest {
     private val updateCurrentTextSizeUseCase = mockk<UpdateCurrentTextSizeUseCase>()
     private val getCurrentFontUseCase = mockk<GetCurrentFontUseCase>()
     private val updateCurrentFontUseCase = mockk<UpdateCurrentFontUseCase>()
+    private val logInForGoogleUseCase = mockk<LogInForGoogleUseCase>()
+    private val logOutForGoogleUseCase = mockk<LogOutForGoogleUseCase>()
+    private val backupDiariesToGoogleDrive = mockk<BackupDiariesToGoogleDriveUseCase>()
+    private val restoreDiariesForGoogleDrive = mockk<RestoreDiariesForGoogleDriveUseCase>()
+    private val getAllDiariesUseCase = mockk<GetAllDiariesUseCase>()
+    private val isLoggedInUseCase = mockk<IsLoggedInUseCase>()
+    private val addDiaryUseCase = mockk<AddDiaryUseCase>()
 
     private lateinit var viewModel: SettingsViewModel
 
@@ -34,7 +48,18 @@ class SettingsViewModelTest {
         coEvery { getCurrentTextSizeUseCase() } returns flowOf(testTextSize)
         coEvery { updateCurrentTextSizeUseCase(any()) } just Runs
 
-        viewModel = SettingsViewModel(getCurrentTextSizeUseCase, updateCurrentTextSizeUseCase, getCurrentFontUseCase, updateCurrentFontUseCase)
+        viewModel = SettingsViewModel(
+            getCurrentTextSizeUseCase,
+            updateCurrentTextSizeUseCase,
+            getCurrentFontUseCase,
+            updateCurrentFontUseCase,
+            logInForGoogleUseCase,
+            logOutForGoogleUseCase,
+            backupDiariesToGoogleDrive,
+            restoreDiariesForGoogleDrive,
+            getAllDiariesUseCase,
+            isLoggedInUseCase,
+            addDiaryUseCase)
 
         delay(1000)
 

@@ -249,17 +249,19 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                                 return@SSJetPackComposeProgressButton
                             }
 
-                            if (contentText.length < 20) {
-                                // 내용이 너무 적을 경우 예외 처리
-                                Toast.makeText(context, "최소 20자이상 작성해주세요.", Toast.LENGTH_SHORT)
-                                    .show()
-                                return@SSJetPackComposeProgressButton
-                            }
 
-                            submitButtonState = SSButtonState.LOADING
 
                             if (diary == null) {
+                                if (contentText.length < 20) {
+                                    // 내용이 너무 적을 경우 예외 처리
+                                    Toast.makeText(context, "최소 20자이상 작성해주세요.", Toast.LENGTH_SHORT)
+                                        .show()
+                                    return@SSJetPackComposeProgressButton
+                                }
+
                                 // 요약하기
+                                submitButtonState = SSButtonState.LOADING
+
                                 titleText = ""
                                 viewModel.processIntent(AddDiaryIntent.SummaryContent(titleText, contentText))
                             } else {

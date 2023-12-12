@@ -3,6 +3,7 @@ package com.pass.diary.data.db.diary
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.pass.diary.data.entity.Diary
@@ -12,7 +13,7 @@ interface DiaryDao {
     @Query("SELECT * FROM diary WHERE month = :month and year = :year")
     fun getDiariesByMonth(year: String, month: String): List<Diary>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun addDiary(diary: Diary)
 
     @Update

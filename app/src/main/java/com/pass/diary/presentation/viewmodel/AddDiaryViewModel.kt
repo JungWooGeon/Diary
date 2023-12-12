@@ -1,6 +1,5 @@
 package com.pass.diary.presentation.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pass.diary.domain.diary.AddDiaryUseCase

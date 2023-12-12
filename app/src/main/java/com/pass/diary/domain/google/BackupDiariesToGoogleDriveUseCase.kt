@@ -10,6 +10,8 @@ class BackupDiariesToGoogleDriveUseCase(private val repository: GoogleManagerRep
             repository.backupDiariesToGoogleDrive(diaries)
         } catch (e: UserRecoverableAuthIOException) {
             throw e
+        } catch (e: Exception) {
+            throw e
         }
     }
 }

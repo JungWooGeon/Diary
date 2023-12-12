@@ -29,7 +29,6 @@ class GetDiariesByMonthUseCaseTest {
                 null,
                 null,
                 null,
-                null,
                 "",
                 "일기 내용 테스트 10/24"
             ),
@@ -39,7 +38,6 @@ class GetDiariesByMonthUseCaseTest {
                 month,
                 "23",
                 "월",
-                null,
                 null,
                 null,
                 null,

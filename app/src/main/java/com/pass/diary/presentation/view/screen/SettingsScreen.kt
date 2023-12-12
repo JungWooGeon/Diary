@@ -35,11 +35,10 @@ import androidx.compose.ui.unit.sp
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.Scope
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import com.google.api.services.drive.DriveScopes
 import com.pass.diary.BuildConfig
 import com.pass.diary.presentation.intent.SettingsIntent
+import com.pass.diary.presentation.state.LoginState
 import com.pass.diary.presentation.state.SettingState
 import com.pass.diary.presentation.ui.theme.LineGray
 import com.pass.diary.presentation.view.composable.SettingBackup
@@ -50,27 +49,47 @@ import org.koin.androidx.compose.getViewModel
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
+    val context = LocalContext.current
+
     var screenState by remember { mutableStateOf<SettingState>(SettingState.DefaultSetting) }
+
+    val backupDiariesState by viewModel.backupDiariesState.collectAsState()
+    val restoreDiariesState by viewModel.restoreDiariesState.collectAsState()
 
     val textSize by viewModel.textSize.collectAsState()
     val textFont by viewModel.textFont.collectAsState()
-
-    val context = LocalContext.current
-
     val loginState by viewModel.loginState.collectAsState()
+
+    LaunchedEffect(backupDiariesState) {
+        if (backupDiariesState == null) return@LaunchedEffect
+        Toast.makeText(context, if (backupDiariesState == true) { "백업이 완료되었습니다." } else { "백업이 실패하였습니다." } , Toast.LENGTH_SHORT).show()
+        // 토스트 메시지 반복 출력 방지를 위해 백업 state null 설정
+        viewModel.processIntent(SettingsIntent.SetNullState(SettingsIntent.Backup))
+    }
+
+    LaunchedEffect(restoreDiariesState) {
+        if (restoreDiariesState == null) return@LaunchedEffect
+        Toast.makeText(context, if (restoreDiariesState == true) { "복원이 완료되었습니다." } else { "복원이 실패하였습니다." } , Toast.LENGTH_SHORT).show()
+        // 토스트 메시지 반복 출력 방지를 위해 복원 state null 설정
+        viewModel.processIntent(SettingsIntent.SetNullState(SettingsIntent.Restore))
+    }
+
+    LaunchedEffect(loginState) {
+        if (loginState is LoginState.Success) {
+            Toast.makeText(context, "로그인이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+            // 토스트 메시지 반복 출력 방지를 위해 LoginState SuccessIdle 로 변경
+            viewModel.processIntent(SettingsIntent.SetLoginState(LoginState.SuccessIdle))
+        } else if (loginState is LoginState.Fail) {
+            // 토스트 메시지 반복 출력 방지를 위해 LoginState FailIdle 로 변경
+            Toast.makeText(context, "로그인에 실패하였습니다." , Toast.LENGTH_SHORT).show()
+            viewModel.processIntent(SettingsIntent.SetLoginState(LoginState.FailIdle))
+        }
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
-        viewModel.login(
-            activityResultData = it.data,
-            onSuccess = {
-                Toast.makeText(context, "로그인이 완료되었습니다.", Toast.LENGTH_SHORT).show()
-            },
-            onFail = {
-                Toast.makeText(context, "로그인에 실패하였습니다.", Toast.LENGTH_SHORT).show()
-            }
-        )
+        viewModel.processIntent(SettingsIntent.Login(activityResultData = it.data))
     }
 
     var drivePendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
@@ -91,8 +110,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
     LaunchedEffect(error) {
         if (error == null) return@LaunchedEffect
 
-        Log.d("오류", "권한 요청 해보자")
-        drivePendingAction = { viewModel.backup() }
+        drivePendingAction = { viewModel.processIntent(SettingsIntent.Backup) }
         // 사용자에게 권한 부여 요청
         driveLauncher.launch(error)
     }
@@ -178,28 +196,28 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
                         launcher.launch(googleSignInClient.signInIntent)
                     },
                     signOut = {
-                        viewModel.logout()
+                        viewModel.processIntent(SettingsIntent.Logout)
                         googleSignInClient.signOut().addOnCompleteListener {
                             Toast.makeText(context, "로그아웃이 완료되었습니다.", Toast.LENGTH_SHORT).show()
                         }
                     },
                     backUp = {
                         try {
-                            viewModel.backup()
+                            viewModel.processIntent(SettingsIntent.Backup)
                         } catch (e: UserRecoverableAuthException) {
                             Log.d("테스트", "로그인 권한 요청 거부")
                             // 백업 작업을 대기 상태로 설정
-                            drivePendingAction = { viewModel.backup() }
+                            drivePendingAction = { viewModel.processIntent(SettingsIntent.Backup) }
                             // 사용자에게 권한 부여 요청
                             driveLauncher.launch(e.intent)
                         }
                     },
                     restore = {
                         try {
-                            viewModel.restore()
+                            viewModel.processIntent(SettingsIntent.Restore)
                         } catch (e: UserRecoverableAuthIOException) {
                             // 복원 작업을 대기 상태로 설정
-                            drivePendingAction = { viewModel.restore() }
+                            drivePendingAction = { viewModel.processIntent(SettingsIntent.Restore) }
                             // 사용자에게 권한 부여 요청
                             driveLauncher.launch(e.intent)
                         }
