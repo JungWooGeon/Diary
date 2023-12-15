@@ -15,5 +15,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "diary"
-include(":app")
- 
+include(":presentation")
+include(":domain")
+include(":data")
