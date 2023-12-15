@@ -19,10 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,84 +41,64 @@ import com.pass.presentation.viewmodel.AddDiaryViewModel
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonType
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSJetPackComposeProgressButton
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.getViewModel
-import java.time.LocalDate
 
 @SuppressLint("MutableCollectionMutableState")
 @Composable
 fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel()) {
     val context = LocalContext.current
 
-    val addDiaryState by viewModel.state.collectAsState()
+    // 현재 화면 상태 (standby, loading, error)
+    val addDiaryState by viewModel.addDiaryState.collectAsState()
+
+    // 텍스트 크기 상태
     val textSizeState by viewModel.textSizeState.collectAsState()
-    val summaryState by viewModel.summaryState.collectAsState()
 
-    // DatePicker 에서 사용될 selected date
-    val dateArray = if (diary != null) {
-        arrayListOf(diary.year, diary.month, diary.day)
-    } else {
-        arrayListOf(
-            LocalDate.now().year.toString(),
-            LocalDate.now().monthValue.toString(),
-            LocalDate.now().dayOfMonth.toString()
-        )
-    }
+    // 선택한 날짜 상태
+    val selectedDateWithLocalDate by viewModel.selectedDateWithLocalDate.collectAsState()
 
-    var selectedDateWithLocalDate by remember {
-        mutableStateOf(
-            LocalDate.of(
-                dateArray[0].toInt(),
-                dateArray[1].toInt(),
-                dateArray[2].toInt()
-            )
-        )
-    }
+    // 제목 (요약 텍스트) 상태
+    val titleTextState by viewModel.titleTextState.collectAsState()
 
-    var submitButtonState by remember { mutableStateOf(SSButtonState.IDLE) }
+    // 일기 내용 상태
+    val contentTextState by viewModel.contentTextState.collectAsState()
 
-    // DatePicker show / hide 상태
-    var isDatePickerOpen by remember { mutableStateOf(false) }
+    // '요약하기' 버튼 상태
+    val submitButtonState by viewModel.submitButtonState.collectAsState()
 
     // 현재 선택된 이모티콘 리스트
-    var emoticonIdList by remember {
-        mutableStateOf(
-            if (diary == null) {
-                arrayListOf(Constants.EMOTICON_RAW_ID_LIST[0], -1, -1)
-            } else {
-                arrayListOf<Int>().apply {
-                    (if (diary.emoticonId1 == null) -1 else diary.emoticonId1)?.let { add(it) }
-                    (if (diary.emoticonId2 == null) -1 else diary.emoticonId2)?.let { add(it) }
-                    (if (diary.emoticonId3 == null) -1 else diary.emoticonId3)?.let { add(it) }
-                }
-            }
-        )
-    }
+    val emoticonIdListState by viewModel.emoticonIdListState.collectAsState()
 
-    // 일기 제목
-    var titleText by remember { mutableStateOf(diary?.title ?: "") }
-    LaunchedEffect(summaryState) {
-        // 요약 시 제목 변경 (실패 시 토스트 메시지 출력)
-        submitButtonState = if (summaryState == "ERROR") { SSButtonState.FAILIURE } else if (summaryState != "") { SSButtonState.SUCCESS } else { SSButtonState.IDLE }
+    // DatePicker show / hide 상태
+    val isDatePickerOpenState by viewModel.isDatePickerOpenState.collectAsState()
 
-        // 내용 요약 실패
+    // 이모티콘 추가 다이얼로그 상태
+    val isDialogAddState by viewModel.isDialogAddState.collectAsState()
+
+    // 이모티콘 삭제 다이얼로그 상태
+    val isDialogEditState by viewModel.isDialogEditState.collectAsState()
+
+    // 녹음 다이얼로그 상태
+    val isRecordDialogState by viewModel.isRecordDialogState.collectAsState()
+
+    // 처음 시작 시 diary 상태에 따라 수정하기 / 추가하기 화면 구분
+    LaunchedEffect(Unit) { viewModel.processIntent(AddDiaryIntent.Initialize(diary)) }
+
+    // '요약하기' 성공 여부에 따라 토스트 메시지 출력
+    LaunchedEffect(submitButtonState) {
+        if (titleTextState == "") return@LaunchedEffect
+
+        // 3초 후 토스트 메시지 출력
+        delay(3000)
         if (submitButtonState == SSButtonState.FAILIURE) {
+            // 내용 요약 실패
             Toast.makeText(context, "내용을 요약할 수 없습니다. 더 자세히 적어주세요.", Toast.LENGTH_SHORT).show()
-            submitButtonState = SSButtonState.IDLE
-            return@LaunchedEffect
+        } else if (submitButtonState == SSButtonState.SUCCESS) {
+            // 내용 요약 성공 (요약 제목 반영)
+            Toast.makeText(context, "요약된 내용이 제목에 반영되었어요!", Toast.LENGTH_SHORT).show()
         }
-
-        // 요약 제목 반영
-        if (summaryState != "") titleText = summaryState
     }
-
-    // 일기 내용
-    var contentText by remember { mutableStateOf(diary?.content ?: "") }
-
-    // 이모티콘 다이얼로그 추가 / 수정 상태
-    var isDialogAdd by remember { mutableStateOf(false) }
-    var isDialogEdit by remember { mutableIntStateOf(Constants.NOT_EDIT_INDEX) }
-    // 녹음 다이얼로그
-    var isRecordDialogState by remember { mutableStateOf(false) }
 
     when (addDiaryState) {
         is AddDiaryState.Standby -> {
@@ -143,14 +119,9 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                         var emoticonId2: Int? = null
                         var emoticonId3: Int? = null
 
-                        if (emoticonIdList[0] != -1)
-                            emoticonId1 = emoticonIdList[0]
-
-                        if (emoticonIdList[1] != -1)
-                            emoticonId2 = emoticonIdList[1]
-
-                        if (emoticonIdList[2] != -1)
-                            emoticonId3 = emoticonIdList[2]
+                        if (emoticonIdListState[0] != -1) emoticonId1 = emoticonIdListState[0]
+                        if (emoticonIdListState[1] != -1) emoticonId2 = emoticonIdListState[1]
+                        if (emoticonIdListState[2] != -1) emoticonId3 = emoticonIdListState[2]
 
                         val addDiary = Diary(
                             id = null,
@@ -162,54 +133,25 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                             emoticonId2 = emoticonId2,
                             emoticonId3 = emoticonId3,
                             imageUri = null,
-                            content = contentText,
-                            title = titleText
+                            content = contentTextState,
+                            title = titleTextState
                         )
 
                         viewModel.processIntent(AddDiaryIntent.AddDiary(addDiary))
                     },
-                    onOpenDatePicker = {
-                        isDatePickerOpen = true
-                    },
-                    onDeleteDiary = {
-                        // 삭제
-                        diary?.let { viewModel.processIntent(AddDiaryIntent.DeleteDiary(diary)) }
-                    }
+                    onOpenDatePicker = { viewModel.processIntent(AddDiaryIntent.UpdateDatePickerDialog(true)) },
+                    onDeleteDiary = { diary?.let { viewModel.processIntent(AddDiaryIntent.DeleteDiary(diary)) } }
                 )
 
                 EmoticonBox(
-                    emoticonIdList = emoticonIdList,
-                    onDatePickerOpen = { isDialogAdd = true },
-                    onEmoticonChange = {
-                        isDialogEdit = it
-                    },
+                    emoticonIdList = emoticonIdListState,
+                    onDatePickerOpen = { viewModel.processIntent(AddDiaryIntent.UpdateAddDialog(true)) },
+                    onEmoticonChange = { viewModel.processIntent(AddDiaryIntent.UpdateEditDialog(it)) },
                     onEmotionDelete = {
-                        if (emoticonIdList[1] == -1) {
+                        if (emoticonIdListState[1] == -1) {
                             Toast.makeText(context, "1개까지 삭제할 수 있습니다.", Toast.LENGTH_SHORT).show()
                         } else {
-                            val tmpList = arrayListOf<Int>()
-                            when (it) {
-                                0 -> {
-                                    tmpList.add(emoticonIdList[1])
-                                    tmpList.add(emoticonIdList[2])
-                                    tmpList.add(-1)
-                                }
-
-                                1 -> {
-                                    tmpList.add(emoticonIdList[0])
-                                    tmpList.add(emoticonIdList[2])
-                                    tmpList.add(-1)
-                                }
-
-                                2 -> {
-                                    tmpList.add(emoticonIdList[0])
-                                    tmpList.add(emoticonIdList[1])
-                                    tmpList.add(-1)
-                                }
-                            }
-
-                            emoticonIdList = tmpList
-
+                            viewModel.processIntent(AddDiaryIntent.DeleteEmoticon(it))
                             Toast.makeText(context, "삭제되었습니다.", Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -217,25 +159,25 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
 
                 // 제목
                 ContentBox(
-                    contentText = titleText,
+                    contentText = titleTextState,
                     hintText = "제목을 입력해주세요.",
                     modifier = Modifier.padding(horizontal = 20.dp),
                     textSize = textSizeState,
                     onTextChanged = { changedText ->
-                        titleText = changedText
+                        viewModel.processIntent(AddDiaryIntent.WriteTitle(changedText))
                     }
                 )
 
                 // 본문
                 ContentBox(
-                    contentText = contentText,
+                    contentText = contentTextState,
                     hintText = "오늘은 무슨 일이 있었나요?",
                     modifier = Modifier
                         .weight(1F)
                         .padding(20.dp),
                     textSize = textSizeState,
                     onTextChanged = { changedText ->
-                        contentText = changedText
+                        viewModel.processIntent(AddDiaryIntent.WriteContent(changedText))
                     }
                 )
 
@@ -257,7 +199,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
 
                             if (diary == null) {
                                 // 추가하기 일 때
-                                if (contentText.length < 20) {
+                                if (contentTextState.length < 20) {
                                     // 내용이 너무 적을 경우 예외 처리
                                     Toast.makeText(context, "최소 20자이상 작성해주세요.", Toast.LENGTH_SHORT)
                                         .show()
@@ -265,24 +207,16 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                                 }
 
                                 // 요약하기
-                                submitButtonState = SSButtonState.LOADING
-
-                                titleText = ""
-                                viewModel.processIntent(AddDiaryIntent.SummaryContent(titleText, contentText))
+                                viewModel.processIntent(AddDiaryIntent.SummaryContent(titleTextState, contentTextState))
                             } else {
                                 // 수정하기일 때
                                 var emoticonId1: Int? = null
                                 var emoticonId2: Int? = null
                                 var emoticonId3: Int? = null
 
-                                if (emoticonIdList[0] != -1)
-                                    emoticonId1 = emoticonIdList[0]
-
-                                if (emoticonIdList[1] != -1)
-                                    emoticonId2 = emoticonIdList[1]
-
-                                if (emoticonIdList[2] != -1)
-                                    emoticonId3 = emoticonIdList[2]
+                                if (emoticonIdListState[0] != -1) emoticonId1 = emoticonIdListState[0]
+                                if (emoticonIdListState[1] != -1) emoticonId2 = emoticonIdListState[1]
+                                if (emoticonIdListState[2] != -1) emoticonId3 = emoticonIdListState[2]
 
                                 diary.year = selectedDateWithLocalDate.year.toString()
                                 diary.month = selectedDateWithLocalDate.monthValue.toString()
@@ -293,8 +227,8 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                                 diary.emoticonId2 = emoticonId2
                                 diary.emoticonId3 = emoticonId3
                                 diary.imageUri = null
-                                diary.content = contentText
-                                diary.title = titleText
+                                diary.content = contentTextState
+                                diary.title = titleTextState
 
                                 viewModel.processIntent(AddDiaryIntent.UpdateDiary(diary))
                             }
@@ -307,69 +241,76 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                 }
 
                 BottomEditor {
-                    isRecordDialogState = true
+                    viewModel.processIntent(AddDiaryIntent.UpdateRecordDialog(true))
                 }
             }
 
-            if (isDialogAdd || isDialogEdit != Constants.NOT_EDIT_INDEX) {
+            if (isDialogAddState || isDialogEditState != Constants.NOT_EDIT_INDEX) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
                         .clickable {
-                            isDialogAdd = false
-                            isDialogEdit = Constants.NOT_EDIT_INDEX
-                        }  // 배경을 클릭하면 다이얼로그를 닫음
+                            // 배경을 클릭하면 다이얼로그를 닫음 (다이얼로그 상태 초기화)
+                            viewModel.processIntent(AddDiaryIntent.UpdateAddDialog(false))
+                            viewModel.processIntent(AddDiaryIntent.UpdateEditDialog(Constants.NOT_EDIT_INDEX))
+                        }
                 )
 
                 AddEmoticonDialog(
                     onDismissRequest = {
-                        isDialogAdd = false
-                        isDialogEdit = Constants.NOT_EDIT_INDEX
+                        // 배경을 클릭하면 다이얼로그를 닫음 (다이얼로그 상태 초기화)
+                        viewModel.processIntent(AddDiaryIntent.UpdateAddDialog(false))
+                        viewModel.processIntent(AddDiaryIntent.UpdateEditDialog(Constants.NOT_EDIT_INDEX))
                     },
                     onSelectEmoticon = { emoticonId ->
-                        if (isDialogEdit == Constants.NOT_EDIT_INDEX) {
+                        if (isDialogEditState == Constants.NOT_EDIT_INDEX) {
                             // emoticon 추가
                             var index = -1
-                            for (i in 0..<emoticonIdList.size) {
-                                if (emoticonIdList[i] == -1) {
+                            for (i in 0..< emoticonIdListState.size) {
+                                if (emoticonIdListState[i] == -1) {
                                     index = i
                                     break
                                 }
                             }
 
                             if (index != -1) {
-                                emoticonIdList[index] = emoticonId
+                                viewModel.processIntent(AddDiaryIntent.UpdateEmoticon(index, emoticonId))
                             } else {
-                                Toast.makeText(context, "3개까지 추가할 수 있습니다.", Toast.LENGTH_SHORT)
-                                    .show()
+                                Toast.makeText(context, "3개까지 추가할 수 있습니다.", Toast.LENGTH_SHORT).show()
                             }
-                            isDialogAdd = false
+
+                            viewModel.processIntent(AddDiaryIntent.UpdateAddDialog(false))
                         } else {
                             // emoticon 수정
-                            emoticonIdList[isDialogEdit] = emoticonId
-                            isDialogEdit = Constants.NOT_EDIT_INDEX
+                            viewModel.processIntent(AddDiaryIntent.UpdateEmoticon(isDialogEditState, emoticonId))
+                            viewModel.processIntent(AddDiaryIntent.UpdateEditDialog(Constants.NOT_EDIT_INDEX))
                         }
                     }
                 )
             }
 
             // DatePicker show / hide
-            if (isDatePickerOpen) {
+            if (isDatePickerOpenState) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
-                        .clickable { isDatePickerOpen = false },  // 배경을 클릭하면 다이얼로그를 닫음
+                        .clickable {
+                            viewModel.processIntent(
+                                AddDiaryIntent.UpdateDatePickerDialog(
+                                    false
+                                )
+                            )
+                        },  // 배경을 클릭하면 다이얼로그를 닫음
                 )
 
-                Dialog(onDismissRequest = { isDatePickerOpen = false }) {
+                Dialog(onDismissRequest = { viewModel.processIntent(AddDiaryIntent.UpdateDatePickerDialog(false)) }) {
                     CustomSpinnerDatePicker(context) { tmpDate, isComplete ->
-                        isDatePickerOpen = false
+                        viewModel.processIntent(AddDiaryIntent.UpdateDatePickerDialog(false))
 
-                        if (isComplete) {
-                            selectedDateWithLocalDate = tmpDate
-                        }
+                        // 선택한 날짜 변경
+                        if (isComplete) { viewModel.processIntent(AddDiaryIntent.SelectDate(tmpDate)) }
                     }
                 }
             }
@@ -381,14 +322,14 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
                         .clickable {
-                            isRecordDialogState = false
+                            viewModel.processIntent(AddDiaryIntent.UpdateRecordDialog(false))
                         }  // 배경을 클릭하면 다이얼로그를 닫음
                 ) {
                     RecordDialog(
-                        onDismissRequest = { isRecordDialogState = false },
+                        onDismissRequest = { viewModel.processIntent(AddDiaryIntent.UpdateRecordDialog(false)) },
                         onCompleteRecording = {
-                            isRecordDialogState = false
-                            contentText += "\n" + it
+                            viewModel.processIntent(AddDiaryIntent.UpdateRecordDialog(false))
+                            viewModel.processIntent(AddDiaryIntent.WriteContent(contentTextState + "\n" + it))
                         }
                     )
                 }
