@@ -10,9 +10,11 @@ import com.pass.domain.model.Diary
 import com.pass.presentation.intent.AddDiaryIntent
 import com.pass.presentation.state.AddDiaryState
 import com.pass.presentation.viewmodel.AddDiaryViewModel
+import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
@@ -38,10 +40,31 @@ class AddDiaryScreenTest {
         ""
     )
 
+    @Before
+    fun setUp() {
+        every { viewModel.textSizeState } returns MutableStateFlow(13f)
+        every { viewModel.titleTextState } returns MutableStateFlow("")
+        every { viewModel.contentTextState } returns MutableStateFlow("")
+        every { viewModel.selectedDateWithLocalDate } returns MutableStateFlow(
+            LocalDate.of(
+                LocalDate.now().year,
+                LocalDate.now().monthValue,
+                LocalDate.now().dayOfMonth
+            )
+        )
+        every { viewModel.submitButtonState } returns MutableStateFlow(SSButtonState.IDLE)
+        every { viewModel.emoticonIdListState } returns MutableStateFlow(arrayListOf(Constants.EMOTICON_RAW_ID_LIST[0], -1, -1))
+        every { viewModel.isDialogAddState } returns MutableStateFlow(false)
+        every { viewModel.isDialogEditState } returns MutableStateFlow(Constants.NOT_EDIT_INDEX)
+        every { viewModel.isDatePickerOpenState } returns MutableStateFlow(false)
+        every { viewModel.isRecordDialogState } returns MutableStateFlow(false)
+        every { viewModel.isDeleteDialogState } returns MutableStateFlow(false)
+    }
+
     // Standby 상태 테스트
     @Test
     fun addDiaryScreenDisplaysStandbyState() {
-        every { viewModel.state } returns MutableStateFlow(AddDiaryState.Standby)
+        every { viewModel.addDiaryState } returns MutableStateFlow(AddDiaryState.Standby)
 
         composeTestRule.setContent {
             AddDiaryScreen(diary = null, viewModel = viewModel)
@@ -53,7 +76,7 @@ class AddDiaryScreenTest {
     // Loading 상태 테스트
     @Test
     fun addDiaryScreenDisplaysLoadingState() {
-        every { viewModel.state } returns MutableStateFlow(AddDiaryState.Loading)
+        every { viewModel.addDiaryState } returns MutableStateFlow(AddDiaryState.Loading)
 
         composeTestRule.setContent {
             AddDiaryScreen(diary = null, viewModel = viewModel)
@@ -66,7 +89,7 @@ class AddDiaryScreenTest {
     @Test
     fun addDiaryScreenDisplaysErrorState() {
         val errorMessage = "An error occurred"
-        every { viewModel.state } returns MutableStateFlow(AddDiaryState.Error(Exception(errorMessage)))
+        every { viewModel.addDiaryState } returns MutableStateFlow(AddDiaryState.Error(Exception(errorMessage)))
 
         composeTestRule.setContent {
             AddDiaryScreen(diary = null, viewModel = viewModel)
@@ -80,10 +103,10 @@ class AddDiaryScreenTest {
     fun addDiaryScreenCallsOnAddDiaryWhenDiaryIsProvided() {
         // viewModel의 AddDiary 함수가 호출되었을 때 state 을 Complete 만 나오도록 설정
         every { viewModel.processIntent(AddDiaryIntent.AddDiary) } answers {
-            every { viewModel.state } returns MutableStateFlow(AddDiaryState.Complete)
+            every { viewModel.addDiaryState } returns MutableStateFlow(AddDiaryState.Complete)
         }
 
-        every { viewModel.state } returns MutableStateFlow(AddDiaryState.Standby)
+        every { viewModel.addDiaryState } returns MutableStateFlow(AddDiaryState.Standby)
 
         composeTestRule.setContent {
             AddDiaryScreen(diary = null, viewModel = viewModel)
@@ -93,13 +116,13 @@ class AddDiaryScreenTest {
         composeTestRule.onNodeWithText("완료").performClick()
 
         // state 가 Complete 로 변경되었는지 확인
-        assert(viewModel.state.value is AddDiaryState.Complete)
+        assert(viewModel.addDiaryState.value is AddDiaryState.Complete)
     }
 
     // '추가' 화면인지 테스트
     @Test
     fun addDiaryScreenDisplaysCorrectIconWhenDiaryIsNull() {
-        every { viewModel.state } returns MutableStateFlow(AddDiaryState.Standby)
+        every { viewModel.addDiaryState } returns MutableStateFlow(AddDiaryState.Standby)
 
         composeTestRule.setContent {
             AddDiaryScreen(diary = null, viewModel = viewModel)
@@ -112,7 +135,7 @@ class AddDiaryScreenTest {
     // '편집' 화면인지 테스트
     @Test
     fun addDiaryScreenDisplaysCorrectIconWhenDiaryIsNotNull() {
-        every { viewModel.state } returns MutableStateFlow(AddDiaryState.Standby)
+        every { viewModel.addDiaryState } returns MutableStateFlow(AddDiaryState.Standby)
 
         composeTestRule.setContent {
             AddDiaryScreen(diary = diary, viewModel = viewModel)
@@ -127,10 +150,10 @@ class AddDiaryScreenTest {
     fun addDiaryScreenCallsOnUpdateDiaryWhenDiaryIsProvided() {
         // viewModel의 UpdateDiary 함수가 호출되었을 때 state 을 Complete 만 나오도록 설정
         every { viewModel.processIntent(AddDiaryIntent.UpdateDiary) } answers {
-            every { viewModel.state } returns MutableStateFlow(AddDiaryState.Complete)
+            every { viewModel.addDiaryState } returns MutableStateFlow(AddDiaryState.Complete)
         }
 
-        every { viewModel.state } returns MutableStateFlow(AddDiaryState.Standby)
+        every { viewModel.addDiaryState } returns MutableStateFlow(AddDiaryState.Standby)
 
         composeTestRule.setContent {
             AddDiaryScreen(diary = diary, viewModel = viewModel)
@@ -140,18 +163,18 @@ class AddDiaryScreenTest {
         composeTestRule.onNodeWithText("수정 완료").performClick()
 
         // state 가 Complete 로 변경되었는지 확인
-        assert(viewModel.state.value is AddDiaryState.Complete)
+        assert(viewModel.addDiaryState.value is AddDiaryState.Complete)
     }
 
     // '일기 편집 화면'에서 'Delete Button' 클릭 시 일기 정보가 올바르게 삭제되고, Complete 상태까지 도달하는지 테스트
     @Test
     fun addDiaryScreenCallsOnDeleteDiaryWhenDiaryIsProvided() {
-        // viewModel의 DeleteDiary 함수가 호출되었을 때 state 을 Complete 만 나오도록 설정
-        every { viewModel.processIntent(AddDiaryIntent.DeleteDiary) } answers {
-            every { viewModel.state } returns MutableStateFlow(AddDiaryState.Complete)
+        // viewModel의 Delete dialog 업데이트 함수가 호출되었을 때 state 을 Complete 만 나오도록 설정
+        every { viewModel.processIntent(AddDiaryIntent.UpdateDeleteDialog(true)) } answers {
+            every { viewModel.addDiaryState } returns MutableStateFlow(AddDiaryState.Complete)
         }
 
-        every { viewModel.state } returns MutableStateFlow(AddDiaryState.Standby)
+        every { viewModel.addDiaryState } returns MutableStateFlow(AddDiaryState.Standby)
 
         composeTestRule.setContent {
             AddDiaryScreen(diary = diary, viewModel = viewModel)
@@ -160,7 +183,7 @@ class AddDiaryScreenTest {
         // 'Delete Button' 텍스트 클릭
         composeTestRule.onNodeWithContentDescription("Delete Button").performClick()
 
-        // state 가 Complete 로 변경되었는지 확인
-        assert(viewModel.state.value is AddDiaryState.Complete)
+        // delete Dialog 가 나오는지 확인
+        assert(viewModel.addDiaryState.value is AddDiaryState.Complete)
     }
 }
