@@ -6,9 +6,9 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.pass.domain.model.Diary
-import com.pass.presentation.intent.TimelineIntent
+import com.pass.presentation.intent.CalendarIntent
 import com.pass.presentation.state.TimelineState
-import com.pass.presentation.viewmodel.TimelineViewModel
+import com.pass.presentation.viewmodel.CalendarViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -23,7 +23,7 @@ class CalendarScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val viewModel: TimelineViewModel = mockk(relaxed = true)
+    private val viewModel: CalendarViewModel = mockk(relaxed = true)
 
     // 현재 날짜로 모킹 데이터 설정
     private val mockData = listOf(
@@ -33,7 +33,7 @@ class CalendarScreenTest {
             LocalDate.now().monthValue.toString(),
             LocalDate.now().dayOfMonth.toString(),
             Constants.DAY_OF_WEEK_TO_KOREAN[LocalDate.now().dayOfWeek.toString()].toString(),
-            2131689482,
+            Constants.EMOTICON_RAW_ID_LIST[0],
             null,
             null,
             null,
@@ -44,13 +44,17 @@ class CalendarScreenTest {
 
     @Before
     fun setup() {
-        every { viewModel.state } returns MutableStateFlow<TimelineState>(TimelineState.Success(mockData))
+        every { viewModel.calendarState } returns MutableStateFlow<TimelineState>(TimelineState.Success(mockData))
+        every { viewModel.selectedDateState } returns MutableStateFlow(LocalDate.now())
+        every { viewModel.isDatePickerOpenState } returns MutableStateFlow(false)
+        every { viewModel.datePickerYearState } returns MutableStateFlow(LocalDate.now().year)
+        every { viewModel.selectedDateErrorState } returns MutableStateFlow(false)
     }
 
     // '월' 변경 시 잘 동작하는지 테스트
     @Test
     fun testChangeMonth() {
-        val slot = slot<TimelineIntent.LoadDiaries>()
+        val slot = slot<CalendarIntent.LoadDiaries>()
         val initialMonth = 10
 
         // 현재 월에 대한 '일기 목록'을 읽을 경우 "initialMonth + 1 처리"

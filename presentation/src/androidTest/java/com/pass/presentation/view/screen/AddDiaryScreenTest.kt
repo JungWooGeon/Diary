@@ -9,6 +9,7 @@ import androidx.compose.ui.test.performClick
 import com.pass.domain.model.Diary
 import com.pass.presentation.intent.AddDiaryIntent
 import com.pass.presentation.state.AddDiaryState
+import com.pass.presentation.state.WorkState
 import com.pass.presentation.viewmodel.AddDiaryViewModel
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState
 import io.mockk.every
@@ -59,6 +60,8 @@ class AddDiaryScreenTest {
         every { viewModel.isDatePickerOpenState } returns MutableStateFlow(false)
         every { viewModel.isRecordDialogState } returns MutableStateFlow(false)
         every { viewModel.isDeleteDialogState } returns MutableStateFlow(false)
+        every { viewModel.onCompleteDeleteEmotionState } returns MutableStateFlow(WorkState.Standby)
+        every { viewModel.addEmoticonErrorState } returns MutableStateFlow(false)
     }
 
     // Standby 상태 테스트
@@ -149,7 +152,7 @@ class AddDiaryScreenTest {
     @Test
     fun addDiaryScreenCallsOnUpdateDiaryWhenDiaryIsProvided() {
         // viewModel의 UpdateDiary 함수가 호출되었을 때 state 을 Complete 만 나오도록 설정
-        every { viewModel.processIntent(AddDiaryIntent.UpdateDiary) } answers {
+        every { viewModel.processIntent(AddDiaryIntent.OnClickSSProgressButton) } answers {
             every { viewModel.addDiaryState } returns MutableStateFlow(AddDiaryState.Complete)
         }
 

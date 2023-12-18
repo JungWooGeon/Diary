@@ -27,10 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,7 +47,6 @@ import com.pass.presentation.view.composable.DiaryItem
 import com.pass.presentation.view.screen.Constants.INTENT_NAME_DIARY
 import com.pass.presentation.viewmodel.TimelineViewModel
 import org.koin.androidx.compose.getViewModel
-import java.time.LocalDate
 
 @Composable
 fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
@@ -59,35 +54,44 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
 
     val context = LocalContext.current
 
-    val state by viewModel.state.collectAsState()
+    val timeLineState by viewModel.timeLineState.collectAsState()
 
-    // UI 상 에서 선택된 날짜
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    // UI 상 에서 선택된 날짜 상태
+    val selectedDateState by viewModel.selectedDateState.collectAsState()
 
-    // Custom Date Picker 에서 선택된 연도
-    var datePickerYear by remember { mutableIntStateOf(selectedDate.year) }
+    // Custom Date Picker 에서 선택된 연도 상태
+    val datePickerYearState by viewModel.datePickerYearState.collectAsState()
 
     // DatePicker show / hide 상태
-    var isDatePickerOpen by remember { mutableStateOf(false) }
+    val isDatePickerOpenState by viewModel.isDatePickerOpenState.collectAsState()
+
+    // 날짜 선택 예외 처리 상태 -> 날짜 선택 실패 시 토스트 메시지 출력
+    val selectedDateErrorState by viewModel.selectedDateErrorState.collectAsState()
+    LaunchedEffect(selectedDateErrorState) {
+        if (selectedDateErrorState) {
+            Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
+            viewModel.processIntent(TimelineIntent.OnCompleteShowToastErrorMessage)
+        }
+    }
 
     // selectedDate 변경 시마다 diary 업데이트
-    LaunchedEffect(selectedDate) {
-        viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.year.toString(), selectedDate.monthValue.toString()))
+    LaunchedEffect(selectedDateState) {
+        viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDateState.year.toString(), selectedDateState.monthValue.toString()))
     }
 
     // onResume 상태 일 때 diary 업데이트
     LaunchedEffect(lifecycle) {
         lifecycle.addObserver(LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.year.toString(), selectedDate.monthValue.toString()))
+                viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDateState.year.toString(), selectedDateState.monthValue.toString()))
             }
         })
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // 상태에 따라 자연스러운 화면 전환을 위해 Crossfase 사용
-        Crossfade(targetState = state, label = "") { state ->
-            when (state) {
+        Crossfade(targetState = timeLineState, label = "") { timeLineState ->
+            when (timeLineState) {
                 // Loading 상태 : Indicator
                 is TimelineState.Loading -> {
                     Box(
@@ -100,8 +104,8 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
 
                 // 타임라인 diary 읽기 성공 상태
                 is TimelineState.Success -> {
-                    val diaries = state.diaries
-                    val date = selectedDate.year.toString() + "." + selectedDate.monthValue + "."
+                    val diaries = timeLineState.diaries
+                    val date = selectedDateState.year.toString() + "." + selectedDateState.monthValue + "."
 
                     Column(
                         modifier = Modifier
@@ -120,7 +124,9 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
                                 text = date
                             )
 
-                            IconButton(onClick = { isDatePickerOpen = true }) {
+                            IconButton(onClick = {
+                                viewModel.processIntent(TimelineIntent.UpdateDatePickerDialogIsOpen(true))
+                            }) {
                                 Icon(Icons.Default.ArrowDropDown, "DatePicker Button")
                             }
                         }
@@ -149,7 +155,7 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
 
                 // 타임라인 읽기 실패 상태 : errorMessage
                 is TimelineState.Error -> {
-                    val errorMessage = state.error.message
+                    val errorMessage = timeLineState.error.message
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -180,31 +186,26 @@ fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
     }
 
     // DatePicker show / hide
-    if (isDatePickerOpen) {
+    if (isDatePickerOpenState) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
-                .clickable { isDatePickerOpen = false },  // 배경을 클릭하면 다이얼로그를 닫음
+                .clickable { viewModel.processIntent(TimelineIntent.UpdateDatePickerDialogIsOpen(false)) }  // 배경을 클릭하면 다이얼로그를 닫음
         )
 
         CustomYearDatePicker(
-            datePickerYear = datePickerYear,
+            datePickerYear = datePickerYearState,
             onDatePickerYearChange = { newYear ->
-                datePickerYear = newYear
+                viewModel.processIntent(TimelineIntent.UpdateDatePickerYear(newYear))
             },
             onDateSelected = { selectedMonth ->
-                isDatePickerOpen = false
-                val newDate = LocalDate.of(datePickerYear, selectedMonth, 1)
-                if (newDate.isAfter(LocalDate.now())) {
-                    Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
-                } else {
-                    selectedDate = newDate
-                }
+                viewModel.processIntent(TimelineIntent.UpdateDatePickerDialogIsOpen(false))
+                viewModel.processIntent(TimelineIntent.OnDateSelected(selectedMonth))
             },
             onDismissRequest = {
-                isDatePickerOpen = false
-                datePickerYear = selectedDate.year
+                viewModel.processIntent(TimelineIntent.UpdateDatePickerDialogIsOpen(false))
+                viewModel.processIntent(TimelineIntent.UpdateDatePickerYear(selectedDateState.year))
             }
         )
     }
