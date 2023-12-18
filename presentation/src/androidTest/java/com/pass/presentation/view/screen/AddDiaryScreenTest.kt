@@ -79,7 +79,7 @@ class AddDiaryScreenTest {
     @Test
     fun addDiaryScreenCallsOnAddDiaryWhenDiaryIsProvided() {
         // viewModel의 AddDiary 함수가 호출되었을 때 state 을 Complete 만 나오도록 설정
-        every { viewModel.processIntent(AddDiaryIntent.AddDiary(diary)) } answers {
+        every { viewModel.processIntent(AddDiaryIntent.AddDiary) } answers {
             every { viewModel.state } returns MutableStateFlow(AddDiaryState.Complete)
         }
 
@@ -126,7 +126,7 @@ class AddDiaryScreenTest {
     @Test
     fun addDiaryScreenCallsOnUpdateDiaryWhenDiaryIsProvided() {
         // viewModel의 UpdateDiary 함수가 호출되었을 때 state 을 Complete 만 나오도록 설정
-        every { viewModel.processIntent(AddDiaryIntent.UpdateDiary(diary)) } answers {
+        every { viewModel.processIntent(AddDiaryIntent.UpdateDiary) } answers {
             every { viewModel.state } returns MutableStateFlow(AddDiaryState.Complete)
         }
 
@@ -147,7 +147,7 @@ class AddDiaryScreenTest {
     @Test
     fun addDiaryScreenCallsOnDeleteDiaryWhenDiaryIsProvided() {
         // viewModel의 DeleteDiary 함수가 호출되었을 때 state 을 Complete 만 나오도록 설정
-        every { viewModel.processIntent(AddDiaryIntent.DeleteDiary(diary)) } answers {
+        every { viewModel.processIntent(AddDiaryIntent.DeleteDiary) } answers {
             every { viewModel.state } returns MutableStateFlow(AddDiaryState.Complete)
         }
 

@@ -12,13 +12,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,8 +32,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.google.android.gms.auth.UserRecoverableAuthException
 import com.pass.domain.model.Diary
 import com.pass.presentation.intent.AddDiaryIntent
+import com.pass.presentation.intent.SettingsIntent
 import com.pass.presentation.state.AddDiaryState
 import com.pass.presentation.view.composable.AddDiaryAppBar
 import com.pass.presentation.view.composable.AddEmoticonDialog
@@ -82,6 +89,9 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
     // 녹음 다이얼로그 상태
     val isRecordDialogState by viewModel.isRecordDialogState.collectAsState()
 
+    // 삭제 다이얼로그 상태
+    val isDeleteDialogState by viewModel.isDeleteDialogState.collectAsState()
+
     // 처음 시작 시 diary 상태에 따라 수정하기 / 추가하기 화면 구분
     LaunchedEffect(Unit) { viewModel.processIntent(AddDiaryIntent.Initialize(diary)) }
 
@@ -113,34 +123,9 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     isEdit = diary != null,
                     context = context,
                     date = selectedDateWithLocalDate,
-                    onAddDiary = {
-                        // 추가
-                        var emoticonId1: Int? = null
-                        var emoticonId2: Int? = null
-                        var emoticonId3: Int? = null
-
-                        if (emoticonIdListState[0] != -1) emoticonId1 = emoticonIdListState[0]
-                        if (emoticonIdListState[1] != -1) emoticonId2 = emoticonIdListState[1]
-                        if (emoticonIdListState[2] != -1) emoticonId3 = emoticonIdListState[2]
-
-                        val addDiary = Diary(
-                            id = null,
-                            year = selectedDateWithLocalDate.year.toString(),
-                            month = selectedDateWithLocalDate.monthValue.toString(),
-                            day = selectedDateWithLocalDate.dayOfMonth.toString(),
-                            dayOfWeek = Constants.DAY_OF_WEEK_TO_KOREAN[selectedDateWithLocalDate.dayOfWeek.toString()]!!,
-                            emoticonId1 = emoticonId1,
-                            emoticonId2 = emoticonId2,
-                            emoticonId3 = emoticonId3,
-                            imageUri = null,
-                            content = contentTextState,
-                            title = titleTextState
-                        )
-
-                        viewModel.processIntent(AddDiaryIntent.AddDiary(addDiary))
-                    },
+                    onAddDiary = { viewModel.processIntent(AddDiaryIntent.AddDiary) },
                     onOpenDatePicker = { viewModel.processIntent(AddDiaryIntent.UpdateDatePickerDialog(true)) },
-                    onDeleteDiary = { diary?.let { viewModel.processIntent(AddDiaryIntent.DeleteDiary(diary)) } }
+                    onDeleteDiary = { viewModel.processIntent(AddDiaryIntent.UpdateDeleteDialog(true)) }
                 )
 
                 EmoticonBox(
@@ -176,9 +161,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                         .weight(1F)
                         .padding(20.dp),
                     textSize = textSizeState,
-                    onTextChanged = { changedText ->
-                        viewModel.processIntent(AddDiaryIntent.WriteContent(changedText))
-                    }
+                    onTextChanged = { changedText -> viewModel.processIntent(AddDiaryIntent.WriteContent(changedText)) }
                 )
 
                 Box(
@@ -209,28 +192,8 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                                 // 요약하기
                                 viewModel.processIntent(AddDiaryIntent.SummaryContent(titleTextState, contentTextState))
                             } else {
-                                // 수정하기일 때
-                                var emoticonId1: Int? = null
-                                var emoticonId2: Int? = null
-                                var emoticonId3: Int? = null
-
-                                if (emoticonIdListState[0] != -1) emoticonId1 = emoticonIdListState[0]
-                                if (emoticonIdListState[1] != -1) emoticonId2 = emoticonIdListState[1]
-                                if (emoticonIdListState[2] != -1) emoticonId3 = emoticonIdListState[2]
-
-                                diary.year = selectedDateWithLocalDate.year.toString()
-                                diary.month = selectedDateWithLocalDate.monthValue.toString()
-                                diary.day = selectedDateWithLocalDate.dayOfMonth.toString()
-                                diary.dayOfWeek =
-                                    Constants.DAY_OF_WEEK_TO_KOREAN[selectedDateWithLocalDate.dayOfWeek.toString()]!!
-                                diary.emoticonId1 = emoticonId1
-                                diary.emoticonId2 = emoticonId2
-                                diary.emoticonId3 = emoticonId3
-                                diary.imageUri = null
-                                diary.content = contentTextState
-                                diary.title = titleTextState
-
-                                viewModel.processIntent(AddDiaryIntent.UpdateDiary(diary))
+                                // 수정하기 일 때
+                                viewModel.processIntent(AddDiaryIntent.UpdateDiary)
                             }
                         },
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black, contentColor = Color.White),
@@ -245,6 +208,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                 }
             }
 
+            // Emoticon Dialog show / hide
             if (isDialogAddState || isDialogEditState != Constants.NOT_EDIT_INDEX) {
                 Box(
                     modifier = Modifier
@@ -330,6 +294,46 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                         onCompleteRecording = {
                             viewModel.processIntent(AddDiaryIntent.UpdateRecordDialog(false))
                             viewModel.processIntent(AddDiaryIntent.WriteContent(contentTextState + "\n" + it))
+                        }
+                    )
+                }
+            }
+
+            // Delete Dialog show / hide
+            if (isDeleteDialogState) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
+                        .clickable { viewModel.processIntent(AddDiaryIntent.UpdateDeleteDialog(false)) }  // 배경을 클릭하면 다이얼로그를 닫음
+                ) {
+                    AlertDialog(
+                        onDismissRequest = { viewModel.processIntent(AddDiaryIntent.UpdateDeleteDialog(false)) },
+                        title = { Text(text = "삭제") },
+                        text = { Text(text = "일기를 삭제하시겠습니까?") },
+                        confirmButton = {
+                            Button(
+                                shape = RoundedCornerShape(5.dp),
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                    containerColor = Color.Black
+                                ),
+                                modifier = Modifier.padding(horizontal = 10.dp),
+                                onClick = { viewModel.processIntent(AddDiaryIntent.DeleteDiary) }
+                            ) {
+                                Text("확인")
+                            }
+                        },
+                        dismissButton = {
+                            Button(
+                                shape = RoundedCornerShape(5.dp),
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                    containerColor = Color.Black
+                                ),
+                                modifier = Modifier.padding(horizontal = 10.dp),
+                                onClick = { viewModel.processIntent(AddDiaryIntent.UpdateDeleteDialog(false)) }
+                            ) {
+                                Text("취소")
+                            }
                         }
                     )
                 }

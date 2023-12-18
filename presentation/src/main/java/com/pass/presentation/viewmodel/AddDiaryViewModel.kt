@@ -2,6 +2,7 @@ package com.pass.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pass.domain.model.Diary
 import com.pass.domain.usecase.diary.AddDiaryUseCase
 import com.pass.domain.usecase.diary.DeleteDiaryUseCase
 import com.pass.domain.usecase.diary.SummaryDiaryUseCase
@@ -27,7 +28,7 @@ class AddDiaryViewModel(
 ) : ViewModel() {
 
     // 화면 상태 (loading, error, standby)
-    private val _addDiaryState = MutableStateFlow<AddDiaryState>(AddDiaryState.Standby)
+    private val _addDiaryState = MutableStateFlow<AddDiaryState>(AddDiaryState.Loading)
     val addDiaryState: StateFlow<AddDiaryState> = _addDiaryState
 
     // 텍스트 크기
@@ -76,12 +77,22 @@ class AddDiaryViewModel(
     private val _isRecordDialogState = MutableStateFlow(false)
     val isRecordDialogState: StateFlow<Boolean> = _isRecordDialogState
 
+    // 삭제 다이얼로그
+    private val _isDeleteDialogState = MutableStateFlow(false)
+    val isDeleteDialogState: StateFlow<Boolean> = _isDeleteDialogState
+
+    // 수정하기 일 때 diary 정보
+    private var updateDiary: Diary? = null
+
     init {
+        _addDiaryState.value = AddDiaryState.Loading
+
         viewModelScope.launch(Dispatchers.Main) {
             withContext(Dispatchers.IO) {
                 getCurrentTextSizeUseCase()
             }.collect { size ->
                 _testSizeState.value = size
+                _addDiaryState.value = AddDiaryState.Standby
             }
         }
     }
@@ -91,6 +102,7 @@ class AddDiaryViewModel(
             is AddDiaryIntent.Initialize -> {
                 // 수정하기 화면일 경우 초기화
                 if (intent.diary != null) {
+                    updateDiary = intent.diary
                     _selectedDateWithLocalDate.value = LocalDate.of(intent.diary.year.toInt(), intent.diary.month.toInt(), intent.diary.day.toInt())
                     _titleTextState.value = intent.diary.title
                     _contentTextState.value = intent.diary.content
@@ -105,9 +117,32 @@ class AddDiaryViewModel(
 
             is AddDiaryIntent.AddDiary -> {
                 _addDiaryState.value = AddDiaryState.Loading
+
+                var emoticonId1: Int? = null
+                var emoticonId2: Int? = null
+                var emoticonId3: Int? = null
+
+                if (emoticonIdListState.value[0] != -1) emoticonId1 = emoticonIdListState.value[0]
+                if (emoticonIdListState.value[1] != -1) emoticonId2 = emoticonIdListState.value[1]
+                if (emoticonIdListState.value[2] != -1) emoticonId3 = emoticonIdListState.value[2]
+
+                val addDiary = Diary(
+                    id = null,
+                    year = selectedDateWithLocalDate.value.year.toString(),
+                    month = selectedDateWithLocalDate.value.monthValue.toString(),
+                    day = selectedDateWithLocalDate.value.dayOfMonth.toString(),
+                    dayOfWeek = Constants.DAY_OF_WEEK_TO_KOREAN[selectedDateWithLocalDate.value.dayOfWeek.toString()]!!,
+                    emoticonId1 = emoticonId1,
+                    emoticonId2 = emoticonId2,
+                    emoticonId3 = emoticonId3,
+                    imageUri = null,
+                    content = contentTextState.value,
+                    title = titleTextState.value
+                )
+
                 viewModelScope.launch(Dispatchers.IO) {
                     try {
-                        addDiaryUseCase(intent.diary)
+                        addDiaryUseCase(addDiary)
                         withContext(Dispatchers.Main) {
                             _addDiaryState.value = AddDiaryState.Complete
                         }
@@ -119,9 +154,30 @@ class AddDiaryViewModel(
 
             is AddDiaryIntent.UpdateDiary -> {
                 _addDiaryState.value = AddDiaryState.Loading
+
+                // 수정하기일 때
+                var emoticonId1: Int? = null
+                var emoticonId2: Int? = null
+                var emoticonId3: Int? = null
+
+                if (emoticonIdListState.value[0] != -1) emoticonId1 = emoticonIdListState.value[0]
+                if (emoticonIdListState.value[1] != -1) emoticonId2 = emoticonIdListState.value[1]
+                if (emoticonIdListState.value[2] != -1) emoticonId3 = emoticonIdListState.value[2]
+
+                updateDiary?.year = selectedDateWithLocalDate.value.year.toString()
+                updateDiary?.month = selectedDateWithLocalDate.value.monthValue.toString()
+                updateDiary?.day = selectedDateWithLocalDate.value.dayOfMonth.toString()
+                updateDiary?.dayOfWeek = Constants.DAY_OF_WEEK_TO_KOREAN[selectedDateWithLocalDate.value.dayOfWeek.toString()]!!
+                updateDiary?.emoticonId1 = emoticonId1
+                updateDiary?.emoticonId2 = emoticonId2
+                updateDiary?.emoticonId3 = emoticonId3
+                updateDiary?.imageUri = null
+                updateDiary?.content = contentTextState.value
+                updateDiary?.title = titleTextState.value
+
                 viewModelScope.launch(Dispatchers.IO) {
                     try {
-                        updateDiaryUseCase(intent.diary)
+                        updateDiary?.let { updateDiaryUseCase(it) }
                         withContext(Dispatchers.Main) {
                             _addDiaryState.value = AddDiaryState.Complete
                         }
@@ -135,7 +191,7 @@ class AddDiaryViewModel(
                 _addDiaryState.value = AddDiaryState.Loading
                 viewModelScope.launch(Dispatchers.IO) {
                     try {
-                        deleteDiaryUseCase(intent.diary)
+                        updateDiary?.let { deleteDiaryUseCase(it) }
                         withContext(Dispatchers.Main) {
                             _addDiaryState.value = AddDiaryState.Complete
                         }
@@ -204,6 +260,7 @@ class AddDiaryViewModel(
             is AddDiaryIntent.UpdateEditDialog -> { _isDialogEditState.value = intent.index }
             is AddDiaryIntent.UpdateDatePickerDialog -> { _isDatePickerOpenState.value = intent.isOpen }
             is AddDiaryIntent.UpdateRecordDialog -> { _isRecordDialogState.value = intent.isOpen }
+            is AddDiaryIntent.UpdateDeleteDialog -> { _isDeleteDialogState.value = intent.isOpen }
         }
     }
 }

@@ -5,9 +5,9 @@ import java.time.LocalDate
 
 sealed class AddDiaryIntent {
     data class Initialize(val diary: Diary?) : AddDiaryIntent()
-    data class AddDiary(val diary: Diary) : AddDiaryIntent()
-    data class UpdateDiary(val diary: Diary) : AddDiaryIntent()
-    data class DeleteDiary(val diary: Diary) : AddDiaryIntent()
+    data object AddDiary : AddDiaryIntent()
+    data object UpdateDiary : AddDiaryIntent()
+    data object DeleteDiary : AddDiaryIntent()
     data class SummaryContent(val title: String, val content: String) : AddDiaryIntent()
 
     data class SelectDate(val localDate: LocalDate) : AddDiaryIntent()
@@ -21,4 +21,5 @@ sealed class AddDiaryIntent {
     data class UpdateEditDialog(val index: Int) : AddDiaryIntent()
     data class UpdateDatePickerDialog(val isOpen: Boolean) : AddDiaryIntent()
     data class UpdateRecordDialog(val isOpen: Boolean) : AddDiaryIntent()
+    data class UpdateDeleteDialog(val isOpen: Boolean) : AddDiaryIntent()
 }

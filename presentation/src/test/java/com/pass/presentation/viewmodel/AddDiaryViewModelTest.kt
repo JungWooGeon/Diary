@@ -47,7 +47,7 @@ class AddDiaryViewModelTest {
 
         coEvery { addDiaryUseCase(diary) } just Runs
 
-        viewModel.processIntent(AddDiaryIntent.AddDiary(diary))
+        viewModel.processIntent(AddDiaryIntent.AddDiary)
 
         // 한 번만 수행되었는지 확인
         coVerify(exactly = 1) { addDiaryUseCase(diary) }
@@ -73,7 +73,7 @@ class AddDiaryViewModelTest {
         // addDiary 실행 시 실행만 되게 적용
         coEvery { updateDiaryUseCase(diary) } just Runs
 
-        viewModel.processIntent(AddDiaryIntent.UpdateDiary(diary))
+        viewModel.processIntent(AddDiaryIntent.UpdateDiary)
 
         // 한 번만 수행되었는지 확인
         coVerify(exactly = 1) { updateDiaryUseCase(diary) }
@@ -99,7 +99,7 @@ class AddDiaryViewModelTest {
         // addDiary 실행 시 실행만 되게 적용
         coEvery { deleteDiaryUseCase(diary) } just Runs
 
-        viewModel.processIntent(AddDiaryIntent.DeleteDiary(diary))
+        viewModel.processIntent(AddDiaryIntent.DeleteDiary)
 
         // 한 번만 수행되었는지 확인
         coVerify(exactly = 1) { deleteDiaryUseCase(diary) }
