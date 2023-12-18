@@ -32,16 +32,17 @@ class AnalysisViewModel(
     private val _isDatePickerOpenState = MutableStateFlow(false)
     val isDatePickerOpenState: StateFlow<Boolean> = _isDatePickerOpenState
 
+    // 날짜 선택 예외 처리
+    private val _selectDateErrorState = MutableStateFlow(false)
+    val selectDateErrorState: StateFlow<Boolean> = _selectDateErrorState
+
     // 처음 시작 시 현재 날짜 기반 일기 내용 로드
     init { loadDiaries() }
 
     fun processIntent(intent: AnalysisIntent) {
         when (intent) {
-            is AnalysisIntent.UpdateSelectDate -> {
-                _selectedDateState.value = intent.date
-
-                // selectedDate 변경 시마다 diary 업데이트
-                loadDiaries()
+            is AnalysisIntent.OnDateSelected -> {
+                setSelectDate(LocalDate.of(datePickerYearState.value, intent.selectedMonth, 1))
             }
 
             is AnalysisIntent.UpdateDatePickerYear -> {
@@ -50,6 +51,18 @@ class AnalysisViewModel(
 
             is AnalysisIntent.UpdateDatePickerDialog -> {
                 _isDatePickerOpenState.value = intent.isOpen
+            }
+
+            is AnalysisIntent.OnSelectPreviousMonth -> {
+                setSelectDate(selectedDateState.value.minusMonths(1))
+            }
+
+            is AnalysisIntent.OnSelectNextMonth -> {
+                setSelectDate(selectedDateState.value.plusMonths(1))
+            }
+
+            is AnalysisIntent.OnCompleteShowToastErrorMessage -> {
+                _selectDateErrorState.value = false
             }
         }
     }
@@ -67,6 +80,17 @@ class AnalysisViewModel(
                     _state.value = TimelineState.Error(e)
                 }
             }
+        }
+    }
+
+    private fun setSelectDate(newDate: LocalDate) {
+        if (newDate.isAfter(LocalDate.now())) {
+            _selectDateErrorState.value = true
+        } else {
+            _selectedDateState.value = newDate
+            _datePickerYearState.value = selectedDateState.value.year
+            // selectedDate 변경 시마다 diary 업데이트
+            loadDiaries()
         }
     }
 }

@@ -26,17 +26,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.pass.presentation.intent.TimelineIntent
+import com.pass.presentation.intent.CalendarIntent
 import com.pass.presentation.state.TimelineState
 import com.pass.presentation.ui.theme.LineGray
 import com.pass.presentation.view.activity.AddDiaryActivity
@@ -45,46 +41,45 @@ import com.pass.presentation.view.composable.CalendarWeekdaysTitle
 import com.pass.presentation.view.composable.CurrentMonthWithCalendar
 import com.pass.presentation.view.composable.CustomYearDatePicker
 import com.pass.presentation.view.composable.DiaryItem
-import com.pass.presentation.viewmodel.TimelineViewModel
+import com.pass.presentation.viewmodel.CalendarViewModel
 import org.koin.androidx.compose.getViewModel
-import java.time.LocalDate
 
 @Composable
-fun CalendarScreen(viewModel: TimelineViewModel = getViewModel()) {
+fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
     val context = LocalContext.current
 
-    val state by viewModel.state.collectAsState()
+    // 현재 화면 상태 (standby, loading, error)
+    val calendarState by viewModel.calendarState.collectAsState()
 
-    // UI 상 에서 선택된 날짜
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    // UI 상 에서 선택된 날짜 상태
+    val selectedDateState by viewModel.selectedDateState.collectAsState()
 
     // DatePicker show / hide 상태
-    var isDatePickerOpen by remember { mutableStateOf(false) }
+    val isDatePickerOpenState by viewModel.isDatePickerOpenState.collectAsState()
 
-    // Custom Date Picker 에서 선택된 연도
-    var datePickerYear by remember { mutableIntStateOf(selectedDate.year) }
-
-    // selectedDate '월' 변경 시마다 diary 업데이트
-    LaunchedEffect(selectedDate.monthValue) {
-        viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.year.toString(), selectedDate.monthValue.toString()))
-    }
-
-    // selectedDate '년' 변경 시마다 Custom Date Picker 에서 사용될 연도 업데이트
-    LaunchedEffect(selectedDate.year) {
-        datePickerYear = selectedDate.year
-    }
+    // Custom Date Picker 에서 선택된 연도 상태
+    val datePickerYearState by viewModel.datePickerYearState.collectAsState()
 
     // 일기 추가/수정 마치고 왔을 경우 업데이트
     val startForResult = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
         if (result.resultCode == Activity.RESULT_OK) {
-            viewModel.processIntent(TimelineIntent.LoadDiaries(selectedDate.year.toString(), selectedDate.monthValue.toString()))
+            viewModel.processIntent(CalendarIntent.LoadDiaries)
+        }
+    }
+
+    // 날짜 선택 예외 처리 상태 -> 날짜 선택 실패 시 토스트 메시지 출력
+    val selectedDateErrorState by viewModel.selectedDateErrorState.collectAsState()
+    LaunchedEffect(selectedDateErrorState) {
+        if (selectedDateErrorState) {
+            Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
+            viewModel.processIntent(CalendarIntent.OnCompleteShowToastErrorMessage)
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // 상태에 따라 자연스러운 화면 전환을 위해 Crossfase 사용
-        Crossfade(targetState = state, label = "") { state ->
-            when (state) {
+        Crossfade(targetState = calendarState, label = "") { calendarState ->
+            when (calendarState) {
                 // Loading 상태 : Indicator
                 is TimelineState.Loading -> {
                     Box(
@@ -97,54 +92,27 @@ fun CalendarScreen(viewModel: TimelineViewModel = getViewModel()) {
 
                 // diary 읽기 성공 상태
                 is TimelineState.Success -> {
-                    val diaries = state.diaries
+                    val diaries = calendarState.diaries
 
                     Column(Modifier.verticalScroll(rememberScrollState())) {
                         // 날짜 표시 및 수정
                         CurrentMonthWithCalendar(
-                            currentMonth = selectedDate.monthValue.toString(),
-                            onSelectPreviousMonth = {
-                                selectedDate = selectedDate.minusMonths(1)
-                            },
-                            onSelectNextMonth = {
-                                val newDate = selectedDate.plusMonths(1)
-                                if (newDate.isAfter(LocalDate.now())) {
-                                    Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    selectedDate = newDate
-                                }
-                            },
-                            onClickSelectMonth = {
-                                isDatePickerOpen = true
-                            }
+                            currentMonth = selectedDateState.monthValue.toString(),
+                            onSelectPreviousMonth = { viewModel.processIntent(CalendarIntent.OnSelectPreviousMonth(selectedDateState.dayOfMonth)) },
+                            onSelectNextMonth = { viewModel.processIntent(CalendarIntent.OnSelectNextMonth(selectedDateState.dayOfMonth)) },
+                            onClickSelectMonth = { viewModel.processIntent(CalendarIntent.UpdateDatePickerIsOpen(true)) }
                         )
 
                         // 달력 표시
                         CalendarWeekdaysTitle()
                         CalendarMonthGrid(
-                            year = selectedDate.year,
-                            month = selectedDate.monthValue,
-                            dayOfMonth = selectedDate.dayOfMonth,
+                            year = selectedDateState.year,
+                            month = selectedDateState.monthValue,
+                            dayOfMonth = selectedDateState.dayOfMonth,
                             diaries = diaries,
-                            onClickTheCurrentMonthDate = { date ->
-                                val newDate = selectedDate.withDayOfMonth(date)
-                                if (newDate.isAfter(LocalDate.now())) {
-                                    Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    selectedDate = newDate
-                                }
-                            },
-                            onClickThePreviousMonthDate = { date ->
-                                selectedDate = selectedDate.minusMonths(1).withDayOfMonth(date)
-                            },
-                            onClickTheNextMonthDate = { date ->
-                                val newDate = selectedDate.plusMonths(1).withDayOfMonth(date)
-                                if (newDate.isAfter(LocalDate.now())) {
-                                    Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    selectedDate = newDate
-                                }
-                            }
+                            onClickTheCurrentMonthDate = { date -> viewModel.processIntent(CalendarIntent.OnSelectTheCurrentMonthDate(date)) },
+                            onClickThePreviousMonthDate = { date -> viewModel.processIntent(CalendarIntent.OnSelectPreviousMonth(date)) },
+                            onClickTheNextMonthDate = { date -> viewModel.processIntent(CalendarIntent.OnSelectNextMonth(date)) }
                         )
 
                         Divider(
@@ -156,7 +124,7 @@ fun CalendarScreen(viewModel: TimelineViewModel = getViewModel()) {
                         )
 
                         diaries.forEach { diary ->
-                            if (diary.day.toInt() == selectedDate.dayOfMonth) {
+                            if (diary.day.toInt() == selectedDateState.dayOfMonth) {
                                 DiaryItem(
                                     diary = diary,
                                     onClickItem = { clickDiary ->
@@ -173,7 +141,7 @@ fun CalendarScreen(viewModel: TimelineViewModel = getViewModel()) {
 
                 // 읽기 실패 상태 : errorMessage
                 is TimelineState.Error -> {
-                    val errorMessage = state.error.message
+                    val errorMessage = calendarState.error.message
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -203,31 +171,26 @@ fun CalendarScreen(viewModel: TimelineViewModel = getViewModel()) {
         }
 
         // DatePicker show / hide
-        if (isDatePickerOpen) {
+        if (isDatePickerOpenState) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
-                    .clickable { isDatePickerOpen = false },  // 배경을 클릭하면 다이얼로그를 닫음
+                    .clickable { viewModel.processIntent(CalendarIntent.UpdateDatePickerIsOpen(false)) },  // 배경을 클릭하면 다이얼로그를 닫음
             )
 
             CustomYearDatePicker(
-                datePickerYear = datePickerYear,
+                datePickerYear = datePickerYearState,
                 onDatePickerYearChange = { newYear ->
-                    datePickerYear = newYear
+                    viewModel.processIntent(CalendarIntent.UpdateDatePickerYear(newYear))
                 },
                 onDateSelected = { selectedMonth ->
-                    isDatePickerOpen = false
-                    val newDate = LocalDate.of(datePickerYear, selectedMonth, 1)
-                    if (newDate.isAfter(LocalDate.now())) {
-                        Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
-                    } else {
-                        selectedDate = newDate
-                    }
+                    viewModel.processIntent(CalendarIntent.UpdateDatePickerIsOpen(false))
+                    viewModel.processIntent(CalendarIntent.OnSelectNewMonth(selectedMonth))
                 },
                 onDismissRequest = {
-                    isDatePickerOpen = false
-                    datePickerYear = selectedDate.year
+                    viewModel.processIntent(CalendarIntent.UpdateDatePickerIsOpen(false))
+                    viewModel.processIntent(CalendarIntent.UpdateDatePickerYear(selectedDateState.year))
                 }
             )
         }

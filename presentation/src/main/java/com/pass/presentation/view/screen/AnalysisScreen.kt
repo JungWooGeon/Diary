@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -24,7 +25,6 @@ import com.pass.presentation.view.composable.CustomYearDatePicker
 import com.pass.presentation.view.composable.HorizontalBarChartView
 import com.pass.presentation.viewmodel.AnalysisViewModel
 import org.koin.androidx.compose.getViewModel
-import java.time.LocalDate
 
 @Composable
 fun AnalysisScreen(viewModel: AnalysisViewModel = getViewModel()) {
@@ -41,6 +41,16 @@ fun AnalysisScreen(viewModel: AnalysisViewModel = getViewModel()) {
 
     // DatePicker show / hide 상태
     val isDatePickerOpenState by viewModel.isDatePickerOpenState.collectAsState()
+
+    // 날짜 선택 예외 처리 상태 -> true 일 경우 에러 토스트 메시지 출력
+    val selectDateErrorState by viewModel.selectDateErrorState.collectAsState()
+    LaunchedEffect(selectDateErrorState) {
+        if (selectDateErrorState) {
+            Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
+            viewModel.processIntent(AnalysisIntent.OnCompleteShowToastErrorMessage)
+        }
+    }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         // 상태에 따라 자연스러운 화면 전환을 위해 Crossfase 사용
@@ -64,17 +74,8 @@ fun AnalysisScreen(viewModel: AnalysisViewModel = getViewModel()) {
                         // 날짜 표시 및 수정
                         CurrentMonthWithCalendar(
                             currentMonth = selectedDateState.monthValue.toString(),
-                            onSelectPreviousMonth = { viewModel.processIntent(AnalysisIntent.UpdateSelectDate(selectedDateState.minusMonths(1))) },
-                            onSelectNextMonth = {
-                                val newDate = selectedDateState.plusMonths(1)
-                                if (newDate.isAfter(LocalDate.now())) {
-                                    Toast.makeText(
-                                        context,
-                                        "오지 않은 날짜는 설정할 수 없습니다.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                } else { viewModel.processIntent(AnalysisIntent.UpdateSelectDate(newDate)) }
-                            },
+                            onSelectPreviousMonth = { viewModel.processIntent(AnalysisIntent.OnSelectPreviousMonth) },
+                            onSelectNextMonth = { viewModel.processIntent(AnalysisIntent.OnSelectNextMonth) },
                             onClickSelectMonth = { viewModel.processIntent(AnalysisIntent.UpdateDatePickerDialog(true)) }
                         )
                         HorizontalBarChartView(diaries)
@@ -111,10 +112,7 @@ fun AnalysisScreen(viewModel: AnalysisViewModel = getViewModel()) {
             onDatePickerYearChange = { newYear -> viewModel.processIntent(AnalysisIntent.UpdateDatePickerYear(newYear)) },
             onDateSelected = { selectedMonth ->
                 viewModel.processIntent(AnalysisIntent.UpdateDatePickerDialog(false))
-                val newDate = LocalDate.of(datePickerYearState, selectedMonth, 1)
-                if (newDate.isAfter(LocalDate.now())) {
-                    Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
-                } else { viewModel.processIntent(AnalysisIntent.UpdateSelectDate(newDate)) }
+                viewModel.processIntent(AnalysisIntent.OnDateSelected(selectedMonth))
             },
             onDismissRequest = {
                 viewModel.processIntent(AnalysisIntent.UpdateDatePickerDialog(false))

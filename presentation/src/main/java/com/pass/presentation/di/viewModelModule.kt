@@ -2,6 +2,7 @@ package com.pass.presentation.di
 
 import com.pass.presentation.viewmodel.AddDiaryViewModel
 import com.pass.presentation.viewmodel.AnalysisViewModel
+import com.pass.presentation.viewmodel.CalendarViewModel
 import com.pass.presentation.viewmodel.SettingsViewModel
 import com.pass.presentation.viewmodel.ThemeViewModel
 import com.pass.presentation.viewmodel.TimelineViewModel
@@ -27,5 +28,9 @@ val viewModelModule = module {
 
     viewModel {
         AnalysisViewModel(get())
+    }
+
+    viewModel {
+        CalendarViewModel(get())
     }
 }

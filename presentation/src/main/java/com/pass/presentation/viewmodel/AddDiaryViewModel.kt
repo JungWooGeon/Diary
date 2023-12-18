@@ -10,6 +10,7 @@ import com.pass.domain.usecase.diary.UpdateDiaryUseCase
 import com.pass.domain.usecase.settings.font.GetCurrentTextSizeUseCase
 import com.pass.presentation.intent.AddDiaryIntent
 import com.pass.presentation.state.AddDiaryState
+import com.pass.presentation.state.WorkState
 import com.pass.presentation.view.screen.Constants
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState
 import kotlinx.coroutines.Dispatchers
@@ -84,6 +85,14 @@ class AddDiaryViewModel(
     // 수정하기 일 때 diary 정보
     private var updateDiary: Diary? = null
 
+    // 삭제 작업 완료 여부
+    private val _onCompleteDeleteEmotionState: MutableStateFlow<WorkState> = MutableStateFlow(WorkState.Standby)
+    val onCompleteDeleteEmotionState: StateFlow<WorkState> = _onCompleteDeleteEmotionState
+
+    // 이모티콘 추가 예외 처리
+    private val _addEmoticonErrorState = MutableStateFlow(false)
+    val addEmoticonErrorState: StateFlow<Boolean> = _addEmoticonErrorState
+
     init {
         _addDiaryState.value = AddDiaryState.Loading
 
@@ -152,41 +161,6 @@ class AddDiaryViewModel(
                 }
             }
 
-            is AddDiaryIntent.UpdateDiary -> {
-                _addDiaryState.value = AddDiaryState.Loading
-
-                // 수정하기일 때
-                var emoticonId1: Int? = null
-                var emoticonId2: Int? = null
-                var emoticonId3: Int? = null
-
-                if (emoticonIdListState.value[0] != -1) emoticonId1 = emoticonIdListState.value[0]
-                if (emoticonIdListState.value[1] != -1) emoticonId2 = emoticonIdListState.value[1]
-                if (emoticonIdListState.value[2] != -1) emoticonId3 = emoticonIdListState.value[2]
-
-                updateDiary?.year = selectedDateWithLocalDate.value.year.toString()
-                updateDiary?.month = selectedDateWithLocalDate.value.monthValue.toString()
-                updateDiary?.day = selectedDateWithLocalDate.value.dayOfMonth.toString()
-                updateDiary?.dayOfWeek = Constants.DAY_OF_WEEK_TO_KOREAN[selectedDateWithLocalDate.value.dayOfWeek.toString()]!!
-                updateDiary?.emoticonId1 = emoticonId1
-                updateDiary?.emoticonId2 = emoticonId2
-                updateDiary?.emoticonId3 = emoticonId3
-                updateDiary?.imageUri = null
-                updateDiary?.content = contentTextState.value
-                updateDiary?.title = titleTextState.value
-
-                viewModelScope.launch(Dispatchers.IO) {
-                    try {
-                        updateDiary?.let { updateDiaryUseCase(it) }
-                        withContext(Dispatchers.Main) {
-                            _addDiaryState.value = AddDiaryState.Complete
-                        }
-                    } catch (e: Exception) {
-                        _addDiaryState.value = AddDiaryState.Error(e)
-                    }
-                }
-            }
-
             is AddDiaryIntent.DeleteDiary -> {
                 _addDiaryState.value = AddDiaryState.Loading
                 viewModelScope.launch(Dispatchers.IO) {
@@ -201,36 +175,18 @@ class AddDiaryViewModel(
                 }
             }
 
-            is AddDiaryIntent.SummaryContent -> {
-                _titleTextState.value = ""
-                _submitButtonState.value = SSButtonState.LOADING
-
-                viewModelScope.launch(Dispatchers.Main) {
-                    try {
-                        withContext(Dispatchers.IO) {
-                            summaryDiaryUseCase(intent.content)
-                        }.collect { summary ->
-                            if (summary == "") {
-                                _submitButtonState.value = SSButtonState.FAILIURE
-                            } else {
-                                _submitButtonState.value = SSButtonState.SUCCESS
-                                _titleTextState.value = summary
-                            }
-
-                            _submitButtonState.value = SSButtonState.IDLE
-                        }
-                    } catch (e: Exception) {
-                        _submitButtonState.value = SSButtonState.FAILIURE
-                        _submitButtonState.value = SSButtonState.IDLE
-                    }
-                }
-            }
-
             is AddDiaryIntent.SelectDate -> { _selectedDateWithLocalDate.value = intent.localDate }
             is AddDiaryIntent.WriteTitle -> { _titleTextState.value = intent.text }
             is AddDiaryIntent.WriteContent -> { _contentTextState.value = intent.text }
 
             is AddDiaryIntent.DeleteEmoticon -> {
+                if (emoticonIdListState.value[1] == -1) {
+                    _onCompleteDeleteEmotionState.value = WorkState.Fail
+                    return
+                } else {
+                    _onCompleteDeleteEmotionState.value = WorkState.Success
+                }
+
                 val tmpList = arrayListOf<Int>()
                 when (intent.index) {
                     0 -> {
@@ -255,12 +211,116 @@ class AddDiaryViewModel(
                 _emoticonIdListState.value = tmpList
             }
 
-            is AddDiaryIntent.UpdateEmoticon -> { _emoticonIdListState.value[intent.index] = intent.emoticonId }
             is AddDiaryIntent.UpdateAddDialog -> { _isDialogAddState.value = intent.isOpen }
             is AddDiaryIntent.UpdateEditDialog -> { _isDialogEditState.value = intent.index }
             is AddDiaryIntent.UpdateDatePickerDialog -> { _isDatePickerOpenState.value = intent.isOpen }
             is AddDiaryIntent.UpdateRecordDialog -> { _isRecordDialogState.value = intent.isOpen }
             is AddDiaryIntent.UpdateDeleteDialog -> { _isDeleteDialogState.value = intent.isOpen }
+            is AddDiaryIntent.OnCompleteShowToastDeleteEmoticon -> { _onCompleteDeleteEmotionState.value = WorkState.Standby }
+            is AddDiaryIntent.OnClickSSProgressButton -> {
+                // 요약 중에는 버튼 클릭 방지
+                if (submitButtonState.value != SSButtonState.IDLE && submitButtonState.value != SSButtonState.SUCCESS) return
+
+                if (updateDiary == null) {
+                    // 추가하기 화면일 때
+                    if (contentTextState.value.length < 20) {
+                        // 내용이 너무 적을 경우 예외 처리
+                        _submitButtonState.value = SSButtonState.FAILIURE
+                        return
+                    }
+
+                    // 요약하기
+                    _titleTextState.value = ""
+                    _submitButtonState.value = SSButtonState.LOADING
+
+                    viewModelScope.launch(Dispatchers.Main) {
+                        try {
+                            withContext(Dispatchers.IO) {
+                                summaryDiaryUseCase(contentTextState.value)
+                            }.collect { summary ->
+                                if (summary == "") {
+                                    _submitButtonState.value = SSButtonState.FAILIURE
+                                } else {
+                                    _submitButtonState.value = SSButtonState.SUCCESS
+                                    _titleTextState.value = summary
+                                }
+
+                                _submitButtonState.value = SSButtonState.IDLE
+                            }
+                        } catch (e: Exception) {
+                            _submitButtonState.value = SSButtonState.FAILIURE
+                            _submitButtonState.value = SSButtonState.IDLE
+                        }
+                    }
+                } else {
+                    // 수정하기 화면일 때
+                    _addDiaryState.value = AddDiaryState.Loading
+
+                    // 수정하기일 때
+                    var emoticonId1: Int? = null
+                    var emoticonId2: Int? = null
+                    var emoticonId3: Int? = null
+
+                    if (emoticonIdListState.value[0] != -1) emoticonId1 = emoticonIdListState.value[0]
+                    if (emoticonIdListState.value[1] != -1) emoticonId2 = emoticonIdListState.value[1]
+                    if (emoticonIdListState.value[2] != -1) emoticonId3 = emoticonIdListState.value[2]
+
+                    updateDiary?.year = selectedDateWithLocalDate.value.year.toString()
+                    updateDiary?.month = selectedDateWithLocalDate.value.monthValue.toString()
+                    updateDiary?.day = selectedDateWithLocalDate.value.dayOfMonth.toString()
+                    updateDiary?.dayOfWeek = Constants.DAY_OF_WEEK_TO_KOREAN[selectedDateWithLocalDate.value.dayOfWeek.toString()]!!
+                    updateDiary?.emoticonId1 = emoticonId1
+                    updateDiary?.emoticonId2 = emoticonId2
+                    updateDiary?.emoticonId3 = emoticonId3
+                    updateDiary?.imageUri = null
+                    updateDiary?.content = contentTextState.value
+                    updateDiary?.title = titleTextState.value
+
+                    viewModelScope.launch(Dispatchers.IO) {
+                        try {
+                            updateDiary?.let { updateDiaryUseCase(it) }
+                            withContext(Dispatchers.Main) {
+                                _addDiaryState.value = AddDiaryState.Complete
+                            }
+                        } catch (e: Exception) {
+                            _addDiaryState.value = AddDiaryState.Error(e)
+                        }
+                    }
+                }
+            }
+
+            is AddDiaryIntent.OnSelectEmoticon -> {
+                if (isDialogEditState.value == Constants.NOT_EDIT_INDEX) {
+                    // 이모티콘 추가할 인덱스 탐색
+                    var index = -1
+                    for (i in 0..< emoticonIdListState.value.size) {
+                        if (emoticonIdListState.value[i] == -1) {
+                            index = i
+                            break
+                        }
+                    }
+
+                    if (index != -1) {
+                        // 이모티콘 추가
+                        _emoticonIdListState.value[index] = intent.emoticonId
+                    } else {
+                        // 3개 이상 추가 불가 -> 예외 처리
+                        _addEmoticonErrorState.value = true
+                    }
+
+                    _isDialogAddState.value = false
+                } else {
+                    // emoticon 수정
+                    _emoticonIdListState.value[isDialogEditState.value] = intent.emoticonId
+
+                    // emoticon 수정 다이얼로그 닫기 상태로 수정
+                    _isDialogEditState.value = Constants.NOT_EDIT_INDEX
+                }
+            }
+
+            is AddDiaryIntent.OnCompleteShowToastAddEmoticon -> {
+                _addEmoticonErrorState.value = false
+            }
         }
     }
 }

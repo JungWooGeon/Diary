@@ -1,6 +1,5 @@
 package com.pass.presentation.view.screen
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
@@ -22,8 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,11 +29,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.google.android.gms.auth.UserRecoverableAuthException
 import com.pass.domain.model.Diary
 import com.pass.presentation.intent.AddDiaryIntent
-import com.pass.presentation.intent.SettingsIntent
 import com.pass.presentation.state.AddDiaryState
+import com.pass.presentation.state.WorkState
 import com.pass.presentation.view.composable.AddDiaryAppBar
 import com.pass.presentation.view.composable.AddEmoticonDialog
 import com.pass.presentation.view.composable.BottomEditor
@@ -51,7 +47,6 @@ import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSJetPackComposeProgres
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.getViewModel
 
-@SuppressLint("MutableCollectionMutableState")
 @Composable
 fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel()) {
     val context = LocalContext.current
@@ -91,6 +86,28 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
 
     // 삭제 다이얼로그 상태
     val isDeleteDialogState by viewModel.isDeleteDialogState.collectAsState()
+
+    // 삭제 완료 상태 -> 삭제 성공 여부에 따른 토스트 메시지 출력
+    val onCompleteDeleteEmotionState by viewModel.onCompleteDeleteEmotionState.collectAsState()
+    LaunchedEffect(onCompleteDeleteEmotionState) {
+        if (onCompleteDeleteEmotionState is WorkState.Standby) return@LaunchedEffect
+
+        if (onCompleteDeleteEmotionState is WorkState.Success) {
+            Toast.makeText(context, "삭제되었습니다.", Toast.LENGTH_SHORT).show()
+        } else if (onCompleteDeleteEmotionState is WorkState.Fail) {
+            Toast.makeText(context, "1개까지 삭제할 수 있습니다.", Toast.LENGTH_SHORT).show()
+        }
+        viewModel.processIntent(AddDiaryIntent.OnCompleteShowToastDeleteEmoticon)
+    }
+
+    // 이모티콘 추가 예외 처리 상태 -> true 시 에러 토스트 메시지 출력
+    val addEmoticonErrorState by viewModel.addEmoticonErrorState.collectAsState()
+    LaunchedEffect(addEmoticonErrorState) {
+        if (addEmoticonErrorState) {
+            Toast.makeText(context, "3개까지 추가할 수 있습니다.", Toast.LENGTH_SHORT).show()
+            viewModel.processIntent(AddDiaryIntent.OnCompleteShowToastAddEmoticon)
+        }
+    }
 
     // 처음 시작 시 diary 상태에 따라 수정하기 / 추가하기 화면 구분
     LaunchedEffect(Unit) { viewModel.processIntent(AddDiaryIntent.Initialize(diary)) }
@@ -132,14 +149,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     emoticonIdList = emoticonIdListState,
                     onDatePickerOpen = { viewModel.processIntent(AddDiaryIntent.UpdateAddDialog(true)) },
                     onEmoticonChange = { viewModel.processIntent(AddDiaryIntent.UpdateEditDialog(it)) },
-                    onEmotionDelete = {
-                        if (emoticonIdListState[1] == -1) {
-                            Toast.makeText(context, "1개까지 삭제할 수 있습니다.", Toast.LENGTH_SHORT).show()
-                        } else {
-                            viewModel.processIntent(AddDiaryIntent.DeleteEmoticon(it))
-                            Toast.makeText(context, "삭제되었습니다.", Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    onEmotionDelete = { viewModel.processIntent(AddDiaryIntent.DeleteEmoticon(it)) }
                 )
 
                 // 제목
@@ -148,9 +158,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     hintText = "제목을 입력해주세요.",
                     modifier = Modifier.padding(horizontal = 20.dp),
                     textSize = textSizeState,
-                    onTextChanged = { changedText ->
-                        viewModel.processIntent(AddDiaryIntent.WriteTitle(changedText))
-                    }
+                    onTextChanged = { changedText -> viewModel.processIntent(AddDiaryIntent.WriteTitle(changedText)) }
                 )
 
                 // 본문
@@ -164,6 +172,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     onTextChanged = { changedText -> viewModel.processIntent(AddDiaryIntent.WriteContent(changedText)) }
                 )
 
+                // '수정하기' or '요약하기' 버튼
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -174,28 +183,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                         type = SSButtonType.ZOOM_IN_OUT_CIRCLE,
                         width = LocalConfiguration.current.screenWidthDp.dp,
                         height = 50.dp,
-                        onClick = {
-                            if (submitButtonState != SSButtonState.IDLE && submitButtonState != SSButtonState.SUCCESS) {
-                                // 요약 중에는 버튼 클릭 방지
-                                return@SSJetPackComposeProgressButton
-                            }
-
-                            if (diary == null) {
-                                // 추가하기 일 때
-                                if (contentTextState.length < 20) {
-                                    // 내용이 너무 적을 경우 예외 처리
-                                    Toast.makeText(context, "최소 20자이상 작성해주세요.", Toast.LENGTH_SHORT)
-                                        .show()
-                                    return@SSJetPackComposeProgressButton
-                                }
-
-                                // 요약하기
-                                viewModel.processIntent(AddDiaryIntent.SummaryContent(titleTextState, contentTextState))
-                            } else {
-                                // 수정하기 일 때
-                                viewModel.processIntent(AddDiaryIntent.UpdateDiary)
-                            }
-                        },
+                        onClick = { viewModel.processIntent(AddDiaryIntent.OnClickSSProgressButton) },
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black, contentColor = Color.White),
                         assetColor = Color.White,
                         buttonState = submitButtonState,
@@ -203,9 +191,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     )
                 }
 
-                BottomEditor {
-                    viewModel.processIntent(AddDiaryIntent.UpdateRecordDialog(true))
-                }
+                BottomEditor(onOpenRecordDialog = { viewModel.processIntent(AddDiaryIntent.UpdateRecordDialog(true)) })
             }
 
             // Emoticon Dialog show / hide
@@ -227,30 +213,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                         viewModel.processIntent(AddDiaryIntent.UpdateAddDialog(false))
                         viewModel.processIntent(AddDiaryIntent.UpdateEditDialog(Constants.NOT_EDIT_INDEX))
                     },
-                    onSelectEmoticon = { emoticonId ->
-                        if (isDialogEditState == Constants.NOT_EDIT_INDEX) {
-                            // emoticon 추가
-                            var index = -1
-                            for (i in 0..< emoticonIdListState.size) {
-                                if (emoticonIdListState[i] == -1) {
-                                    index = i
-                                    break
-                                }
-                            }
-
-                            if (index != -1) {
-                                viewModel.processIntent(AddDiaryIntent.UpdateEmoticon(index, emoticonId))
-                            } else {
-                                Toast.makeText(context, "3개까지 추가할 수 있습니다.", Toast.LENGTH_SHORT).show()
-                            }
-
-                            viewModel.processIntent(AddDiaryIntent.UpdateAddDialog(false))
-                        } else {
-                            // emoticon 수정
-                            viewModel.processIntent(AddDiaryIntent.UpdateEmoticon(isDialogEditState, emoticonId))
-                            viewModel.processIntent(AddDiaryIntent.UpdateEditDialog(Constants.NOT_EDIT_INDEX))
-                        }
-                    }
+                    onSelectEmoticon = { emoticonId -> viewModel.processIntent(AddDiaryIntent.OnSelectEmoticon(emoticonId)) }
                 )
             }
 
@@ -260,13 +223,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
-                        .clickable {
-                            viewModel.processIntent(
-                                AddDiaryIntent.UpdateDatePickerDialog(
-                                    false
-                                )
-                            )
-                        },  // 배경을 클릭하면 다이얼로그를 닫음
+                        .clickable { viewModel.processIntent(AddDiaryIntent.UpdateDatePickerDialog(false)) }  // 배경을 클릭하면 다이얼로그를 닫음
                 )
 
                 Dialog(onDismissRequest = { viewModel.processIntent(AddDiaryIntent.UpdateDatePickerDialog(false)) }) {
@@ -285,9 +242,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
-                        .clickable {
-                            viewModel.processIntent(AddDiaryIntent.UpdateRecordDialog(false))
-                        }  // 배경을 클릭하면 다이얼로그를 닫음
+                        .clickable { viewModel.processIntent(AddDiaryIntent.UpdateRecordDialog(false)) }  // 배경을 클릭하면 다이얼로그를 닫음
                 ) {
                     RecordDialog(
                         onDismissRequest = { viewModel.processIntent(AddDiaryIntent.UpdateRecordDialog(false)) },
@@ -314,9 +269,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                         confirmButton = {
                             Button(
                                 shape = RoundedCornerShape(5.dp),
-                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                    containerColor = Color.Black
-                                ),
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color.Black),
                                 modifier = Modifier.padding(horizontal = 10.dp),
                                 onClick = { viewModel.processIntent(AddDiaryIntent.DeleteDiary) }
                             ) {
@@ -326,9 +279,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                         dismissButton = {
                             Button(
                                 shape = RoundedCornerShape(5.dp),
-                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                    containerColor = Color.Black
-                                ),
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color.Black),
                                 modifier = Modifier.padding(horizontal = 10.dp),
                                 onClick = { viewModel.processIntent(AddDiaryIntent.UpdateDeleteDialog(false)) }
                             ) {

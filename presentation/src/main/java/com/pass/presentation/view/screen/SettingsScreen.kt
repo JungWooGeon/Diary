@@ -262,7 +262,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
             }
 
             SettingState.NotificationSetting -> {
-
+                Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show()
             }
 
             SettingState.PrivacyPolicySetting -> {
@@ -270,15 +270,15 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
             }
 
             SettingState.ScreenLockSetting -> {
-
+                Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show()
             }
 
             SettingState.StartDateSetting -> {
-
+                Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show()
             }
 
             SettingState.ThemeSetting -> {
-
+                Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show()
             }
         }
     }
