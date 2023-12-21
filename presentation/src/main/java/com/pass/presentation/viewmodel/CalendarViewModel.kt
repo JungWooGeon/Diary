@@ -36,10 +36,6 @@ class CalendarViewModel(
     private val _selectedDateErrorState = MutableStateFlow(false)
     val selectedDateErrorState: StateFlow<Boolean> = _selectedDateErrorState
 
-    init {
-        loadDiaries()
-    }
-
     fun processIntent(intent: CalendarIntent) {
         when (intent) {
             is CalendarIntent.LoadDiaries -> {

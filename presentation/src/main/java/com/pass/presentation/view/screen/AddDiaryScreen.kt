@@ -1,7 +1,6 @@
 package com.pass.presentation.view.screen
 
 import android.app.Activity
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -292,17 +291,13 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
         }
 
         is AddDiaryState.Complete -> {
-            val returnIntent = Intent()
-
             if (diary == null) {
                 Toast.makeText(context, "일기 작성이 완료되었습니다.", Toast.LENGTH_SHORT).show()
-                (context as Activity).setResult(Activity.RESULT_OK, returnIntent)
             } else {
                 Toast.makeText(context, "일기 수정/삭제가 완료되었습니다.", Toast.LENGTH_SHORT).show()
-                (context as Activity).setResult(Activity.RESULT_OK, returnIntent)
             }
 
-            context.finish()
+            (context as Activity).finish()
         }
 
         is AddDiaryState.Loading -> {

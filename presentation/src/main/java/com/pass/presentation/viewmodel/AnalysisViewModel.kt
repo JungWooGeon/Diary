@@ -36,11 +36,12 @@ class AnalysisViewModel(
     private val _selectDateErrorState = MutableStateFlow(false)
     val selectDateErrorState: StateFlow<Boolean> = _selectDateErrorState
 
-    // 처음 시작 시 현재 날짜 기반 일기 내용 로드
-    init { loadDiaries() }
-
     fun processIntent(intent: AnalysisIntent) {
         when (intent) {
+            is AnalysisIntent.LoadDiaries -> {
+                loadDiaries()
+            }
+
             is AnalysisIntent.OnDateSelected -> {
                 setSelectDate(LocalDate.of(datePickerYearState.value, intent.selectedMonth, 1))
             }

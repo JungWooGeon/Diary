@@ -17,7 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.pass.presentation.intent.AnalysisIntent
 import com.pass.presentation.state.TimelineState
 import com.pass.presentation.view.composable.CurrentMonthWithCalendar
@@ -29,6 +32,7 @@ import org.koin.androidx.compose.getViewModel
 @Composable
 fun AnalysisScreen(viewModel: AnalysisViewModel = getViewModel()) {
     val context = LocalContext.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
 
     // 화면 로드 상태
     val state by viewModel.state.collectAsState()
@@ -51,6 +55,14 @@ fun AnalysisScreen(viewModel: AnalysisViewModel = getViewModel()) {
         }
     }
 
+    // onResume 상태 일 때 diary 업데이트
+    LaunchedEffect(lifecycle) {
+        lifecycle.addObserver(LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.processIntent(AnalysisIntent.LoadDiaries)
+            }
+        })
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // 상태에 따라 자연스러운 화면 전환을 위해 Crossfase 사용

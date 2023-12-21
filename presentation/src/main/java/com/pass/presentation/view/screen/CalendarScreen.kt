@@ -1,11 +1,7 @@
 package com.pass.presentation.view.screen
 
-import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,8 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.pass.presentation.intent.CalendarIntent
 import com.pass.presentation.state.TimelineState
 import com.pass.presentation.ui.theme.LineGray
@@ -47,6 +46,7 @@ import org.koin.androidx.compose.getViewModel
 @Composable
 fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
     val context = LocalContext.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
 
     // 현재 화면 상태 (standby, loading, error)
     val calendarState by viewModel.calendarState.collectAsState()
@@ -60,13 +60,6 @@ fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
     // Custom Date Picker 에서 선택된 연도 상태
     val datePickerYearState by viewModel.datePickerYearState.collectAsState()
 
-    // 일기 추가/수정 마치고 왔을 경우 업데이트
-    val startForResult = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            viewModel.processIntent(CalendarIntent.LoadDiaries)
-        }
-    }
-
     // 날짜 선택 예외 처리 상태 -> 날짜 선택 실패 시 토스트 메시지 출력
     val selectedDateErrorState by viewModel.selectedDateErrorState.collectAsState()
     LaunchedEffect(selectedDateErrorState) {
@@ -74,6 +67,15 @@ fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
             Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
             viewModel.processIntent(CalendarIntent.OnCompleteShowToastErrorMessage)
         }
+    }
+
+    // onResume 상태 일 때 diary 업데이트
+    LaunchedEffect(lifecycle) {
+        lifecycle.addObserver(LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.processIntent(CalendarIntent.LoadDiaries)
+            }
+        })
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -131,7 +133,7 @@ fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
                                         // 다이어리 편집 액티비티 실행
                                         val intent = Intent(context, AddDiaryActivity::class.java)
                                         intent.putExtra(Constants.INTENT_NAME_DIARY, clickDiary)
-                                        startForResult.launch(intent)
+                                        context.startActivity(intent)
                                     }
                                 )
                             }
@@ -159,7 +161,7 @@ fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
             onClick = {
                 // 다이어리 추가 액티비티 실행
                 val intent = Intent(context, AddDiaryActivity::class.java)
-                startForResult.launch(intent)
+                context.startActivity(intent)
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
