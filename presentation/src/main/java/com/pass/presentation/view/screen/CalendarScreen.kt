@@ -94,7 +94,7 @@ fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
 
                 // diary 읽기 성공 상태
                 is TimelineState.Success -> {
-                    val diaries = calendarState.diaries
+                    val diaries = calendarState.diariesit
 
                     Column(Modifier.verticalScroll(rememberScrollState())) {
                         // 날짜 표시 및 수정
