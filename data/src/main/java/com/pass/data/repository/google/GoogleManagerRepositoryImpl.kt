@@ -62,65 +62,87 @@ class GoogleManagerRepositoryImpl(private val context: Context) : GoogleManagerR
     }
 
     override suspend fun restoreDiariesForGoogleDrive(): List<Diary>? {
-        val diaries = mutableListOf<Diary>()
+        try {
+            val diaries = mutableListOf<Diary>()
 
-        // 'DiaryBackup' 폴더의 ID를 찾습니다.
-        val backupFolder = driveService?.files()?.list()?.setQ("name = 'DiaryBackup'")?.execute()?.files
+            // 'DiaryBackup' 폴더의 ID를 찾습니다.
+            val backupFolder =
+                driveService?.files()?.list()?.setQ("name = 'DiaryBackup'")?.execute()?.files
 
-        if (backupFolder?.isEmpty() == true) return null
+            if (backupFolder?.isEmpty() == true) return null
 
-        val backupFolderId = backupFolder?.first()?.id
+            val backupFolderId = backupFolder?.first()?.id
 
-        // 'DiaryBackup' 폴더 내의 모든 파일 리스트를 가져옵니다.
-        val files = driveService?.files()?.list()?.setQ("'$backupFolderId' in parents")?.execute()?.files
+            // 'DiaryBackup' 폴더 내의 모든 파일 리스트를 가져옵니다.
+            val files = driveService?.files()?.list()?.setQ("'$backupFolderId' in parents")
+                ?.execute()?.files
 
-        files?.forEach { file ->
-            // 각 파일의 내용을 읽어서 Diary 객체로 변환합니다
+            files?.forEach { file ->
+                // 각 파일의 내용을 읽어서 Diary 객체로 변환합니다
 
-            // 파일 내용 읽기
-            val fileId = file.id
-            val outputStream = ByteArrayOutputStream()
-            driveService?.files()?.get(fileId)?.executeMediaAndDownloadTo(outputStream)
-            val fileContent = outputStream.toString()
+                // 파일 내용 읽기
+                val fileId = file.id
+                val outputStream = ByteArrayOutputStream()
+                driveService?.files()?.get(fileId)?.executeMediaAndDownloadTo(outputStream)
+                val fileContent = outputStream.toString()
 
-            // 파일 제목 읽기
-            var temp = file.name.split("|")
-            val id = temp[0]
-            val title = temp[1]
+                // 파일 제목 읽기
+                var temp = file.name.split("|")
+                val id = temp[0]
+                val title = temp[1]
 
-            temp = fileContent.split("|")
+                temp = fileContent.split("|")
 
-            val dayTemp = temp[0].split("/")
-            val year = dayTemp[0]
-            val month = dayTemp[1]
-            val day = dayTemp[2]
-            val dayOfWeek = dayTemp[3]
+                val dayTemp = temp[0].split("/")
+                val year = dayTemp[0]
+                val month = dayTemp[1]
+                val day = dayTemp[2]
+                val dayOfWeek = dayTemp[3]
 
-            val emoticonIdTemp = temp[1].split("/")
-            val emoticonId1 = if (emoticonIdTemp[0] == "null") { null } else { emoticonIdTemp[0].toInt() }
-            val emoticonId2 = if (emoticonIdTemp[1] == "null") { null } else { emoticonIdTemp[1].toInt() }
-            val emoticonId3 = if (emoticonIdTemp[2] == "null") { null } else { emoticonIdTemp[2].toInt() }
+                val emoticonIdTemp = temp[1].split("/")
+                val emoticonId1 = if (emoticonIdTemp[0] == "null") {
+                    null
+                } else {
+                    emoticonIdTemp[0].toInt()
+                }
+                val emoticonId2 = if (emoticonIdTemp[1] == "null") {
+                    null
+                } else {
+                    emoticonIdTemp[1].toInt()
+                }
+                val emoticonId3 = if (emoticonIdTemp[2] == "null") {
+                    null
+                } else {
+                    emoticonIdTemp[2].toInt()
+                }
 
-            val imageUri = if (temp[2] == "null") { null } else { temp[2] }
-            val content = temp[3]
+                val imageUri = if (temp[2] == "null") {
+                    null
+                } else {
+                    temp[2]
+                }
+                val content = temp[3]
 
-            val diary = Diary(
-                id = id.toInt(),
-                year = year,
-                month = month,
-                day = day,
-                dayOfWeek = dayOfWeek,
-                emoticonId1 = emoticonId1,
-                emoticonId2 = emoticonId2,
-                emoticonId3 = emoticonId3,
-                imageUri = imageUri,
-                title = title,
-                content = content
-            )
-            diaries.add(diary)
+                val diary = Diary(
+                    id = id.toInt(),
+                    year = year,
+                    month = month,
+                    day = day,
+                    dayOfWeek = dayOfWeek,
+                    emoticonId1 = emoticonId1,
+                    emoticonId2 = emoticonId2,
+                    emoticonId3 = emoticonId3,
+                    imageUri = imageUri,
+                    title = title,
+                    content = content
+                )
+                diaries.add(diary)
+            }
+
+            return diaries
+        } catch (e: UserRecoverableAuthIOException) {
+            throw e
         }
-
-        return diaries
     }
 
 
