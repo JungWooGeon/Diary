@@ -2,6 +2,13 @@ package com.pass.presentation.view.screen
 
 import android.app.Activity
 import android.widget.Toast
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
@@ -20,6 +28,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +37,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
 import androidx.compose.ui.window.Dialog
 import com.pass.domain.model.Diary
 import com.pass.presentation.intent.AddDiaryIntent
@@ -45,6 +56,8 @@ import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonType
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSJetPackComposeProgressButton
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.getViewModel
+import java.lang.Math.PI
+import java.lang.Math.sin
 
 @Composable
 fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel()) {
@@ -113,7 +126,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
 
     // '요약하기' 성공 여부에 따라 토스트 메시지 출력
     LaunchedEffect(submitButtonState) {
-        if (titleTextState == "") return@LaunchedEffect
+        if (submitButtonState == SSButtonState.IDLE) return@LaunchedEffect
 
         // 3초 후 토스트 메시지 출력
         delay(3000)
@@ -153,11 +166,23 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     onEmotionDelete = { viewModel.processIntent(AddDiaryIntent.DeleteEmoticon(it)) }
                 )
 
+                val shouldShake by viewModel.shouldShake.collectAsState()
+
+                val shake by animateFloatAsState(
+                    targetValue = if (shouldShake) 1f else 0f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1000, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ), label = ""
+                )
+
                 // 제목
                 ContentBox(
                     contentText = titleTextState,
                     hintText = "제목을 입력해주세요.",
-                    modifier = Modifier.padding(horizontal = 20.dp),
+                    modifier = Modifier
+                        .offset(x = (kotlin.math.sin(shake * 2 * PI) * 10).dp)
+                        .padding(horizontal = 20.dp),
                     textSize = textSizeState,
                     onTextChanged = { changedText -> viewModel.processIntent(AddDiaryIntent.WriteTitle(changedText)) }
                 )
@@ -224,7 +249,13 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
-                        .clickable { viewModel.processIntent(AddDiaryIntent.UpdateDatePickerDialog(false)) }  // 배경을 클릭하면 다이얼로그를 닫음
+                        .clickable {
+                            viewModel.processIntent(
+                                AddDiaryIntent.UpdateDatePickerDialog(
+                                    false
+                                )
+                            )
+                        }  // 배경을 클릭하면 다이얼로그를 닫음
                 )
 
                 Dialog(onDismissRequest = { viewModel.processIntent(AddDiaryIntent.UpdateDatePickerDialog(false)) }) {

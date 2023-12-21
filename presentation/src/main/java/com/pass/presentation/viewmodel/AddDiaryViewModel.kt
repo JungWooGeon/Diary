@@ -1,5 +1,6 @@
 package com.pass.presentation.viewmodel
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pass.domain.model.Diary
@@ -14,6 +15,7 @@ import com.pass.presentation.state.WorkState
 import com.pass.presentation.view.screen.Constants
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -92,6 +94,9 @@ class AddDiaryViewModel(
     // 이모티콘 추가 예외 처리
     private val _addEmoticonErrorState = MutableStateFlow(false)
     val addEmoticonErrorState: StateFlow<Boolean> = _addEmoticonErrorState
+
+    private val _shouldShake = MutableStateFlow(false)
+    val shouldShake: StateFlow<Boolean> = _shouldShake
 
     init {
         _addDiaryState.value = AddDiaryState.Loading
@@ -241,8 +246,18 @@ class AddDiaryViewModel(
                                 if (summary == "") {
                                     _submitButtonState.value = SSButtonState.FAILIURE
                                 } else {
-                                    _titleTextState.value = summary
+                                    // _titleTextState.value = summary
+                                    for (char in summary) {
+                                        _titleTextState.value += char
+                                        delay(100)  // 각 글자가 추가되는 시간 간격
+                                    }
                                     _submitButtonState.value = SSButtonState.SUCCESS
+
+                                    delay(2000)
+                                    // 2초 후 2초간 제목 박스 흔들기 애니메이션 적용 -> 요약하기 성공 시 3초 후 토스트 메시지를 출력하기 때문
+                                    _shouldShake.value = true
+                                    delay(2000)
+                                    _shouldShake.value = false
                                 }
                             }
                         } catch (e: Exception) {
