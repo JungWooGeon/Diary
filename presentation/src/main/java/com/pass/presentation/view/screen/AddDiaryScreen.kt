@@ -124,6 +124,8 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
             // 내용 요약 성공 (요약 제목 반영)
             Toast.makeText(context, "요약된 내용이 제목에 반영되었어요!", Toast.LENGTH_SHORT).show()
         }
+
+        viewModel.processIntent(AddDiaryIntent.SetIDleSSButtonState)
     }
 
     when (addDiaryState) {

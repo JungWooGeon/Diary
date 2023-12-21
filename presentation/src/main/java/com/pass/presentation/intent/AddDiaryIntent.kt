@@ -25,4 +25,6 @@ sealed class AddDiaryIntent {
 
     data object OnClickSSProgressButton : AddDiaryIntent()
     data class OnSelectEmoticon(val emoticonId: Int) : AddDiaryIntent()
+
+    data object SetIDleSSButtonState : AddDiaryIntent()
 }

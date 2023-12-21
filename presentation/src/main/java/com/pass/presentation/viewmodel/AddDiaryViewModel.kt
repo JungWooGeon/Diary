@@ -241,15 +241,12 @@ class AddDiaryViewModel(
                                 if (summary == "") {
                                     _submitButtonState.value = SSButtonState.FAILIURE
                                 } else {
-                                    _submitButtonState.value = SSButtonState.SUCCESS
                                     _titleTextState.value = summary
+                                    _submitButtonState.value = SSButtonState.SUCCESS
                                 }
-
-                                _submitButtonState.value = SSButtonState.IDLE
                             }
                         } catch (e: Exception) {
                             _submitButtonState.value = SSButtonState.FAILIURE
-                            _submitButtonState.value = SSButtonState.IDLE
                         }
                     }
                 } else {
@@ -318,9 +315,9 @@ class AddDiaryViewModel(
                 }
             }
 
-            is AddDiaryIntent.OnCompleteShowToastAddEmoticon -> {
-                _addEmoticonErrorState.value = false
-            }
+            is AddDiaryIntent.OnCompleteShowToastAddEmoticon -> { _addEmoticonErrorState.value = false }
+
+            is AddDiaryIntent.SetIDleSSButtonState -> { _submitButtonState.value = SSButtonState.IDLE }
         }
     }
 }
