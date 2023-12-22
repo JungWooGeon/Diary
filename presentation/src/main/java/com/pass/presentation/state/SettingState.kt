@@ -8,6 +8,5 @@ sealed class SettingState {
     data object ScreenLockSetting: SettingState()
     data object StartDateSetting: SettingState()
     data object BackupSetting: SettingState()
-    data object PrivacyPolicySetting: SettingState()
     data object LicenseSetting: SettingState()
 }

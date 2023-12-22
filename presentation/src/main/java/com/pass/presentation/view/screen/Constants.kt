@@ -46,4 +46,19 @@ object Constants {
         "restart" to "다시 시작해",
         "skybori" to "하늘보리"
     )
+
+    val OPENSOURCE_LICENSE_LIST = arrayListOf(
+        arrayOf(
+            "SSJetPackComposeProgressButton\nCopyright 2022 Simform Solutions\n Licensed under the Apache License, Version 2.0 (the \"License\")",
+            "https://github.com/SimformSolutionsPvtLtd/SSJetPackComposeProgressButton/blob/main/LICENSE"
+        ),
+        arrayOf(
+            "MPAndroidChart\nCopyright 2020 Philipp Jahoda\nLicensed under the Apache License, Version 2.0 (the \"License\")",
+            "https://github.com/PhilJay/MPAndroidChart/blob/master/LICENSE"
+        ),
+        arrayOf(
+            "retrofit\nCopyright 2013 Square, Inc.\nLicensed under the Apache License 2.0",
+            "https://github.com/square/retrofit/blob/master/LICENSE.txt"
+        )
+    )
 }

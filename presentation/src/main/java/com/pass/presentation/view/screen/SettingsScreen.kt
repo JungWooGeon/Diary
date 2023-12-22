@@ -1,6 +1,8 @@
 package com.pass.presentation.view.screen
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -48,6 +50,7 @@ import com.pass.presentation.ui.theme.LineGray
 import com.pass.presentation.view.composable.SettingBackup
 import com.pass.presentation.view.composable.SettingDefault
 import com.pass.presentation.view.composable.SettingFont
+import com.pass.presentation.view.composable.SettingLicense
 import com.pass.presentation.viewmodel.SettingsViewModel
 import org.koin.androidx.compose.getViewModel
 
@@ -198,7 +201,20 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
         )
 
         when (settingsScreenState) {
-            SettingState.DefaultSetting -> { SettingDefault { viewModel.processIntent(SettingsIntent.SetSettingsScreenState(it)) } }
+            SettingState.DefaultSetting -> {
+                SettingDefault(
+                    onClick = { viewModel.processIntent(SettingsIntent.SetSettingsScreenState(it)) },
+                    onClickPrivacyPolicy = {
+                        val url = "https://ai-diary-privacy-policy.co.kr/"
+                        val intent = Intent(Intent.ACTION_VIEW)
+                        intent.data = Uri.parse(url)
+                        context.startActivity(intent)
+                    },
+                    onClickReview = {
+                        Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
 
             SettingState.FontSetting -> {
                 SettingFont(
@@ -249,20 +265,32 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
             }
 
             SettingState.LicenseSetting -> {
-
+                SettingLicense(onClickUrl = { url ->
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.data = Uri.parse(url)
+                    context.startActivity(intent)
+                })
             }
 
-            SettingState.NotificationSetting -> { Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show() }
-
-            SettingState.PrivacyPolicySetting -> {
-
+            SettingState.NotificationSetting -> {
+                Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show()
+                viewModel.processIntent(SettingsIntent.SetSettingsScreenState(SettingState.DefaultSetting))
             }
 
-            SettingState.ScreenLockSetting -> { Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show() }
+            SettingState.ScreenLockSetting -> {
+                Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show()
+                viewModel.processIntent(SettingsIntent.SetSettingsScreenState(SettingState.DefaultSetting))
+            }
 
-            SettingState.StartDateSetting -> { Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show() }
+            SettingState.StartDateSetting -> {
+                Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show()
+                viewModel.processIntent(SettingsIntent.SetSettingsScreenState(SettingState.DefaultSetting))
+            }
 
-            SettingState.ThemeSetting -> { Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show() }
+            SettingState.ThemeSetting -> {
+                Toast.makeText(context, "업데이트 예정입니다." , Toast.LENGTH_SHORT).show()
+                viewModel.processIntent(SettingsIntent.SetSettingsScreenState(SettingState.DefaultSetting))
+            }
         }
     }
 
@@ -271,7 +299,13 @@ fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
-                .clickable { viewModel.processIntent(SettingsIntent.UpdateShowConfirmBackUpDialogIsOpen(false)) }  // 배경을 클릭하면 다이얼로그를 닫음
+                .clickable {
+                    viewModel.processIntent(
+                        SettingsIntent.UpdateShowConfirmBackUpDialogIsOpen(
+                            false
+                        )
+                    )
+                }  // 배경을 클릭하면 다이얼로그를 닫음
         ) {
             AlertDialog(
                 onDismissRequest = { viewModel.processIntent(SettingsIntent.UpdateShowConfirmBackUpDialogIsOpen(false)) },

@@ -20,7 +20,9 @@ import com.pass.presentation.ui.theme.LineGray
 
 @Composable
 fun BottomEditor(
-    onOpenRecordDialog: () -> Unit
+    onOpenRecordDialog: () -> Unit,
+    onClickAddImage: () -> Unit,
+    onClickSortImage: () -> Unit
 ) {
 
     Divider(
@@ -34,14 +36,14 @@ fun BottomEditor(
         horizontalArrangement = Arrangement.Center,
         modifier = Modifier.padding(start = 10.dp)
     ) {
-        IconButton(onClick = { }) {
+        IconButton(onClick = { onClickAddImage() }) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_image),
                 contentDescription = "이미지 추가"
             )
         }
 
-        IconButton(onClick = { }) {
+        IconButton(onClick = { onClickSortImage() }) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_sort),
                 contentDescription = "정렬"

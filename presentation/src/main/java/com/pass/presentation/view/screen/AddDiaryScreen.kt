@@ -4,10 +4,8 @@ import android.app.Activity
 import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,8 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,7 +33,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.times
 import androidx.compose.ui.window.Dialog
 import com.pass.domain.model.Diary
 import com.pass.presentation.intent.AddDiaryIntent
@@ -57,7 +52,6 @@ import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSJetPackComposeProgres
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.getViewModel
 import java.lang.Math.PI
-import java.lang.Math.sin
 
 @Composable
 fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel()) {
@@ -217,7 +211,11 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel())
                     )
                 }
 
-                BottomEditor(onOpenRecordDialog = { viewModel.processIntent(AddDiaryIntent.UpdateRecordDialog(true)) })
+                BottomEditor(
+                    onOpenRecordDialog = { viewModel.processIntent(AddDiaryIntent.UpdateRecordDialog(true)) },
+                    onClickAddImage = { Toast.makeText(context, "업데이트 예정입니다.", Toast.LENGTH_SHORT).show() },
+                    onClickSortImage =  { Toast.makeText(context, "업데이트 예정입니다.", Toast.LENGTH_SHORT).show() },
+                )
             }
 
             // Emoticon Dialog show / hide

@@ -20,7 +20,9 @@ import com.pass.presentation.ui.theme.LineGray
 
 @Composable
 fun SettingDefault(
-    onClick: (SettingState) -> Unit
+    onClick: (SettingState) -> Unit,
+    onClickPrivacyPolicy: () -> Unit,
+    onClickReview: () -> Unit
 ) {
     SettingRow(
         iconResource = R.drawable.ic_font,
@@ -33,6 +35,7 @@ fun SettingDefault(
         iconDescription = "테마",
         onClick = {
             //@TODO 테마 설정 화면 전환
+            onClick(SettingState.ThemeSetting)
         }
     )
 
@@ -41,6 +44,7 @@ fun SettingDefault(
         iconDescription = "화면 잠금",
         onClick = {
             //@TODO 화면 잠금 설정 화면 전환
+            onClick(SettingState.ScreenLockSetting)
         }
     )
 
@@ -49,6 +53,7 @@ fun SettingDefault(
         iconDescription = "시작 요일 설정",
         onClick = {
             //@TODO 시작 요일 설정 화면 전환
+            onClick(SettingState.StartDateSetting)
         }
     )
 
@@ -70,6 +75,7 @@ fun SettingDefault(
         modifier = Modifier
             .padding(start = 20.dp, top = 30.dp)
             .fillMaxWidth()
+            .clickable { onClickPrivacyPolicy() }
     )
 
     Text(
@@ -78,6 +84,7 @@ fun SettingDefault(
         modifier = Modifier
             .padding(start = 20.dp, top = 20.dp)
             .fillMaxWidth()
+            .clickable { onClick(SettingState.LicenseSetting) }
     )
 
     Text(
@@ -86,6 +93,7 @@ fun SettingDefault(
         modifier = Modifier
             .padding(start = 20.dp, top = 20.dp)
             .fillMaxWidth()
+            .clickable { onClickReview() }
     )
 }
 
