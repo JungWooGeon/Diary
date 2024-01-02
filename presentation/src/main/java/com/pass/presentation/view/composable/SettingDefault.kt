@@ -60,7 +60,11 @@ fun SettingDefault(
     SettingRow(
         iconResource = R.drawable.ic_cloud,
         iconDescription = "백업 / 복원",
-        onClick = { onClick(SettingState.BackupSetting) }
+        onClick = {
+            //@TODO 구글 드라이브 기능
+            // onClick(SettingState.BackupSetting)
+            onClick(SettingState.StartDateSetting)
+        }
     )
 
     Divider(
