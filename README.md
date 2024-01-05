@@ -21,9 +21,9 @@ https://play.google.com/store/apps/details?id=com.pass.diary
 
 ## 📷 화면
 
-<img src="https://github.com/JungWooGeon/Diary/assets/61993128/3727d47e-8b68-42f4-9edc-fd2f34e60fa3" width="460" height="760"/> <img src="https://github.com/JungWooGeon/Diary/assets/61993128/de0da521-2abe-41fd-a145-e0f384a915ef" width="460" height="760" />
-<img src="https://github.com/JungWooGeon/Diary/assets/61993128/0928347c-56ea-4f2a-82ed-9e421de3e6dd" width="460" height="760"/> <img src="https://github.com/JungWooGeon/Diary/assets/61993128/c422b093-419d-44cd-a40a-aed882b178e7" width="460" height="760" />
-<img src="https://github.com/JungWooGeon/Diary/assets/61993128/8c0f39e2-2c67-49eb-a1af-8f1fe332ab3d" width="460" height="760" />
+<img src="https://github.com/JungWooGeon/Diary/assets/61993128/3727d47e-8b68-42f4-9edc-fd2f34e60fa3" width="400" height="760"/> <img src="https://github.com/JungWooGeon/Diary/assets/61993128/de0da521-2abe-41fd-a145-e0f384a915ef" width="400" height="760" />
+<img src="https://github.com/JungWooGeon/Diary/assets/61993128/0928347c-56ea-4f2a-82ed-9e421de3e6dd" width="400" height="760"/> <img src="https://github.com/JungWooGeon/Diary/assets/61993128/c422b093-419d-44cd-a40a-aed882b178e7" width="400" height="760" />
+<img src="https://github.com/JungWooGeon/Diary/assets/61993128/8c0f39e2-2c67-49eb-a1af-8f1fe332ab3d" width="400" height="760" />
 
 <br><br>
 
