@@ -1,20 +1,19 @@
 ## 💡 AI 일기장
 
-AI 가 일기 내용을 한 줄로 요약해주고, 그 날의 감정 이모티콘을 추천해줍니다.<br>
-이모티콘과 같이 일기를 기록할 수 있고, 지금까지 기록한 감정들을 월별로 통계내어 확인할 수도 있어요!
+AI를 사용하여 편리하고 똑똑하게 작성하는 감정 일기장 앱
 
 <br><br>
 
-## 🛠 설계
+## 🔥 Google Play
+https://play.google.com/store/apps/details?id=com.pass.diary
 
-- 아키텍처 : Clean Architecture
-- 디자인 패턴 : MVI
-- 개발 방식 : TDD
-- ui : Compose
-- di : Koin
-- db : Room, DataStore
-- async : Coroutine, WorkManager
-- test : Junit, MokK
+<br><br>
+
+## 🛠 사용
+- android, android studio
+- kotlin
+- MVI, Clean Architecture, koin, Room, DataStore, Retrofit, Coroutine, Junit, MockK
+- Google STT (SpeechRecognizer), Naver CLOVA Summary API
 
 <img src="https://github.com/JungWooGeon/Diary/assets/61993128/81dcaa7c-4aee-4a42-898d-fa0ead18df41" width="593" height="653"/>
 
@@ -22,48 +21,39 @@ AI 가 일기 내용을 한 줄로 요약해주고, 그 날의 감정 이모티�
 
 ## 📷 화면
 
-<img src="https://github.com/JungWooGeon/Diary/assets/61993128/d61070c0-04cd-42b8-b63d-66a6699226b3" width="360" height="760"/> <img src="https://github.com/JungWooGeon/Diary/assets/61993128/841eb46c-9efb-4ef8-ac39-c64bd625d26f" width="360" height="760" />
-<img src="https://github.com/JungWooGeon/Diary/assets/61993128/df020259-56fb-4012-a38e-78084405def8" width="360" height="760"/> <img src="https://github.com/JungWooGeon/Diary/assets/61993128/00928480-630b-4a7b-863d-0fbf0fab59c1" width="360" height="760" />
+<img src="https://github.com/JungWooGeon/Diary/assets/61993128/3727d47e-8b68-42f4-9edc-fd2f34e60fa3" width="460" height="760"/> <img src="https://github.com/JungWooGeon/Diary/assets/61993128/de0da521-2abe-41fd-a145-e0f384a915ef" width="460" height="760" />
+<img src="https://github.com/JungWooGeon/Diary/assets/61993128/0928347c-56ea-4f2a-82ed-9e421de3e6dd" width="460" height="760"/> <img src="https://github.com/JungWooGeon/Diary/assets/61993128/c422b093-419d-44cd-a40a-aed882b178e7" width="460" height="760" />
+<img src="https://github.com/JungWooGeon/Diary/assets/61993128/8c0f39e2-2c67-49eb-a1af-8f1fe332ab3d" width="460" height="760" />
 
 <br><br>
 
 ## ⭐️ 기능
-
-일기 쓰기 / 수정
-  - 이모티콘(기분, 감정 등)
-  - 내용 (이미지 포함)
-  - ** 음성 녹음
-  - ** 이모티콘, 일기 내용 요약(한 줄 요약) AI 
-
-일기 보기
-  - 달력으로 보기
-  - 타임라인으로 보기
-
-디자인 기능
-  - 일기장 테마 설정 (분홍, 검정 등)
-  - 다크모드 설정
-  - 여러 폰트 설정
-
-다양한 기능
-  - ** 기분 통계 (기존 감정 통계 어플리케이션 참고)
-  - ** 일기장 잠금 기능
-  - 알림 기능
-
-추가 사항
-  - 위젯 기능
-  - 한 주의 시작 요일 설정 (일요일 / 월요일)
-
+- 일기 쓰기 / 수정
+    - **음성으로 내용 입력 (AI)**
+    - **일기 내용 요약하여 제목으로 작성하기 (AI)**
+    - 이모티콘(기분, 감정 등)
+    - 내용
+    - 이미지 (미구현)
+- 일기 조회 (월별)
+    - 달력으로 보기
+    - 타임라인으로 보기
+- 디자인 기능
+    - 일기장 테마 설정 (분홍, 검정 등) (미구현)
+    - 다크모드 설정 (미구현)
+    - 여러 폰트 설정
+- 다양한 기능
+    - **감정 통계**
+    - 일기장 잠금 기능 (미구현)
+    - 알림 기능 (미구현)
+- 추가 사항
+    - 위젯 기능 (미구현)
+    - 한 주의 시작 요일 설정 (일요일 / 월요일) (미구현)
+      
 <br><br>
 
 ## 🧩 구조
 
 ```bash
-│── di
-│   ├── databaseModule.kt
-│   ├── repositoryModule.kt
-│   ├── useCaseModule.kt
-│   └── viewModelModule.kt
-│
 │── presentation
 │   ├── ui
 │   │   └── theme
@@ -71,18 +61,16 @@ AI 가 일기 내용을 한 줄로 요약해주고, 그 날의 감정 이모티�
 │   │       ├── Theme.kt
 │   │       └── Type.kt
 │   ├── state
-│   │   ├── MainState.kt
 │   │   ├── AddDiaryState.kt
-│   │   ├── GenerateImageState.kt
+│   │   ├── LoginState.kt
+│   │   ├── MainState.kt
+│   │   ├── SettingState.kt
 │   │   ├── TimelineState.kt
-│   │   └── SettingsState.kt
+│   │   └── WorkState.kt
 │   ├── view
 │   │   ├── activity
 │   │   │   ├── MainActivity.kt
-│   │   │   ├── AddDiaryActivity.kt
-│   │   │   ├── GenerateImageActivity.kt
-│   │   │   ├── ScreenLockActivity.kt
-│   │   │   └── LicenseActivity.kt
+│   │   │   └── AddDiaryActivity.kt
 │   │   ├── composable
 │   │   │   └── ...
 │   │   └── screen
@@ -92,79 +80,74 @@ AI 가 일기 내용을 한 줄로 요약해주고, 그 날의 감정 이모티�
 │   │       ├── AddDiaryScreen.kt
 │   │       ├── AnalysisScreen.kt
 │   │       ├── SettingsScreen.kt
-│   │       ├── LicenseScreen.kt
 │   │       └── Constants.kt
 │   ├── viewmodel
-│   │   ├── MainViewModel.kt
 │   │   ├── AddDiaryViewModel.kt
-│   │   ├── GenerateImageViewModel.kt
-│   │   ├── TimelineViewModel.kt
-│   │   └── SettingsViewModel.kt
-│   └── intent
-│       ├── MainIntent.kt
-│       ├── AddDiaryIntent.kt
-│       ├── GenerateImageIntent.kt
-│       ├── TimelineIntent.kt
-│       └── SettingsIntent.kt
+│   │   ├── AnalysisViewModel.kt
+│   │   ├── CalendarViewModel.kt
+│   │   ├── SettingsViewModel.kt
+│   │   ├── ThemeViewModel.kt
+│   │   └── TimelineViewModel.kt
+│   ├── intent
+│   │   ├── AddDiaryIntent.kt
+│   │   ├── AnalysisIntent.kt
+│   │   ├── CalendarIntent.kt
+│   │   ├── SettingsIntent.kt
+│   │   └── TimelineIntent.kt
+│   ├── di
+│   │   ├── databaseModule.kt
+│   │   ├── repositoryModule.kt
+│   │   ├── useCaseModule.kt
+│   │   └── viewModelModule.kt
+│   └── DiaryApplication.kt
 │
 ├── domain
-│   ├── diary
-│   │   ├── GetDiariesByMonthUseCase.kt
-│   │   ├── AddDiaryUseCase.kt
-│   │   ├── UpdateDiaryUseCase.kt
-│   │   └── DeleteDiaryUseCase.kt
-│   ├── upload
-│   │   ├── RecordUseCase.kt
-│   │   └── UploadImageUseCase.kt
-│   └── settings
-│       ├── font
-│       │   ├── GetAllFontUseCase.kt
-│       │   ├── GetCurrentFontUseCase.kt
-│       │   └── UpdateCurrentFontUseCase.kt
-│       ├── darkmode
-│       │   ├── GetCurrentDarkModeUseCase.kt
-│       │   └── UpdateCurrentDarkModeUseCase.kt
-│       ├── theme
-│       │   ├── GetAllThemeUseCase.kt
-│       │   ├── GetCurrentThemeUseCase.kt
-│       │   └── UpdateCurrentThemeUseCase.kt
-│       ├── notification
-│       │   ├── GetCurrentNotificationUseCase.kt
-│       │   ├── UpdateCurrentNotificationUseCase.kt
-│       │   └── NotifyUseCase.kt
-│       ├── screenlock
-│       │   ├── CompareCurrentLockPasswordUseCase.kt
-│       │   └── UpdateCurrentLockPasswordUseCase.kt
-│       ├── startdate
-│       │   ├── GetCurrentStartDateUseCase.kt
-│       │   └── UpdateCurrentStartDateUseCase.kt
-│       └── backup
-│           ├── BackupDiaryUseCase.kt
-│           └── RestoreDiaryUseCase.kt
-│
-├── data
-│   ├── db
+│   ├── model
+│   │   └── Diary.kt
+│   ├── repository
 │   │   ├── diary
-│   │   │   ├── DiaryDao.kt
-│   │   │   └── DiaryDataBase.kt
-│   │   └── datastore
-│   │       └── DataStoreManager.kt
-│   ├── entity
-│   │   ├── Diary.kt
-│   │   ├── Theme.kt
-│   │   ├── Notification.kt
-│   │   ├── ScreenLock.kt
-│   │   └── Startdate.kt
-│   └── repository
+│   │   │   └── DiaryRepository.kt
+│   │   ├── google
+│   │   │   └── GoogleManagerRepository.kt
+│   │   └── settings
+│   │       └── SettingsRepository.kt
+│   └── usecase
 │       ├── diary
-│       │   ├── DiaryRepository
-│       │   └── DiaryRepositoryImpl.kt
-│       ├── upload
-│       │   ├── UploadRepository
-│       │   └── UploadRepositoryImpl.kt
+│       │   ├── AddDiaryUseCase.kt
+│       │   ├── DeleteDiaryUseCase.kt
+│       │   ├── GetAllDiariesUseCase.kt
+│       │   ├── GetDiariesByMonthUseCase.kt
+│       │   ├── SummaryDiaryUseCase.kt
+│       │   └── UpdateDiaryUseCase.kt
+│       ├── google
+│       │   ├── BackupDiariesToGoogleDriveUseCase.kt
+│       │   ├── isLoggedInUseCase.kt
+│       │   ├── LogInForGoogleUseCase.kt
+│       │   ├── LogOutForGoogleUseCase.kt
+│       │   └── RestoreDiariesForGoogleDriveUseCase.kt
 │       └── settings
-│           ├── SettingsRepository
-│           └── SettingsRepositoryImpl.kt
-│   
-└── DiaryApplication.kt
+│           └── font
+│               ├── GetCurrentFontUseCase.kt
+│               ├── GetCurrentTextSizeUseCase.kt
+│               ├── UpdateCurrentFontUseCase.kt
+│               └── UpdateCurrentTextSizeUseCase.kt
+│
+└── data
+    ├── db
+    │   └── diary
+    │       ├── DiaryDao.kt
+    │       └── DiaryDataBase.kt
+    ├── remote
+    │   ├── dto
+    │   │   ├── SummaryRequest.kt
+    │   │   └── SummaryResponse.kt
+    │   └── service
+    │       └── SummaryService.kt
+    └── repository
+        ├── diary
+        │   └── DiaryRepositoryImpl.kt
+        ├── google
+        │   └── GoogleManagerRepositoryImpl.kt
+        └── settings
+            └── SettingsRepositoryImpl.kt
 ```
