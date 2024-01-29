@@ -1,7 +1,3 @@
-<img width="2719" alt="알람 플레이리스트 아키텍처" src="https://github.com/JungWooGeon/Diary/assets/61993128/737ad8b8-6acf-4fcd-948b-33617c723031"><img src="https://github.com/JungWooGeon/Diary/assets/61993128/66672f41-0d4c-41aa-b295-9c4568975f78" width="300" height="300"/>
-
-<br>
-
 ## 💡 AI 일기장
 AI를 사용하여 편리하고 똑똑하게 작성하는 감정 일기장 앱
 
