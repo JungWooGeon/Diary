@@ -16,8 +16,8 @@ android {
         applicationId = "com.pass.diary"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -104,46 +104,21 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     androidTestImplementation("androidx.test:core-ktx:1.5.0")
     debugImplementation("androidx.test:core:1.5.0")
-//
-//    // room
-//    implementation("androidx.room:room-runtime:2.6.0")
-//    ksp("androidx.room:room-compiler:2.6.0")
-//
+
     // koin
     implementation("io.insert-koin:koin-core:3.5.0")
     implementation("io.insert-koin:koin-android:3.5.0")
     implementation("io.insert-koin:koin-androidx-compose:3.5.0")
-//
-//    // Preferences Data Store
-//    implementation("androidx.datastore:datastore-preferences:1.0.0")
-//    implementation("androidx.datastore:datastore-preferences-core:1.0.0")
-//    implementation("androidx.datastore:datastore-core:1.0.0")
-//
+
     // lottie
     implementation("com.airbnb.android:lottie-compose:6.2.0")
-//
+
     // compose permission
     implementation("com.google.accompanist:accompanist-permissions:0.33.2-alpha")
-//
-//    // retrofit
-//    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-//    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-//
-    // google auth
+
+    // google auth + drive
     implementation("com.google.android.gms:play-services-auth:20.7.0")
-//
-//    // firebase auth
-//    implementation("com.google.gms:google-services:4.4.0")
-//    implementation("com.google.firebase:firebase-auth:22.3.0")
-//    implementation(platform("com.google.firebase:firebase-bom:32.6.0"))
-//    implementation("com.google.firebase:firebase-analytics")
-//    implementation("com.google.android.gms:play-services-auth:20.7.0")
-//
-    // google drive
-//    implementation("com.google.android.gms:play-services-auth:20.7.0")
-//    implementation("com.google.http-client:google-http-client-gson:1.26.0")
     implementation("com.google.api-client:google-api-client-android:1.26.0")
-//    implementation("com.google.apis:google-api-services-drive:v3-rev136-1.25.0")
 
     // open source
     implementation("com.github.SimformSolutionsPvtLtd:SSJetPackComposeProgressButton:1.0.7")
