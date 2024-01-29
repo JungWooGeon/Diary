@@ -1,4 +1,4 @@
-<img src="https://github.com/JungWooGeon/Diary/assets/61993128/66672f41-0d4c-41aa-b295-9c4568975f78" width="300" height="300"/>
+<img width="2719" alt="알람 플레이리스트 아키텍처" src="https://github.com/JungWooGeon/Diary/assets/61993128/737ad8b8-6acf-4fcd-948b-33617c723031"><img src="https://github.com/JungWooGeon/Diary/assets/61993128/66672f41-0d4c-41aa-b295-9c4568975f78" width="300" height="300"/>
 
 <br>
 
@@ -20,7 +20,7 @@ https://play.google.com/store/apps/details?id=com.pass.diary
 
 <br><br>
 
-## 🧩 설계
+## 🚀 설계
 <img src="https://github.com/JungWooGeon/Diary/assets/61993128/81dcaa7c-4aee-4a42-898d-fa0ead18df41" width="593" height="653"/>
 <img src="https://github.com/JungWooGeon/Diary/assets/61993128/abb4f48c-bf1c-4ba4-8a55-3d008031443c" width="600" height="600"/>
 
