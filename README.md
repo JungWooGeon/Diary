@@ -1,5 +1,8 @@
-## 💡 AI 일기장
+<img src="https://github.com/JungWooGeon/Diary/assets/61993128/66672f41-0d4c-41aa-b295-9c4568975f78" width="300" height="300"/>
 
+<br>
+
+## 💡 AI 일기장
 AI를 사용하여 편리하고 똑똑하게 작성하는 감정 일기장 앱
 
 <br><br>
@@ -13,17 +16,13 @@ https://play.google.com/store/apps/details?id=com.pass.diary
 - android, android studio
 - kotlin
 - MVI, Clean Architecture, koin, Room, DataStore, Retrofit, Coroutine, Junit, MockK
-- Google STT (SpeechRecognizer), Naver CLOVA Summary API
-
-<img src="https://github.com/JungWooGeon/Diary/assets/61993128/81dcaa7c-4aee-4a42-898d-fa0ead18df41" width="593" height="653"/>
+- Google STT (SpeechRecognizer), Naver CLOVA Summary API, Google OAuth(Firebase Authentication), Google Drive API
 
 <br><br>
 
-## 📷 화면
-
-<img src="https://github.com/JungWooGeon/Diary/assets/61993128/3727d47e-8b68-42f4-9edc-fd2f34e60fa3" width="400" height="760"/> <img src="https://github.com/JungWooGeon/Diary/assets/61993128/de0da521-2abe-41fd-a145-e0f384a915ef" width="400" height="760" />
-<img src="https://github.com/JungWooGeon/Diary/assets/61993128/0928347c-56ea-4f2a-82ed-9e421de3e6dd" width="400" height="760"/> <img src="https://github.com/JungWooGeon/Diary/assets/61993128/c422b093-419d-44cd-a40a-aed882b178e7" width="400" height="760" />
-<img src="https://github.com/JungWooGeon/Diary/assets/61993128/8c0f39e2-2c67-49eb-a1af-8f1fe332ab3d" width="400" height="760" />
+## 🧩 설계
+<img src="https://github.com/JungWooGeon/Diary/assets/61993128/81dcaa7c-4aee-4a42-898d-fa0ead18df41" width="593" height="653"/>
+<img src="https://github.com/JungWooGeon/Diary/assets/61993128/abb4f48c-bf1c-4ba4-8a55-3d008031443c" width="600" height="600"/>
 
 <br><br>
 
@@ -48,10 +47,18 @@ https://play.google.com/store/apps/details?id=com.pass.diary
 - 추가 사항
     - 위젯 기능 (미구현)
     - 한 주의 시작 요일 설정 (일요일 / 월요일) (미구현)
+
+<br><br>
+
+## 📷 화면
+
+<img src="https://github.com/JungWooGeon/Diary/assets/61993128/3727d47e-8b68-42f4-9edc-fd2f34e60fa3" width="400" height="760"/> <img src="https://github.com/JungWooGeon/Diary/assets/61993128/de0da521-2abe-41fd-a145-e0f384a915ef" width="400" height="760" />
+<img src="https://github.com/JungWooGeon/Diary/assets/61993128/0928347c-56ea-4f2a-82ed-9e421de3e6dd" width="400" height="760"/> <img src="https://github.com/JungWooGeon/Diary/assets/61993128/c422b093-419d-44cd-a40a-aed882b178e7" width="400" height="760" />
+<img src="https://github.com/JungWooGeon/Diary/assets/61993128/8c0f39e2-2c67-49eb-a1af-8f1fe332ab3d" width="400" height="760" />
       
 <br><br>
 
-## 🧩 구조
+## 🧩 코드 구조
 
 ```bash
 │── presentation
