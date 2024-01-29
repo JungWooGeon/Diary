@@ -1,7 +1,7 @@
 package com.pass.presentation.view.screen
 
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 import com.pass.presentation.view.screen.Constants.EMOTICON_RAW_ID_LIST
 import org.junit.Rule
 import org.junit.Test

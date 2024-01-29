@@ -1,6 +1,6 @@
 package com.pass.domain.repository.diary
 
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 import kotlinx.coroutines.flow.Flow
 
 interface DiaryRepository {

@@ -1,6 +1,6 @@
 package com.pass.domain.diary
 
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 import com.pass.domain.repository.diary.DiaryRepository
 import com.pass.domain.usecase.diary.UpdateDiaryUseCase
 import io.mockk.Runs

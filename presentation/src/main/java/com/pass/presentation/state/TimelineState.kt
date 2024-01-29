@@ -1,6 +1,6 @@
 package com.pass.presentation.state
 
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 
 sealed class TimelineState {
     data object Loading : TimelineState()

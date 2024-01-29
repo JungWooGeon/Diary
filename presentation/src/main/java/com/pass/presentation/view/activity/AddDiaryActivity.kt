@@ -4,7 +4,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 import com.pass.presentation.ui.theme.DiaryTheme
 import com.pass.presentation.view.screen.AddDiaryScreen
 import com.pass.presentation.view.screen.Constants.INTENT_NAME_DIARY

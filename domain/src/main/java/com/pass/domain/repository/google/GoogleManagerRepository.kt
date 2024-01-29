@@ -1,7 +1,7 @@
 package com.pass.domain.repository.google
 
 import android.content.Intent
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 import kotlinx.coroutines.flow.Flow
 
 interface GoogleManagerRepository {

@@ -16,7 +16,7 @@ import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 import com.pass.presentation.view.screen.Constants
 
 @Composable

@@ -15,7 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 import com.pass.presentation.ui.theme.LineGray
 import com.pass.presentation.view.screen.Constants
 

@@ -6,7 +6,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.pass.data.db.diary.DiaryDao
 import com.pass.data.db.diary.DiaryDataBase
-import com.pass.domain.model.Diary
+import com.pass.data.mapper.DiaryMapper
+import com.pass.domain.entity.Diary
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -54,7 +55,7 @@ class DiaryDaoTest {
             "일기 내용 테스트"
         )
 
-        dao.addDiary(newDiary)
+        dao.addDiary(DiaryMapper.fromDomain(newDiary))
 
         val diaries = dao.getDiariesByMonth("2023", "10")
         assertTrue(diaries.isNotEmpty())

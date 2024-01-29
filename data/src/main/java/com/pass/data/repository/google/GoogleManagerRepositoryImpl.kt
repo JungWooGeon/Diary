@@ -14,7 +14,7 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 import com.pass.domain.repository.google.GoogleManagerRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

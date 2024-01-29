@@ -1,6 +1,6 @@
 package com.pass.presentation.intent
 
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 import java.time.LocalDate
 
 sealed class AddDiaryIntent {

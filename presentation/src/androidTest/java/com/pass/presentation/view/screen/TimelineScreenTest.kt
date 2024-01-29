@@ -6,15 +6,12 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.pass.domain.model.Diary
-import com.pass.presentation.intent.AddDiaryIntent
+import com.pass.domain.entity.Diary
 import com.pass.presentation.intent.TimelineIntent
-import com.pass.presentation.state.AddDiaryState
 import com.pass.presentation.state.TimelineState
 import com.pass.presentation.viewmodel.TimelineViewModel
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
 import org.junit.Before

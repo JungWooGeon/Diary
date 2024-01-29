@@ -34,7 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 import com.pass.presentation.intent.AddDiaryIntent
 import com.pass.presentation.state.AddDiaryState
 import com.pass.presentation.state.WorkState

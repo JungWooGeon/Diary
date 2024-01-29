@@ -1,14 +1,11 @@
-package com.pass.domain.model
+package com.pass.data.db.entity
 
-import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import kotlinx.parcelize.Parcelize
 
-@Parcelize
 @Entity
-data class Diary (
+data class DiaryEntity (
     @PrimaryKey(autoGenerate = true) val id: Int?,
     @ColumnInfo(name = "year") var year: String,
     @ColumnInfo(name = "month") var month: String,
@@ -20,4 +17,4 @@ data class Diary (
     @ColumnInfo(name = "imageUri") var imageUri: String?,
     @ColumnInfo(name = "title") var title: String,
     @ColumnInfo(name = "content") var content: String
-) : Parcelable
+)

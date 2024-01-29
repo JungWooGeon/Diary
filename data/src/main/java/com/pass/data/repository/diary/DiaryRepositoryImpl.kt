@@ -2,12 +2,13 @@ package com.pass.data.repository.diary
 
 import android.util.Log
 import com.pass.data.db.diary.DiaryDataBase
-import com.pass.domain.model.Diary
+import com.pass.data.mapper.DiaryMapper
 import com.pass.data.remote.dto.DocumentObject
 import com.pass.data.remote.dto.OptionObject
 import com.pass.data.remote.dto.SummaryRequest
 import com.pass.data.remote.dto.SummaryResponse
 import com.pass.data.remote.service.SummaryService
+import com.pass.domain.entity.Diary
 import com.pass.domain.repository.diary.DiaryRepository
 import com.sss.data.BuildConfig
 import kotlinx.coroutines.channels.awaitClose
@@ -24,19 +25,20 @@ class DiaryRepositoryImpl(private val db: DiaryDataBase) : DiaryRepository {
     private val NAVER_BASE_URL = "https://naveropenapi.apigw.ntruss.com/"
 
     override suspend fun getDiariesByMonth(year: String, month: String): List<Diary> {
-        return db.diaryDao().getDiariesByMonth(year, month)
+        val diaryEntity = db.diaryDao().getDiariesByMonth(year, month)
+        return DiaryMapper.toDomainWithList(diaryEntity)
     }
 
     override suspend fun addDiary(diary: Diary) {
-        return db.diaryDao().addDiary(diary)
+        return db.diaryDao().addDiary(DiaryMapper.fromDomain(diary))
     }
 
     override suspend fun updateDiary(diary: Diary) {
-        return db.diaryDao().updateDiary(diary)
+        return db.diaryDao().updateDiary(DiaryMapper.fromDomain(diary))
     }
 
     override suspend fun deleteDiary(diary: Diary) {
-        return db.diaryDao().deleteDiary(diary)
+        return db.diaryDao().deleteDiary(DiaryMapper.fromDomain(diary))
     }
 
     override suspend fun summaryDiary(content: String): Flow<String> = callbackFlow {
@@ -88,6 +90,7 @@ class DiaryRepositoryImpl(private val db: DiaryDataBase) : DiaryRepository {
     }
 
     override suspend fun getAllDiaries(): List<Diary> {
-        return db.diaryDao().getAllDiaries()
+        val diaryEntity = db.diaryDao().getAllDiaries()
+        return DiaryMapper.toDomainWithList(diaryEntity)
     }
 }

@@ -2,7 +2,8 @@ package com.pass.data.repository
 
 import com.pass.data.db.diary.DiaryDao
 import com.pass.data.db.diary.DiaryDataBase
-import com.pass.domain.model.Diary
+import com.pass.data.mapper.DiaryMapper
+import com.pass.domain.entity.Diary
 import com.pass.data.repository.diary.DiaryRepositoryImpl
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -64,7 +65,7 @@ class DiaryRepositoryTest {
             )
         )
 
-        every { diaryDataBase.diaryDao().getDiariesByMonth("2023", month) } returns fakeDiaries
+        every { diaryDataBase.diaryDao().getDiariesByMonth("2023", month) } returns DiaryMapper.fromDomainWithList(fakeDiaries)
 
         val result = diaryRepository.getDiariesByMonth("2023", month)
 
@@ -95,12 +96,12 @@ class DiaryRepositoryTest {
         )
 
         // addDiary 실행 시 실행만 되게 적용
-        coEvery { diaryDataBase.diaryDao().addDiary(diary) } just Runs
+        coEvery { diaryDataBase.diaryDao().addDiary(DiaryMapper.fromDomain(diary)) } just Runs
 
         diaryRepository.addDiary(diary)
 
         // addDiary 가 정확히 한 번만 실행되었는지 확인
-        coVerify(exactly = 1) { diaryDataBase.diaryDao().addDiary(diary) }
+        coVerify(exactly = 1) { diaryDataBase.diaryDao().addDiary(DiaryMapper.fromDomain(diary)) }
     }
 
     @Test
@@ -121,12 +122,12 @@ class DiaryRepositoryTest {
         )
 
         // updateDiary 실행 시 실행만 되게 적용
-        coEvery { diaryDataBase.diaryDao().updateDiary(diary) } just Runs
+        coEvery { diaryDataBase.diaryDao().updateDiary(DiaryMapper.fromDomain(diary)) } just Runs
 
         diaryRepository.updateDiary(diary)
 
         // updateDiary 가 정확히 한 번만 실행되었는지 확인
-        coVerify(exactly = 1) { diaryDataBase.diaryDao().updateDiary(diary) }
+        coVerify(exactly = 1) { diaryDataBase.diaryDao().updateDiary(DiaryMapper.fromDomain(diary)) }
     }
 
     @Test
@@ -147,11 +148,11 @@ class DiaryRepositoryTest {
         )
 
         // deleteDiary 실행 시 실행만 되게 적용
-        coEvery { diaryDataBase.diaryDao().deleteDiary(diary) } just Runs
+        coEvery { diaryDataBase.diaryDao().deleteDiary(DiaryMapper.fromDomain(diary)) } just Runs
 
         diaryRepository.deleteDiary(diary)
 
         // deleteDiary 가 정확히 한 번만 실행되었는지 확인
-        coVerify(exactly = 1) { diaryDataBase.diaryDao().deleteDiary(diary) }
+        coVerify(exactly = 1) { diaryDataBase.diaryDao().deleteDiary(DiaryMapper.fromDomain(diary)) }
     }
 }

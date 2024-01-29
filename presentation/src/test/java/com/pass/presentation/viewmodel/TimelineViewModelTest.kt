@@ -1,6 +1,6 @@
 package com.pass.presentation.viewmodel
 
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 import com.pass.domain.usecase.diary.GetDiariesByMonthUseCase
 import com.pass.presentation.intent.TimelineIntent
 import com.pass.presentation.state.TimelineState

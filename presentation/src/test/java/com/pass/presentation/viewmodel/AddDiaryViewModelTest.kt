@@ -1,6 +1,6 @@
 package com.pass.presentation.viewmodel
 
-import com.pass.domain.model.Diary
+import com.pass.domain.entity.Diary
 import com.pass.domain.usecase.diary.AddDiaryUseCase
 import com.pass.domain.usecase.diary.DeleteDiaryUseCase
 import com.pass.domain.usecase.diary.SummaryDiaryUseCase
