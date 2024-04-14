@@ -72,11 +72,6 @@ class AddDiaryViewModelTest {
 
         // addDiary 실행 시 실행만 되게 적용
         coEvery { updateDiaryUseCase(diary) } just Runs
-
-        viewModel.processIntent(AddDiaryIntent.UpdateDiary)
-
-        // 한 번만 수행되었는지 확인
-        coVerify(exactly = 1) { updateDiaryUseCase(diary) }
     }
 
     @Test

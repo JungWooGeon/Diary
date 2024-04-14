@@ -25,7 +25,8 @@ import javax.inject.Singleton
 @Singleton
 class DiaryRepositoryImpl @Inject constructor(private val db: DiaryDataBase) : DiaryRepository {
 
-    private val NAVER_BASE_URL = "https://naveropenapi.apigw.ntruss.com/"
+    @Inject
+    lateinit var service: SummaryService
 
     override suspend fun getDiariesByMonth(year: String, month: String): List<Diary> {
         val diaryEntity = db.diaryDao().getDiariesByMonth(year, month)
@@ -45,12 +46,6 @@ class DiaryRepositoryImpl @Inject constructor(private val db: DiaryDataBase) : D
     }
 
     override suspend fun summaryDiary(content: String): Flow<String> = callbackFlow {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(NAVER_BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        val service = retrofit.create(SummaryService::class.java)
-
         service.getSearchRestaurant(
             clientId = BuildConfig.naver_client_id,
             clientSecret = BuildConfig.naver_client_pw,
