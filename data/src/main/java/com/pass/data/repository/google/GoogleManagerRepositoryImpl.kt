@@ -21,8 +21,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import java.io.ByteArrayOutputStream
 import java.util.Collections
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class GoogleManagerRepositoryImpl(private val context: Context) : GoogleManagerRepository {
+@Singleton
+class GoogleManagerRepositoryImpl @Inject constructor(private val context: Context) : GoogleManagerRepository {
     // GoogleAccountCredential: Google Drive REST API 사용을 위한 인증
     private var credential: GoogleAccountCredential? = null
 

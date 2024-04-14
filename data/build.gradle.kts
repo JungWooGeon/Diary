@@ -6,6 +6,9 @@ plugins {
     id("com.google.devtools.ksp")
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
+
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -53,6 +56,10 @@ android {
     buildFeatures {
         buildConfig = true
     }
+
+    kapt {
+        correctErrorTypes = true
+    }
 }
 
 dependencies {
@@ -93,4 +100,8 @@ dependencies {
     testImplementation("io.mockk:mockk-agent:1.13.8")
     androidTestImplementation("io.mockk:mockk-android:1.13.8")
     androidTestImplementation("io.mockk:mockk-agent:1.13.8")
+
+    // hilt
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-compiler:2.51.1")
 }

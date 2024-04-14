@@ -10,8 +10,11 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.pass.domain.repository.settings.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
+@Singleton
+class SettingsRepositoryImpl @Inject constructor(private val context: Context) : SettingsRepository {
 
     companion object {
         private val TEXT_SIZE_KEY = floatPreferencesKey("text_size")

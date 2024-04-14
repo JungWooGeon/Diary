@@ -5,14 +5,17 @@ import androidx.lifecycle.viewModelScope
 import com.pass.domain.usecase.diary.GetDiariesByMonthUseCase
 import com.pass.presentation.intent.CalendarIntent
 import com.pass.presentation.state.TimelineState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import javax.inject.Inject
 
-class CalendarViewModel(
+@HiltViewModel
+class CalendarViewModel @Inject constructor(
     private val getDiariesByMonthUseCase: GetDiariesByMonthUseCase
 ) : ViewModel() {
 

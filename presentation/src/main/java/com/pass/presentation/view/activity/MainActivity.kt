@@ -11,7 +11,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.pass.presentation.ui.theme.DiaryTheme
 import com.pass.presentation.view.screen.MainScreen
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private var backPressedTime: Long = 0

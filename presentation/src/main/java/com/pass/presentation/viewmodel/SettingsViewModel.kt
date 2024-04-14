@@ -18,12 +18,15 @@ import com.pass.domain.usecase.settings.font.UpdateCurrentTextSizeUseCase
 import com.pass.presentation.intent.SettingsIntent
 import com.pass.presentation.state.LoginState
 import com.pass.presentation.state.SettingState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SettingsViewModel(
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
     private val getCurrentTextSizeUseCase: GetCurrentTextSizeUseCase,
     private val updateCurrentTextSizeUseCase: UpdateCurrentTextSizeUseCase,
     private val getCurrentFontUseCase: GetCurrentFontUseCase,

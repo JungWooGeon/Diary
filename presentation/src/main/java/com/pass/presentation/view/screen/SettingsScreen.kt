@@ -40,7 +40,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat.startActivity
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.pass.diary.BuildConfig
@@ -53,11 +53,10 @@ import com.pass.presentation.view.composable.SettingDefault
 import com.pass.presentation.view.composable.SettingFont
 import com.pass.presentation.view.composable.SettingLicense
 import com.pass.presentation.viewmodel.SettingsViewModel
-import org.koin.androidx.compose.getViewModel
 
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = getViewModel()) {
+fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val context = LocalContext.current
 
     // 설정 화면 상태 (기본, 폰트, 백업 등)

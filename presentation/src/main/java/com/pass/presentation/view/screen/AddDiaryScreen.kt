@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.pass.domain.entity.Diary
 import com.pass.presentation.intent.AddDiaryIntent
 import com.pass.presentation.state.AddDiaryState
@@ -50,11 +51,10 @@ import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonType
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSJetPackComposeProgressButton
 import kotlinx.coroutines.delay
-import org.koin.androidx.compose.getViewModel
 import java.lang.Math.PI
 
 @Composable
-fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = getViewModel()) {
+fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = hiltViewModel()) {
     val context = LocalContext.current
 
     // 현재 화면 상태 (standby, loading, error)

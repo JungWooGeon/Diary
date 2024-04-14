@@ -25,9 +25,10 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pass.diary.R
 import com.pass.presentation.viewmodel.ThemeViewModel
-import org.koin.androidx.compose.getViewModel
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -57,7 +58,7 @@ fun DiaryTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
-    viewModel: ThemeViewModel = getViewModel(),
+    viewModel: ThemeViewModel = viewModel(),
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current

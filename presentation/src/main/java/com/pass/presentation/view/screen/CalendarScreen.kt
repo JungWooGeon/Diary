@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.pass.presentation.intent.CalendarIntent
@@ -41,10 +42,9 @@ import com.pass.presentation.view.composable.CurrentMonthWithCalendar
 import com.pass.presentation.view.composable.CustomYearDatePicker
 import com.pass.presentation.view.composable.DiaryItem
 import com.pass.presentation.viewmodel.CalendarViewModel
-import org.koin.androidx.compose.getViewModel
 
 @Composable
-fun CalendarScreen(viewModel: CalendarViewModel = getViewModel()) {
+fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 

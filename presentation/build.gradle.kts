@@ -6,6 +6,9 @@ plugins {
     id("com.google.devtools.ksp")
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
+
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -68,6 +71,10 @@ android {
             useLegacyPackaging = true
         }
     }
+
+    kapt {
+        correctErrorTypes = true
+    }
 }
 
 dependencies {
@@ -105,11 +112,6 @@ dependencies {
     androidTestImplementation("androidx.test:core-ktx:1.5.0")
     debugImplementation("androidx.test:core:1.5.0")
 
-    // koin
-    implementation("io.insert-koin:koin-core:3.5.0")
-    implementation("io.insert-koin:koin-android:3.5.0")
-    implementation("io.insert-koin:koin-androidx-compose:3.5.0")
-
     // lottie
     implementation("com.airbnb.android:lottie-compose:6.2.0")
 
@@ -125,4 +127,9 @@ dependencies {
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     implementation("com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava")
+
+    // hilt
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-compiler:2.51.1")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 }

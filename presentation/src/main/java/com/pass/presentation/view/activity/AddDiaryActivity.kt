@@ -8,7 +8,9 @@ import com.pass.domain.entity.Diary
 import com.pass.presentation.ui.theme.DiaryTheme
 import com.pass.presentation.view.screen.AddDiaryScreen
 import com.pass.presentation.view.screen.Constants.INTENT_NAME_DIARY
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AddDiaryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

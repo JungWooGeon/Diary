@@ -19,8 +19,11 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class DiaryRepositoryImpl(private val db: DiaryDataBase) : DiaryRepository {
+@Singleton
+class DiaryRepositoryImpl @Inject constructor(private val db: DiaryDataBase) : DiaryRepository {
 
     private val NAVER_BASE_URL = "https://naveropenapi.apigw.ntruss.com/"
 

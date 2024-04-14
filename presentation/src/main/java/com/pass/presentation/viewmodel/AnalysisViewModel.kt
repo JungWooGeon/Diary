@@ -5,14 +5,17 @@ import androidx.lifecycle.viewModelScope
 import com.pass.domain.usecase.diary.GetDiariesByMonthUseCase
 import com.pass.presentation.intent.AnalysisIntent
 import com.pass.presentation.state.TimelineState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import javax.inject.Inject
 
-class AnalysisViewModel(
+@HiltViewModel
+class AnalysisViewModel @Inject constructor(
     private val getDiariesByMonthUseCase: GetDiariesByMonthUseCase
 ): ViewModel() {
 

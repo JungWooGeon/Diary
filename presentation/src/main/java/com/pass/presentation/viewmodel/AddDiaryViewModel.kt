@@ -13,6 +13,7 @@ import com.pass.presentation.state.AddDiaryState
 import com.pass.presentation.state.WorkState
 import com.pass.presentation.view.screen.Constants
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,8 +21,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import javax.inject.Inject
 
-class AddDiaryViewModel(
+@HiltViewModel
+class AddDiaryViewModel @Inject constructor(
     private val addDiaryUseCase: AddDiaryUseCase,
     private val updateDiaryUseCase: UpdateDiaryUseCase,
     private val deleteDiaryUseCase: DeleteDiaryUseCase,

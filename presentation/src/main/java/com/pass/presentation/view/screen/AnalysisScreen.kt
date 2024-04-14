@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.pass.presentation.intent.AnalysisIntent
@@ -27,10 +28,9 @@ import com.pass.presentation.view.composable.CurrentMonthWithCalendar
 import com.pass.presentation.view.composable.CustomYearDatePicker
 import com.pass.presentation.view.composable.HorizontalBarChartView
 import com.pass.presentation.viewmodel.AnalysisViewModel
-import org.koin.androidx.compose.getViewModel
 
 @Composable
-fun AnalysisScreen(viewModel: AnalysisViewModel = getViewModel()) {
+fun AnalysisScreen(viewModel: AnalysisViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 

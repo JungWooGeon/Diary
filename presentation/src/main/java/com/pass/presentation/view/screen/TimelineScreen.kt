@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.pass.presentation.intent.TimelineIntent
@@ -46,10 +47,9 @@ import com.pass.presentation.view.composable.CustomYearDatePicker
 import com.pass.presentation.view.composable.DiaryItem
 import com.pass.presentation.view.screen.Constants.INTENT_NAME_DIARY
 import com.pass.presentation.viewmodel.TimelineViewModel
-import org.koin.androidx.compose.getViewModel
 
 @Composable
-fun TimelineScreen(viewModel: TimelineViewModel = getViewModel()) {
+fun TimelineScreen(viewModel: TimelineViewModel = hiltViewModel()) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
     val context = LocalContext.current
