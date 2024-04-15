@@ -11,7 +11,7 @@ https://play.google.com/store/apps/details?id=com.pass.diary
 ## 🛠 사용
 - android, android studio
 - kotlin
-- MVI, Clean Architecture, koin, Room, DataStore, Retrofit, Coroutine, Junit, MockK
+- MVI, Clean Architecture, Hilt, Room, DataStore, Retrofit, Coroutine, Junit, MockK
 - Google STT (SpeechRecognizer), Naver CLOVA Summary API, Google OAuth(Firebase Authentication), Google Drive API
 
 <br><br>
@@ -98,14 +98,11 @@ https://play.google.com/store/apps/details?id=com.pass.diary
 │   │   ├── SettingsIntent.kt
 │   │   └── TimelineIntent.kt
 │   ├── di
-│   │   ├── databaseModule.kt
-│   │   ├── repositoryModule.kt
-│   │   ├── useCaseModule.kt
-│   │   └── viewModelModule.kt
+│   │   └── AppModule.kt
 │   └── DiaryApplication.kt
 │
 ├── domain
-│   ├── model
+│   ├── entity
 │   │   └── Diary.kt
 │   ├── repository
 │   │   ├── diary
@@ -136,10 +133,18 @@ https://play.google.com/store/apps/details?id=com.pass.diary
 │               └── UpdateCurrentTextSizeUseCase.kt
 │
 └── data
+    ├── di
+    │   ├── DataBaseModule.kt
+    │   ├── NetworkModule.kt
+    │   └── RepositoryModule.kt
     ├── db
-    │   └── diary
-    │       ├── DiaryDao.kt
-    │       └── DiaryDataBase.kt
+    │   ├── diary
+    │   │   ├── DiaryDao.kt
+    │   │   └── DiaryDataBase.kt
+    │   └── entity
+		│		    └── DiaryEntity.kt
+		├── mapper
+	  │   └── DiaryMapper.kt
     ├── remote
     │   ├── dto
     │   │   ├── SummaryRequest.kt
