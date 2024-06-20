@@ -142,9 +142,9 @@ https://play.google.com/store/apps/details?id=com.pass.diary
     │   │   ├── DiaryDao.kt
     │   │   └── DiaryDataBase.kt
     │   └── entity
-		│		    └── DiaryEntity.kt
-		├── mapper
-	  │   └── DiaryMapper.kt
+    │	    └── DiaryEntity.kt
+    ├── mapper
+    │   └── DiaryMapper.kt
     ├── remote
     │   ├── dto
     │   │   ├── SummaryRequest.kt
