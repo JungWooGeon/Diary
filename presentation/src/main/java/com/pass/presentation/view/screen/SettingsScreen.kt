@@ -145,7 +145,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         if (error == null) return@LaunchedEffect
 
         // 사용자에게 권한 부여 요청
-        driveLauncher.launch(error)
+        driveLauncher.launch(error!!)
     }
 
     // 로그인 화면 요청

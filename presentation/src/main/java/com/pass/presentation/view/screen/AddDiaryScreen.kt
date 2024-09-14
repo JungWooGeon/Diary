@@ -124,7 +124,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = hiltViewModel()
 
         // 3초 후 토스트 메시지 출력
         delay(3000)
-        if (submitButtonState == SSButtonState.FAILIURE) {
+        if (submitButtonState == SSButtonState.FAILURE) {
             // 내용 요약 실패
             Toast.makeText(context, "내용을 요약할 수 없습니다. 더 자세히 적어주세요.", Toast.LENGTH_SHORT).show()
         } else if (submitButtonState == SSButtonState.SUCCESS) {

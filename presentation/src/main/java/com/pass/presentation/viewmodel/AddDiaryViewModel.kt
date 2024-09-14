@@ -232,7 +232,7 @@ class AddDiaryViewModel @Inject constructor(
                     // 추가하기 화면일 때
                     if (contentTextState.value.length < 20) {
                         // 내용이 너무 적을 경우 예외 처리
-                        _submitButtonState.value = SSButtonState.FAILIURE
+                        _submitButtonState.value = SSButtonState.FAILURE
                         return
                     }
 
@@ -246,7 +246,7 @@ class AddDiaryViewModel @Inject constructor(
                                 summaryDiaryUseCase(contentTextState.value)
                             }.collect { summary ->
                                 if (summary == "") {
-                                    _submitButtonState.value = SSButtonState.FAILIURE
+                                    _submitButtonState.value = SSButtonState.FAILURE
                                 } else {
                                     // _titleTextState.value = summary
                                     for (char in summary) {
@@ -263,7 +263,7 @@ class AddDiaryViewModel @Inject constructor(
                                 }
                             }
                         } catch (e: Exception) {
-                            _submitButtonState.value = SSButtonState.FAILIURE
+                            _submitButtonState.value = SSButtonState.FAILURE
                         }
                     }
                 } else {
