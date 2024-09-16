@@ -8,7 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.pass.domain.entity.Diary
 import com.pass.presentation.intent.AddDiaryIntent
-import com.pass.presentation.state.AddDiaryState
+import com.pass.presentation.state.screen.AddDiaryState
 import com.pass.presentation.state.WorkState
 import com.pass.presentation.viewmodel.AddDiaryViewModel
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState

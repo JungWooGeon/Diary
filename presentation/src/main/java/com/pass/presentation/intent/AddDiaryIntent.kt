@@ -5,13 +5,10 @@ import java.time.LocalDate
 
 sealed class AddDiaryIntent {
     data class Initialize(val diary: Diary?) : AddDiaryIntent()
-    data object AddDiary : AddDiaryIntent()
+    data class AddDiary(val contentText: String, val titleText: String) : AddDiaryIntent()
     data object DeleteDiary : AddDiaryIntent()
 
     data class SelectDate(val localDate: LocalDate) : AddDiaryIntent()
-
-    data class WriteTitle(val text: String) : AddDiaryIntent()
-    data class WriteContent(val text: String) : AddDiaryIntent()
     data class DeleteEmoticon(val index: Int) : AddDiaryIntent()
 
     data class UpdateAddDialog(val isOpen: Boolean) : AddDiaryIntent()
@@ -20,11 +17,6 @@ sealed class AddDiaryIntent {
     data class UpdateRecordDialog(val isOpen: Boolean) : AddDiaryIntent()
     data class UpdateDeleteDialog(val isOpen: Boolean) : AddDiaryIntent()
 
-    data object OnCompleteShowToastDeleteEmoticon : AddDiaryIntent()
-    data object OnCompleteShowToastAddEmoticon : AddDiaryIntent()
-
-    data object OnClickSSProgressButton : AddDiaryIntent()
+    data class OnClickSSProgressButton(val contentText: String, val titleText: String) : AddDiaryIntent()
     data class OnSelectEmoticon(val emoticonId: Int) : AddDiaryIntent()
-
-    data object SetIDleSSButtonState : AddDiaryIntent()
 }
