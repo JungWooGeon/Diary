@@ -1,5 +1,6 @@
 package com.pass.presentation.view.screen
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -17,8 +18,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.AlertDialog
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -53,6 +55,7 @@ import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSJetPackComposeProgres
 import kotlinx.coroutines.delay
 import java.lang.Math.PI
 
+@SuppressLint("UseOfNonLambdaOffsetOverload")
 @Composable
 fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = hiltViewModel()) {
     val context = LocalContext.current

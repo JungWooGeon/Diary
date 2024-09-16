@@ -16,3 +16,5 @@ val Fluorescent = Color(0xFFB3FC6C)
 
 val BoxGray = Color(0xFFEFEFEF)
 val TextColor = Color(0xFF747474)
+
+val BottomNavigationContentColor = Color(0xFF3F414E)

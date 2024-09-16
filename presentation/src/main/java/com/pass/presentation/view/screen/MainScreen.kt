@@ -5,15 +5,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -25,6 +28,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.pass.presentation.state.MainState
+import com.pass.presentation.ui.theme.BottomNavigationContentColor
 import com.pass.presentation.ui.theme.Fluorescent
 
 @Composable
@@ -54,12 +58,12 @@ fun BottomNavigationBar(
         MainState.Settings
     )
 
-    androidx.compose.material.BottomNavigation(
-        backgroundColor = Color.White,
-        contentColor = Color(0xFF3F414E)
+    NavigationBar(
+        containerColor = Color.White,
+        contentColor = BottomNavigationContentColor
     ) {
         items.forEach { item ->
-            BottomNavigationItem(
+            NavigationBarItem(
                 icon = {
                     Icon(
                         painter = painterResource(id = item.icon),
@@ -71,11 +75,8 @@ fun BottomNavigationBar(
                     )
                 },
                 label = { Text(stringResource(id = item.title), fontSize = 9.sp) },
-                selectedContentColor = MaterialTheme.colors.primary,
-                unselectedContentColor = Gray,
                 selected = currentRoute == item.screenRoute,
                 alwaysShowLabel = false,
-
                 onClick = {
                     navController.navigate(item.screenRoute) {
                         navController.graph.startDestinationRoute?.let {
@@ -84,7 +85,12 @@ fun BottomNavigationBar(
                         launchSingleTop = true
                         restoreState = true
                     }
-                }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedTextColor = Black,
+                    unselectedTextColor = Gray,
+                    indicatorColor = Color.Transparent
+                )
             )
         }
     }

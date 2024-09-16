@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -69,7 +70,8 @@ fun EmoticonBox(
                     modifier = Modifier.size(30.dp)
                 ) {
                     IconButton(onClick = { onDatePickerOpen() }) {
-                        Icon(Icons.Rounded.Add, contentDescription = "이모티콘 추가")
+//                        Icon(Icons.Rounded.Add, contentDescription = "이모티콘 추가")
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "")
                     }
                 }
 

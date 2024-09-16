@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -39,7 +39,7 @@ fun AddDiaryAppBar(
         modifier = Modifier.fillMaxWidth()
     ) {
         IconButton(onClick = { (context as Activity).finish() }) {
-            Icon(Icons.Default.KeyboardArrowLeft, "Back Button")
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Back Button")
         }
 
         Row(

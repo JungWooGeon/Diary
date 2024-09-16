@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,7 +64,7 @@ fun SettingBackup(
         ) {
             Text(
                 text = titleText,
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
@@ -86,9 +86,9 @@ fun GoogleButton(
             .clickable(onClick = onClick)
             .fillMaxWidth(),
         // border = BorderStroke(width = 1.dp, color = Color.LightGray),
-        color = MaterialTheme.colors.surface,
+        color = MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.medium,
-        elevation = 10.dp
+        tonalElevation = 10.dp
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -109,9 +109,9 @@ fun GoogleButton(
             Spacer(modifier = Modifier.width(20.dp))
             Text(
                 text = buttonText,
-                style = MaterialTheme.typography.overline,
+                style = MaterialTheme.typography.headlineMedium,
                 color = Color.Gray,
-                fontSize = 17.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
         }
