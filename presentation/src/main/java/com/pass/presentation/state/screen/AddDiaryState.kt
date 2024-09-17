@@ -1,7 +1,6 @@
 package com.pass.presentation.state.screen
 
 import androidx.compose.runtime.Immutable
-import com.pass.presentation.state.LoadingState
 import com.pass.presentation.view.screen.Constants
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState
 import java.time.LocalDate
@@ -9,7 +8,7 @@ import java.time.LocalDate
 @Immutable
 data class AddDiaryState(
     // 화면 상태 (loading, error, standby)
-    val loading: LoadingState = LoadingState.Loading,
+    val loading: AddDiaryLoadingState = AddDiaryLoadingState.Loading,
 
     // 텍스트 크기
     val textSizeState: Float = DEFAULT_TEXT_SIZE,
@@ -45,5 +44,12 @@ data class AddDiaryState(
 
     val shouldShake: Boolean = false
 )
+
+sealed class AddDiaryLoadingState {
+    data object Loading : AddDiaryLoadingState()
+    data object Complete : AddDiaryLoadingState()
+    data object Standby : AddDiaryLoadingState()
+    data class Error(val error: Throwable) : AddDiaryLoadingState()
+}
 
 private const val DEFAULT_TEXT_SIZE = 13f

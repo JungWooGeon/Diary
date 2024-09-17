@@ -15,19 +15,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pass.diary.R
-import com.pass.presentation.state.SettingState
+import com.pass.presentation.state.SettingRouteState
 import com.pass.presentation.ui.theme.LineGray
 
 @Composable
 fun SettingDefault(
-    onClick: (SettingState) -> Unit,
+    onClick: (SettingRouteState) -> Unit,
     onClickPrivacyPolicy: () -> Unit,
     onClickReview: () -> Unit
 ) {
     SettingRow(
         iconResource = R.drawable.ic_font,
         iconDescription = "폰트",
-        onClick = { onClick(SettingState.FontSetting) }
+        onClick = { onClick(SettingRouteState.FontSettingRoute) }
     )
 
     SettingRow(
@@ -35,7 +35,7 @@ fun SettingDefault(
         iconDescription = "테마",
         onClick = {
             //@TODO 테마 설정 화면 전환
-            onClick(SettingState.ThemeSetting)
+            onClick(SettingRouteState.ThemeSettingRoute)
         }
     )
 
@@ -44,7 +44,7 @@ fun SettingDefault(
         iconDescription = "화면 잠금",
         onClick = {
             //@TODO 화면 잠금 설정 화면 전환
-            onClick(SettingState.ScreenLockSetting)
+            onClick(SettingRouteState.ScreenLockSettingRoute)
         }
     )
 
@@ -53,7 +53,7 @@ fun SettingDefault(
         iconDescription = "시작 요일 설정",
         onClick = {
             //@TODO 시작 요일 설정 화면 전환
-            onClick(SettingState.StartDateSetting)
+            onClick(SettingRouteState.StartDateSettingRoute)
         }
     )
 
@@ -61,7 +61,7 @@ fun SettingDefault(
         iconResource = R.drawable.ic_cloud,
         iconDescription = "백업 / 복원",
         onClick = {
-            onClick(SettingState.BackupSetting)
+            onClick(SettingRouteState.BackupSettingRoute)
         }
     )
 
@@ -86,7 +86,7 @@ fun SettingDefault(
         modifier = Modifier
             .padding(start = 20.dp, top = 20.dp)
             .fillMaxWidth()
-            .clickable { onClick(SettingState.LicenseSetting) }
+            .clickable { onClick(SettingRouteState.LicenseSettingRoute) }
     )
 
     Text(

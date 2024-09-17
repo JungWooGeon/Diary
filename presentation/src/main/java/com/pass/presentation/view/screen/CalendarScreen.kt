@@ -14,26 +14,26 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.pass.domain.entity.Diary
 import com.pass.presentation.intent.CalendarIntent
-import com.pass.presentation.state.TimelineState
+import com.pass.presentation.sideeffect.CalendarSideEffect
+import com.pass.presentation.state.screen.CalendarLoadingState
 import com.pass.presentation.ui.theme.LineGray
 import com.pass.presentation.view.activity.AddDiaryActivity
 import com.pass.presentation.view.composable.CalendarMonthGrid
@@ -42,30 +42,22 @@ import com.pass.presentation.view.composable.CurrentMonthWithCalendar
 import com.pass.presentation.view.composable.CustomYearDatePicker
 import com.pass.presentation.view.composable.DiaryItem
 import com.pass.presentation.viewmodel.CalendarViewModel
+import org.orbitmvi.orbit.compose.collectAsState
+import org.orbitmvi.orbit.compose.collectSideEffect
+import java.time.LocalDate
 
 @Composable
 fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
+
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val calendarState = viewModel.collectAsState().value
 
-    // 현재 화면 상태 (standby, loading, error)
-    val calendarState by viewModel.calendarState.collectAsState()
-
-    // UI 상 에서 선택된 날짜 상태
-    val selectedDateState by viewModel.selectedDateState.collectAsState()
-
-    // DatePicker show / hide 상태
-    val isDatePickerOpenState by viewModel.isDatePickerOpenState.collectAsState()
-
-    // Custom Date Picker 에서 선택된 연도 상태
-    val datePickerYearState by viewModel.datePickerYearState.collectAsState()
-
-    // 날짜 선택 예외 처리 상태 -> 날짜 선택 실패 시 토스트 메시지 출력
-    val selectedDateErrorState by viewModel.selectedDateErrorState.collectAsState()
-    LaunchedEffect(selectedDateErrorState) {
-        if (selectedDateErrorState) {
-            Toast.makeText(context, "오지 않은 날짜는 설정할 수 없습니다.", Toast.LENGTH_SHORT).show()
-            viewModel.processIntent(CalendarIntent.OnCompleteShowToastErrorMessage)
+    viewModel.collectSideEffect { sideEffect ->
+        when(sideEffect) {
+            is CalendarSideEffect.Toast -> {
+                Toast.makeText(context, sideEffect.text, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -78,12 +70,56 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
         })
     }
 
+    CalendarScreen(
+        loading = calendarState.loading,
+        selectedDate = calendarState.selectedDate,
+        datePickerYear = calendarState.datePickerYear,
+        isOpenDatePicker = calendarState.isOpenDatePicker,
+        onSelectPreviousMonth = { dayOfMonth -> viewModel.processIntent(CalendarIntent.OnSelectPreviousMonth(dayOfMonth)) },
+        onSelectNextMonth = { dayOfMonth -> viewModel.processIntent(CalendarIntent.OnSelectNextMonth(dayOfMonth)) },
+        onSelectTheCurrentMonthDate = { dayOfMonth -> viewModel.processIntent(CalendarIntent.OnSelectTheCurrentMonthDate(dayOfMonth)) },
+        onUpdateDatePickerIsOpen = { viewModel.processIntent(CalendarIntent.UpdateDatePickerIsOpen(it)) },
+        onStartDiaryEditActivity = { clickDiary ->
+            // 다이어리 편집 액티비티 실행
+            val intent = Intent(context, AddDiaryActivity::class.java)
+            intent.putExtra(Constants.INTENT_NAME_DIARY, clickDiary)
+            context.startActivity(intent)
+        },
+        onStartDiaryAddActivity = {
+            // 다이어리 추가 액티비티 실행
+            val intent = Intent(context, AddDiaryActivity::class.java)
+            context.startActivity(intent)
+        },
+        onUpdateDatePickerYear = { newYear ->
+            viewModel.processIntent(CalendarIntent.UpdateDatePickerYear(newYear))
+        },
+        onSelectNewMonth = { newMonth ->
+            viewModel.processIntent(CalendarIntent.OnSelectNewMonth(newMonth))
+        }
+    )
+}
+
+@Composable
+fun CalendarScreen(
+    loading: CalendarLoadingState,
+    selectedDate: LocalDate,
+    datePickerYear: Int,
+    isOpenDatePicker: Boolean,
+    onSelectPreviousMonth: (Int) -> Unit,
+    onSelectNextMonth: (Int) -> Unit,
+    onSelectTheCurrentMonthDate: (Int) -> Unit,
+    onUpdateDatePickerIsOpen: (Boolean) -> Unit,
+    onStartDiaryEditActivity: (Diary) -> Unit,
+    onStartDiaryAddActivity: () -> Unit,
+    onUpdateDatePickerYear: (Int) -> Unit,
+    onSelectNewMonth: (Int) -> Unit
+) {
     Box(modifier = Modifier.fillMaxSize()) {
         // 상태에 따라 자연스러운 화면 전환을 위해 Crossfase 사용
-        Crossfade(targetState = calendarState, label = "") { calendarState ->
-            when (calendarState) {
+        Crossfade(targetState = loading, label = "") { loading ->
+            when (loading) {
                 // Loading 상태 : Indicator
-                is TimelineState.Loading -> {
+                is CalendarLoadingState.Loading -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -93,31 +129,31 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
                 }
 
                 // diary 읽기 성공 상태
-                is TimelineState.Success -> {
-                    val diaries = calendarState.diaries
+                is CalendarLoadingState.Success -> {
+                    val diaries = loading.diaries
 
                     Column(Modifier.verticalScroll(rememberScrollState())) {
                         // 날짜 표시 및 수정
                         CurrentMonthWithCalendar(
-                            currentMonth = selectedDateState.monthValue.toString(),
-                            onSelectPreviousMonth = { viewModel.processIntent(CalendarIntent.OnSelectPreviousMonth(selectedDateState.dayOfMonth)) },
-                            onSelectNextMonth = { viewModel.processIntent(CalendarIntent.OnSelectNextMonth(selectedDateState.dayOfMonth)) },
-                            onClickSelectMonth = { viewModel.processIntent(CalendarIntent.UpdateDatePickerIsOpen(true)) }
+                            currentMonth = selectedDate.monthValue.toString(),
+                            onSelectPreviousMonth = { onSelectPreviousMonth(selectedDate.dayOfMonth) },
+                            onSelectNextMonth = { onSelectNextMonth(selectedDate.dayOfMonth) },
+                            onClickSelectMonth = { onUpdateDatePickerIsOpen(true) }
                         )
 
                         // 달력 표시
                         CalendarWeekdaysTitle()
                         CalendarMonthGrid(
-                            year = selectedDateState.year,
-                            month = selectedDateState.monthValue,
-                            dayOfMonth = selectedDateState.dayOfMonth,
+                            year = selectedDate.year,
+                            month = selectedDate.monthValue,
+                            dayOfMonth = selectedDate.dayOfMonth,
                             diaries = diaries,
-                            onClickTheCurrentMonthDate = { date -> viewModel.processIntent(CalendarIntent.OnSelectTheCurrentMonthDate(date)) },
-                            onClickThePreviousMonthDate = { date -> viewModel.processIntent(CalendarIntent.OnSelectPreviousMonth(date)) },
-                            onClickTheNextMonthDate = { date -> viewModel.processIntent(CalendarIntent.OnSelectNextMonth(date)) }
+                            onClickTheCurrentMonthDate = { date -> onSelectTheCurrentMonthDate(date) },
+                            onClickThePreviousMonthDate = { date -> onSelectPreviousMonth(date) },
+                            onClickTheNextMonthDate = { date -> onSelectNextMonth(date) }
                         )
 
-                        Divider(
+                        HorizontalDivider(
                             color = LineGray,
                             thickness = 1.dp,
                             modifier = Modifier
@@ -126,15 +162,10 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
                         )
 
                         diaries.forEach { diary ->
-                            if (diary.day.toInt() == selectedDateState.dayOfMonth) {
+                            if (diary.day.toInt() == selectedDate.dayOfMonth) {
                                 DiaryItem(
                                     diary = diary,
-                                    onClickItem = { clickDiary ->
-                                        // 다이어리 편집 액티비티 실행
-                                        val intent = Intent(context, AddDiaryActivity::class.java)
-                                        intent.putExtra(Constants.INTENT_NAME_DIARY, clickDiary)
-                                        context.startActivity(intent)
-                                    }
+                                    onClickItem = onStartDiaryEditActivity
                                 )
                             }
                         }
@@ -142,8 +173,8 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
                 }
 
                 // 읽기 실패 상태 : errorMessage
-                is TimelineState.Error -> {
-                    val errorMessage = calendarState.error.message
+                is CalendarLoadingState.Error -> {
+                    val errorMessage = loading.error.message
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -158,11 +189,7 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
 
         // "일기 추가" 화면 이동 버튼
         FloatingActionButton(
-            onClick = {
-                // 다이어리 추가 액티비티 실행
-                val intent = Intent(context, AddDiaryActivity::class.java)
-                context.startActivity(intent)
-            },
+            onClick = onStartDiaryAddActivity,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
@@ -173,26 +200,24 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
         }
 
         // DatePicker show / hide
-        if (isDatePickerOpenState) {
+        if (isOpenDatePicker) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.4f))  // 배경을 반투명한 검정색으로 설정
-                    .clickable { viewModel.processIntent(CalendarIntent.UpdateDatePickerIsOpen(false)) },  // 배경을 클릭하면 다이얼로그를 닫음
+                    .clickable { onUpdateDatePickerIsOpen(false) },  // 배경을 클릭하면 다이얼로그를 닫음
             )
 
             CustomYearDatePicker(
-                datePickerYear = datePickerYearState,
-                onDatePickerYearChange = { newYear ->
-                    viewModel.processIntent(CalendarIntent.UpdateDatePickerYear(newYear))
-                },
+                datePickerYear = datePickerYear,
+                onDatePickerYearChange = onUpdateDatePickerYear,
                 onDateSelected = { selectedMonth ->
-                    viewModel.processIntent(CalendarIntent.UpdateDatePickerIsOpen(false))
-                    viewModel.processIntent(CalendarIntent.OnSelectNewMonth(selectedMonth))
+                    onUpdateDatePickerIsOpen(false)
+                    onSelectNewMonth(selectedMonth)
                 },
                 onDismissRequest = {
-                    viewModel.processIntent(CalendarIntent.UpdateDatePickerIsOpen(false))
-                    viewModel.processIntent(CalendarIntent.UpdateDatePickerYear(selectedDateState.year))
+                    onUpdateDatePickerIsOpen(false)
+                    onUpdateDatePickerYear(selectedDate.year)
                 }
             )
         }

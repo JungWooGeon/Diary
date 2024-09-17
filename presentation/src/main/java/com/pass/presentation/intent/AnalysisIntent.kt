@@ -9,6 +9,4 @@ sealed class AnalysisIntent {
 
     data object OnSelectPreviousMonth : AnalysisIntent()
     data object OnSelectNextMonth : AnalysisIntent()
-
-    data object OnCompleteShowToastErrorMessage : AnalysisIntent()
 }

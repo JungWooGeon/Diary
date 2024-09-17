@@ -43,7 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.pass.domain.entity.Diary
 import com.pass.presentation.intent.AddDiaryIntent
 import com.pass.presentation.sideeffect.AddDiarySideEffect
-import com.pass.presentation.state.LoadingState
+import com.pass.presentation.state.screen.AddDiaryLoadingState
 import com.pass.presentation.view.composable.AddDiaryAppBar
 import com.pass.presentation.view.composable.AddEmoticonDialog
 import com.pass.presentation.view.composable.BottomEditor
@@ -137,7 +137,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = hiltViewModel()
 @Composable
 fun AddDiaryScreen(
     context: Context,
-    loadingState: LoadingState,
+    loadingState: AddDiaryLoadingState,
     isEditScreen: Boolean,
     textSize: Float,
     selectedDateWithLocalDate: LocalDate,
@@ -166,11 +166,10 @@ fun AddDiaryScreen(
     onDeleteDiary: () -> Unit,
  ) {
     when (loadingState) {
-        is LoadingState.Standby -> {
+        is AddDiaryLoadingState.Standby -> {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 10.dp)
                     .background(Color.White),
                 verticalArrangement = Arrangement.Top,
             ) {
@@ -292,7 +291,7 @@ fun AddDiaryScreen(
                         onDismissRequest = { onUpdateRecordDialog(false) },
                         onCompleteRecording = {
                             onUpdateRecordDialog(false)
-                            onChangeContent(contentText + "\n" + it)
+                            onChangeContent(if (contentText == "") it else contentText + "\n" + it)
                         }
                     )
                 }
@@ -335,7 +334,7 @@ fun AddDiaryScreen(
             }
         }
 
-        is LoadingState.Complete -> {
+        is AddDiaryLoadingState.Complete -> {
             if (!isEditScreen) {
                 Toast.makeText(context, "일기 작성이 완료되었습니다.", Toast.LENGTH_SHORT).show()
             } else {
@@ -345,7 +344,7 @@ fun AddDiaryScreen(
             (context as Activity).finish()
         }
 
-        is LoadingState.Loading -> {
+        is AddDiaryLoadingState.Loading -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -354,7 +353,7 @@ fun AddDiaryScreen(
             }
         }
 
-        is LoadingState.Error -> {
+        is AddDiaryLoadingState.Error -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center

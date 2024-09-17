@@ -23,24 +23,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pass.diary.R
-import com.pass.presentation.state.LoginState
 
 @Composable
 fun SettingBackup(
-    loginState: LoginState?,
+    isLoggedIn: Boolean,
     signIn: () -> Unit,
     signOut: () -> Unit,
     backUp: () -> Unit,
     restore: () -> Unit
 ) {
-    val buttonText = if (loginState is LoginState.SuccessIdle) { "Sign out with Google" } else { "Sign in with Google" }
-    val titleText = if (loginState is LoginState.SuccessIdle) { "" } else { "구글 드라이브 사용을 위해 구글 로그인이 필요합니다." }
+    val buttonText = if (isLoggedIn) { "Sign out with Google" } else { "Sign in with Google" }
+    val titleText = if (isLoggedIn) { "" } else { "구글 드라이브 사용을 위해 구글 로그인이 필요합니다." }
 
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        if (loginState is LoginState.SuccessIdle) {
+        if (isLoggedIn) {
             Column(
                 verticalArrangement = Arrangement.Center
             ) {
@@ -60,7 +59,7 @@ fun SettingBackup(
 
         Column(
             modifier = Modifier.padding(start = 15.dp, end = 15.dp, bottom = 10.dp).fillMaxSize(),
-            verticalArrangement = if (loginState is LoginState.SuccessIdle) { Arrangement.Bottom } else { Arrangement.Center }
+            verticalArrangement = if (isLoggedIn) { Arrangement.Bottom } else { Arrangement.Center }
         ) {
             Text(
                 text = titleText,
@@ -70,7 +69,7 @@ fun SettingBackup(
             )
             GoogleButton(
                 buttonText = buttonText,
-                onClick = if (loginState is LoginState.SuccessIdle) { signOut } else { signIn }
+                onClick = if (isLoggedIn) { signOut } else { signIn }
             )
         }
     }

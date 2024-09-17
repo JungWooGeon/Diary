@@ -1,81 +1,64 @@
 package com.pass.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.pass.domain.usecase.diary.GetDiariesByMonthUseCase
 import com.pass.presentation.intent.TimelineIntent
-import com.pass.presentation.state.TimelineState
+import com.pass.presentation.sideeffect.TimelineSideEffect
+import com.pass.presentation.state.screen.TimelineLoadingState
+import com.pass.presentation.state.screen.TimelineState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import org.orbitmvi.orbit.Container
+import org.orbitmvi.orbit.ContainerHost
+import org.orbitmvi.orbit.viewmodel.container
 import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
 class TimelineViewModel @Inject constructor(
     private val getDiariesByMonthUseCase: GetDiariesByMonthUseCase
-) : ViewModel() {
+) : ViewModel(), ContainerHost<TimelineState, TimelineSideEffect> {
 
-    private val _timeLineState = MutableStateFlow<TimelineState>(TimelineState.Loading)
-    val timeLineState: StateFlow<TimelineState> = _timeLineState
+    override val container: Container<TimelineState, TimelineSideEffect> = container(
+        initialState = TimelineState()
+    )
 
-    // UI 상 에서 선택된 날짜
-    private val _selectedDateState = MutableStateFlow(LocalDate.now())
-    val selectedDateState: StateFlow<LocalDate> = _selectedDateState
-
-    // Custom Date Picker 에서 선택된 연도
-    private val _datePickerYearState = MutableStateFlow(selectedDateState.value.year)
-    val datePickerYearState: StateFlow<Int> = _datePickerYearState
-
-    // DatePicker show / hide
-    private val _isDatePickerOpenState = MutableStateFlow(false)
-    val isDatePickerOpenState: StateFlow<Boolean> = _isDatePickerOpenState
-
-    // 날짜 선택 예외 처리
-    private val _selectedDateErrorState = MutableStateFlow(false)
-    val selectedDateErrorState: StateFlow<Boolean> = _selectedDateErrorState
-
-    fun processIntent(intent: TimelineIntent) {
+    fun processIntent(intent: TimelineIntent) = intent {
         when (intent) {
             is TimelineIntent.LoadDiaries -> {
-                _timeLineState.value = TimelineState.Loading
-                viewModelScope.launch(Dispatchers.IO) {
-                    try {
-                        val diaries = getDiariesByMonthUseCase(intent.year, intent.month)
-                        withContext(Dispatchers.Main) {
-                            _timeLineState.value = TimelineState.Success(diaries.sortedBy { -it.day.toInt() })
-                        }
-                    } catch (e: Exception) {
-                        withContext(Dispatchers.Main) {
-                            _timeLineState.value = TimelineState.Error(e)
-                        }
-                    }
-                }
+                loadDiaries()
             }
 
-            is TimelineIntent.OnDateSelected -> {
-                val newDate = LocalDate.of(datePickerYearState.value, intent.selectedMonth, 1)
+            is TimelineIntent.OnSelectNewMonth -> {
+                val newDate = LocalDate.of(state.datePickerYear, intent.month, 1)
                 if (newDate.isAfter(LocalDate.now())) {
-                    _selectedDateErrorState.value = true
+                    postSideEffect(TimelineSideEffect.Toast("오지 않은 날짜는 설정할 수 없습니다."))
                 } else {
-                    _selectedDateState.value = newDate
+                    reduce { state.copy(selectedDate = newDate) }
+                    loadDiaries()
                 }
             }
 
-            is TimelineIntent.UpdateDatePickerYear -> {
-                _datePickerYearState.value = intent.year
+            is TimelineIntent.UpdateDatePickerYear -> reduce {
+                state.copy(datePickerYear = intent.year)
             }
 
-            is TimelineIntent.UpdateDatePickerDialogIsOpen -> {
-                _isDatePickerOpenState.value = intent.isOpen
+            is TimelineIntent.UpdateDatePickerDialogIsOpen -> reduce {
+                state.copy(isOpenDatePicker = intent.isOpen)
             }
+        }
+    }
 
-            is TimelineIntent.OnCompleteShowToastErrorMessage -> {
-                _selectedDateErrorState.value = false
+    private fun loadDiaries() = intent {
+        reduce { state.copy(loading = TimelineLoadingState.Loading) }
+        try {
+            val diaries = getDiariesByMonthUseCase(state.selectedDate.year.toString(), state.selectedDate.monthValue.toString())
+            reduce {
+                state.copy(
+                    loading = TimelineLoadingState.Success(diaries.sortedBy { -it.day.toInt() })
+                )
             }
+        } catch (e: Exception) {
+            reduce { state.copy(loading = TimelineLoadingState.Error(e)) }
         }
     }
 }

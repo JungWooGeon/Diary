@@ -10,8 +10,8 @@ import com.pass.domain.usecase.diary.UpdateDiaryUseCase
 import com.pass.domain.usecase.settings.font.GetCurrentTextSizeUseCase
 import com.pass.presentation.intent.AddDiaryIntent
 import com.pass.presentation.sideeffect.AddDiarySideEffect
+import com.pass.presentation.state.screen.AddDiaryLoadingState
 import com.pass.presentation.state.screen.AddDiaryState
-import com.pass.presentation.state.LoadingState
 import com.pass.presentation.view.screen.Constants
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,7 +42,7 @@ class AddDiaryViewModel @Inject constructor(
     private var updateDiary: Diary? = null
 
     init {
-        intent { reduce { state.copy(loading = LoadingState.Loading) } }
+        intent { reduce { state.copy(loading = AddDiaryLoadingState.Loading) } }
 
         viewModelScope.launch(Dispatchers.Main) {
             withContext(Dispatchers.IO) {
@@ -52,7 +52,7 @@ class AddDiaryViewModel @Inject constructor(
                     reduce {
                         state.copy(
                             textSizeState = size,
-                            loading = LoadingState.Standby
+                            loading = AddDiaryLoadingState.Standby
                         )
                     }
                 }
@@ -90,7 +90,7 @@ class AddDiaryViewModel @Inject constructor(
             }
 
             is AddDiaryIntent.AddDiary -> intent {
-                reduce { state.copy(loading = LoadingState.Loading) }
+                reduce { state.copy(loading = AddDiaryLoadingState.Loading) }
 
                 val addDiary = createDiary(
                     selectedDateWithLocalDate = state.selectedDateWithLocalDate,
@@ -103,24 +103,24 @@ class AddDiaryViewModel @Inject constructor(
                     try {
                         addDiaryUseCase(addDiary)
                         withContext(Dispatchers.Main) {
-                            intent { reduce { state.copy(loading = LoadingState.Complete) } }
+                            intent { reduce { state.copy(loading = AddDiaryLoadingState.Complete) } }
                         }
                     } catch (e: Exception) {
-                        intent { reduce { state.copy(loading = LoadingState.Error(e)) } }
+                        intent { reduce { state.copy(loading = AddDiaryLoadingState.Error(e)) } }
                     }
                 }
             }
 
             is AddDiaryIntent.DeleteDiary -> intent {
-                reduce { state.copy(loading = LoadingState.Loading) }
+                reduce { state.copy(loading = AddDiaryLoadingState.Loading) }
                 viewModelScope.launch(Dispatchers.IO) {
                     try {
                         updateDiary?.let { deleteDiaryUseCase(it) }
                         withContext(Dispatchers.Main) {
-                            reduce { state.copy(loading = LoadingState.Complete) }
+                            reduce { state.copy(loading = AddDiaryLoadingState.Complete) }
                         }
                     } catch (e: Exception) {
-                        reduce { state.copy(loading = LoadingState.Error(e)) }
+                        reduce { state.copy(loading = AddDiaryLoadingState.Error(e)) }
                     }
                 }
             }
@@ -182,26 +182,23 @@ class AddDiaryViewModel @Inject constructor(
 
             is AddDiaryIntent.OnClickSSProgressButton -> intent {
                 // 요약 중에는 버튼 클릭 방지
-                if (state.submitButtonState != SSButtonState.IDLE && state.submitButtonState != SSButtonState.SUCCESS) return@intent
+                if (state.submitButtonState == SSButtonState.LOADING) return@intent
+
+                reduce { state.copy(submitButtonState = SSButtonState.LOADING) }
 
                 if (updateDiary == null) {
                     // 추가하기 화면일 때
                     if (intent.contentText.length < 20) {
                         // 내용이 너무 적을 경우 예외 처리
+                        delay(3000)
                         reduce { state.copy(submitButtonState = SSButtonState.FAILURE) }
-
-                        viewModelScope.launch {
-                            delay(3000)
-                            postSideEffect(AddDiarySideEffect.Toast("내용을 요약할 수 없습니다. 더 자세히 적어주세요."))
-                        }
+                        postSideEffect(AddDiarySideEffect.Toast("내용을 요약할 수 없습니다. 더 자세히 적어주세요."))
 
                         return@intent
                     }
 
                     // 요약하기
                     postSideEffect(AddDiarySideEffect.ChangeTitle(""))
-
-                    reduce { state.copy(submitButtonState = SSButtonState.LOADING) }
 
                     viewModelScope.launch(Dispatchers.Main) {
                         try {
@@ -250,7 +247,7 @@ class AddDiaryViewModel @Inject constructor(
                     }
                 } else {
                     // 수정하기 화면일 때
-                    reduce { state.copy(loading = LoadingState.Loading) }
+                    reduce { state.copy(loading = AddDiaryLoadingState.Loading) }
 
                     val deleteDiary = createDiary(
                         id = updateDiary?.id,
@@ -264,10 +261,10 @@ class AddDiaryViewModel @Inject constructor(
                         try {
                             updateDiaryUseCase(deleteDiary)
                             withContext(Dispatchers.Main) {
-                                reduce { state.copy(loading = LoadingState.Complete) }
+                                reduce { state.copy(loading = AddDiaryLoadingState.Complete) }
                             }
                         } catch (e: Exception) {
-                            reduce { state.copy(loading = LoadingState.Error(e)) }
+                            reduce { state.copy(loading = AddDiaryLoadingState.Error(e)) }
                         }
                     }
                 }

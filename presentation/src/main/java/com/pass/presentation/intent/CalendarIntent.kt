@@ -10,6 +10,4 @@ sealed class CalendarIntent {
     data class OnSelectPreviousMonth(val date: Int) : CalendarIntent()
     data class OnSelectNextMonth(val date: Int) : CalendarIntent()
     data class OnSelectTheCurrentMonthDate(val date: Int) : CalendarIntent()
-
-    data object OnCompleteShowToastErrorMessage : CalendarIntent()
 }

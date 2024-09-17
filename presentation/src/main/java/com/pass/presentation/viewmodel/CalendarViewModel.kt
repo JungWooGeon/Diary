@@ -1,114 +1,100 @@
 package com.pass.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.pass.domain.usecase.diary.GetDiariesByMonthUseCase
 import com.pass.presentation.intent.CalendarIntent
-import com.pass.presentation.state.TimelineState
+import com.pass.presentation.sideeffect.CalendarSideEffect
+import com.pass.presentation.state.screen.CalendarLoadingState
+import com.pass.presentation.state.screen.CalendarState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import org.orbitmvi.orbit.Container
+import org.orbitmvi.orbit.ContainerHost
+import org.orbitmvi.orbit.viewmodel.container
 import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
     private val getDiariesByMonthUseCase: GetDiariesByMonthUseCase
-) : ViewModel() {
+) : ViewModel(), ContainerHost<CalendarState, CalendarSideEffect> {
 
-    // 현재 화면 상태 (standby, loading, error)
-    private val _calendarState = MutableStateFlow<TimelineState>(TimelineState.Loading)
-    val calendarState: StateFlow<TimelineState> = _calendarState
+    override val container: Container<CalendarState, CalendarSideEffect> = container(
+        initialState = CalendarState()
+    )
 
-    // UI 상 에서 선택된 날짜
-    private val _selectedDateState = MutableStateFlow<LocalDate>(LocalDate.now())
-    val selectedDateState: StateFlow<LocalDate> = _selectedDateState
-
-    // DatePicker show / hide
-    private val _isDatePickerOpenState = MutableStateFlow(false)
-    val isDatePickerOpenState: StateFlow<Boolean> = _isDatePickerOpenState
-
-    // Custom Date Picker 에서 선택된 연도
-    private val _datePickerYearState = MutableStateFlow(selectedDateState.value.year)
-    val datePickerYearState: StateFlow<Int> = _datePickerYearState
-
-    // 날짜 선택 예외 처리
-    private val _selectedDateErrorState = MutableStateFlow(false)
-    val selectedDateErrorState: StateFlow<Boolean> = _selectedDateErrorState
-
-    fun processIntent(intent: CalendarIntent) {
+    fun processIntent(intent: CalendarIntent) = intent {
         when (intent) {
             is CalendarIntent.LoadDiaries -> {
                 loadDiaries()
             }
 
-            is CalendarIntent.UpdateDatePickerIsOpen -> {
-                _isDatePickerOpenState.value = intent.isOpen
+            is CalendarIntent.UpdateDatePickerIsOpen -> reduce {
+                state.copy(isOpenDatePicker = intent.isOpen)
             }
 
-            is CalendarIntent.UpdateDatePickerYear -> {
-                _datePickerYearState.value = intent.newYear
+            is CalendarIntent.UpdateDatePickerYear -> reduce {
+                state.copy(datePickerYear = intent.newYear)
             }
 
             is CalendarIntent.OnSelectPreviousMonth -> {
-                _selectedDateState.value = selectedDateState.value.minusMonths(1).withDayOfMonth(intent.date)
-                _datePickerYearState.value = selectedDateState.value.year
+                val newDate = state.selectedDate.minusMonths(1).withDayOfMonth(intent.date)
+                reduce {
+                    state.copy(
+                        selectedDate = newDate,
+                        datePickerYear = newDate.year
+                    )
+                }
                 loadDiaries()
             }
 
             is CalendarIntent.OnSelectNextMonth -> {
-                val newDate = selectedDateState.value.plusMonths(1).withDayOfMonth(intent.date)
+                val newDate = state.selectedDate.plusMonths(1).withDayOfMonth(intent.date)
                 if (newDate.isAfter(LocalDate.now())) {
-                    _selectedDateErrorState.value = true
+                    postSideEffect(CalendarSideEffect.Toast("오지 않은 날짜는 설정할 수 없습니다."))
                 } else {
-                    _selectedDateState.value = newDate
-                    _datePickerYearState.value = selectedDateState.value.year
+                    reduce {
+                        state.copy(
+                            selectedDate = newDate,
+                            datePickerYear = newDate.year
+                        )
+                    }
                     loadDiaries()
                 }
             }
 
             is CalendarIntent.OnSelectTheCurrentMonthDate -> {
-                val newDate = selectedDateState.value.withDayOfMonth(intent.date)
+                val newDate = state.selectedDate.withDayOfMonth(intent.date)
                 if (newDate.isAfter(LocalDate.now())) {
-                    _selectedDateErrorState.value = true
+                    postSideEffect(CalendarSideEffect.Toast("오지 않은 날짜는 설정할 수 없습니다."))
                 } else {
-                    _selectedDateState.value = newDate
+                    reduce { state.copy(selectedDate = newDate) }
                     loadDiaries()
                 }
             }
 
             is CalendarIntent.OnSelectNewMonth -> {
-                val newDate = LocalDate.of(datePickerYearState.value, intent.month, 1)
+                val newDate = LocalDate.of(state.datePickerYear, intent.month, 1)
                 if (newDate.isAfter(LocalDate.now())) {
-                    _selectedDateErrorState.value = true
+                    postSideEffect(CalendarSideEffect.Toast("오지 않은 날짜는 설정할 수 없습니다."))
                 } else {
-                    _selectedDateState.value = newDate
+                    reduce { state.copy(selectedDate = newDate) }
                     loadDiaries()
                 }
-            }
-
-            is CalendarIntent.OnCompleteShowToastErrorMessage -> {
-                _selectedDateErrorState.value = false
             }
         }
     }
 
-    private fun loadDiaries() {
-        _calendarState.value = TimelineState.Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val diaries = getDiariesByMonthUseCase(selectedDateState.value.year.toString(), selectedDateState.value.monthValue.toString())
-                withContext(Dispatchers.Main) {
-                    _calendarState.value = TimelineState.Success(diaries.sortedBy { -it.day.toInt() })
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    _calendarState.value = TimelineState.Error(e)
-                }
+    private fun loadDiaries() = intent {
+        reduce { state.copy(loading = CalendarLoadingState.Loading) }
+        try {
+            val diaries = getDiariesByMonthUseCase(state.selectedDate.year.toString(), state.selectedDate.monthValue.toString())
+            reduce {
+                state.copy(
+                    loading = CalendarLoadingState.Success(diaries.sortedBy { -it.day.toInt() })
+                )
             }
+        } catch (e: Exception) {
+            reduce { state.copy(loading = CalendarLoadingState.Error(e)) }
         }
     }
 }
