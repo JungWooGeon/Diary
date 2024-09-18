@@ -14,48 +14,56 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.pass.data.di.IoDispatcher
 import com.pass.domain.entity.Diary
 import com.pass.domain.repository.google.GoogleManagerRepository
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.util.Collections
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class GoogleManagerRepositoryImpl @Inject constructor(private val context: Context) : GoogleManagerRepository {
+class GoogleManagerRepositoryImpl @Inject constructor(
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val context: Context
+) : GoogleManagerRepository {
     // GoogleAccountCredential: Google Drive REST API 사용을 위한 인증
     private var credential: GoogleAccountCredential? = null
 
     // Drive: Google Drive 서비스
     private var driveService: Drive? = null
 
-    override suspend fun logInForGoogle(activityResultData: Intent): Flow<Boolean> = callbackFlow {
-        try {
-            val account = GoogleSignIn.getSignedInAccountFromIntent(activityResultData)
-                .getResult(ApiException::class.java)
-            val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-            FirebaseAuth.getInstance().signInWithCredential(credential)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        // 로그인 정보 변경 시 Google Drive 정보 초기화
-                        initializeGoogleClients()
+    override suspend fun logInForGoogle(activityResultData: Intent): Flow<Boolean> = withContext(ioDispatcher) {
+        callbackFlow {
+            try {
+                val account = GoogleSignIn.getSignedInAccountFromIntent(activityResultData)
+                    .getResult(ApiException::class.java)
+                val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+                FirebaseAuth.getInstance().signInWithCredential(credential)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            // 로그인 정보 변경 시 Google Drive 정보 초기화
+                            initializeGoogleClients()
+                        }
+                        trySend(task.isSuccessful)
+                        close()
                     }
-                    trySend(task.isSuccessful)
-                    close()
-                }
-        } catch (e: Exception) {
-            trySend(false)
-            close()
-        }
+            } catch (e: Exception) {
+                trySend(false)
+                close()
+            }
 
-        awaitClose()
+            awaitClose()
+        }
     }
 
-    override suspend fun logOutForGoogle() {
-        return FirebaseAuth.getInstance().signOut()
+    override suspend fun logOutForGoogle() = withContext(ioDispatcher) {
+        FirebaseAuth.getInstance().signOut()
     }
 
     override suspend fun isLoggedIn(): Boolean {
@@ -66,7 +74,7 @@ class GoogleManagerRepositoryImpl @Inject constructor(private val context: Conte
         return FirebaseAuth.getInstance().currentUser != null && credential != null
     }
 
-    override suspend fun restoreDiariesForGoogleDrive(): List<Diary>? {
+    override suspend fun restoreDiariesForGoogleDrive(): List<Diary>? = withContext(ioDispatcher) {
         try {
             val diaries = mutableListOf<Diary>()
 
@@ -74,7 +82,7 @@ class GoogleManagerRepositoryImpl @Inject constructor(private val context: Conte
             val backupFolder =
                 driveService?.files()?.list()?.setQ("name = 'DiaryBackup'")?.execute()?.files
 
-            if (backupFolder?.isEmpty() == true) return null
+            if (backupFolder?.isEmpty() == true) return@withContext null
 
             val backupFolderId = backupFolder?.first()?.id
 
@@ -144,14 +152,14 @@ class GoogleManagerRepositoryImpl @Inject constructor(private val context: Conte
                 diaries.add(diary)
             }
 
-            return diaries
+            diaries
         } catch (e: UserRecoverableAuthIOException) {
             throw e
         }
     }
 
 
-    override suspend fun backupDiariesToGoogleDrive(diaries: List<Diary>) {
+    override suspend fun backupDiariesToGoogleDrive(diaries: List<Diary>): Unit = withContext(ioDispatcher) {
         try {
             // 'DiaryBackup' 폴더의 ID를 찾습니다.
             val backupFolderId = driveService?.files()?.list()?.setQ("name = 'DiaryBackup'")?.execute()?.files?.firstOrNull()?.id

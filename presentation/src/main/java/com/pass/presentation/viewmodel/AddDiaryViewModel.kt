@@ -15,11 +15,9 @@ import com.pass.presentation.state.screen.AddDiaryState
 import com.pass.presentation.view.screen.Constants
 import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.viewmodel.container
@@ -45,7 +43,7 @@ class AddDiaryViewModel @Inject constructor(
     init {
         intent { reduce { state.copy(loading = AddDiaryLoadingState.Loading) } }
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             val size = getCurrentTextSizeUseCase().first()
             intent {
                 reduce {
@@ -97,12 +95,10 @@ class AddDiaryViewModel @Inject constructor(
                     titleText = intent.titleText
                 )
 
-                viewModelScope.launch(Dispatchers.IO) {
+                viewModelScope.launch {
                     try {
                         addDiaryUseCase(addDiary)
-                        withContext(Dispatchers.Main) {
-                            intent { reduce { state.copy(loading = AddDiaryLoadingState.Complete) } }
-                        }
+                        intent { reduce { state.copy(loading = AddDiaryLoadingState.Complete) } }
                     } catch (e: Exception) {
                         intent { reduce { state.copy(loading = AddDiaryLoadingState.Error(e)) } }
                     }
@@ -111,12 +107,10 @@ class AddDiaryViewModel @Inject constructor(
 
             is AddDiaryIntent.DeleteDiary -> intent {
                 reduce { state.copy(loading = AddDiaryLoadingState.Loading) }
-                viewModelScope.launch(Dispatchers.IO) {
+                viewModelScope.launch {
                     try {
                         updateDiary?.let { deleteDiaryUseCase(it) }
-                        withContext(Dispatchers.Main) {
-                            reduce { state.copy(loading = AddDiaryLoadingState.Complete) }
-                        }
+                        reduce { state.copy(loading = AddDiaryLoadingState.Complete) }
                     } catch (e: Exception) {
                         reduce { state.copy(loading = AddDiaryLoadingState.Error(e)) }
                     }
@@ -198,40 +192,38 @@ class AddDiaryViewModel @Inject constructor(
                     // 요약하기
                     postSideEffect(AddDiarySideEffect.ChangeTitle(""))
 
-                    viewModelScope.launch(Dispatchers.IO) {
+                    viewModelScope.launch {
                         try {
                             val summary = summaryDiaryUseCase(intent.contentText).first()
 
-                            withContext(Dispatchers.Main) {
-                                if (summary == "") {
-                                    reduce { state.copy(submitButtonState = SSButtonState.FAILURE) }
+                            if (summary == "") {
+                                reduce { state.copy(submitButtonState = SSButtonState.FAILURE) }
 
-                                    viewModelScope.launch {
-                                        delay(3000)
-                                        postSideEffect(AddDiarySideEffect.Toast("내용을 요약할 수 없습니다. 더 자세히 적어주세요."))
-                                    }
-                                } else {
-                                    // _titleTextState.value = summary
-                                    var tmpTitle = intent.titleText
-                                    for (char in summary) {
-                                        tmpTitle += char
-                                        postSideEffect(AddDiarySideEffect.ChangeTitle(tmpTitle))
-                                        delay(100)  // 각 글자가 추가되는 시간 간격
-                                    }
-                                    reduce { state.copy(submitButtonState = SSButtonState.SUCCESS) }
+                                viewModelScope.launch {
+                                    delay(3000)
+                                    postSideEffect(AddDiarySideEffect.Toast("내용을 요약할 수 없습니다. 더 자세히 적어주세요."))
+                                }
+                            } else {
+                                // _titleTextState.value = summary
+                                var tmpTitle = intent.titleText
+                                for (char in summary) {
+                                    tmpTitle += char
+                                    postSideEffect(AddDiarySideEffect.ChangeTitle(tmpTitle))
+                                    delay(100)  // 각 글자가 추가되는 시간 간격
+                                }
+                                reduce { state.copy(submitButtonState = SSButtonState.SUCCESS) }
 
-                                    viewModelScope.launch {
-                                        delay(3000)
-                                        postSideEffect(AddDiarySideEffect.Toast("요약된 내용이 제목에 반영되었어요!"))
-                                    }
+                                viewModelScope.launch {
+                                    delay(3000)
+                                    postSideEffect(AddDiarySideEffect.Toast("요약된 내용이 제목에 반영되었어요!"))
+                                }
 
-                                    viewModelScope.launch {
-                                        delay(2000)
-                                        // 2초 후 2초간 제목 박스 흔들기 애니메이션 적용 -> 요약하기 성공 시 3초 후 토스트 메시지를 출력하기 때문
-                                        reduce { state.copy(shouldShake = true) }
-                                        delay(2000)
-                                        reduce { state.copy(shouldShake = false) }
-                                    }
+                                viewModelScope.launch {
+                                    delay(2000)
+                                    // 2초 후 2초간 제목 박스 흔들기 애니메이션 적용 -> 요약하기 성공 시 3초 후 토스트 메시지를 출력하기 때문
+                                    reduce { state.copy(shouldShake = true) }
+                                    delay(2000)
+                                    reduce { state.copy(shouldShake = false) }
                                 }
                             }
                         } catch (e: Exception) {
@@ -255,12 +247,10 @@ class AddDiaryViewModel @Inject constructor(
                         titleText = intent.titleText
                     )
 
-                    viewModelScope.launch(Dispatchers.IO) {
+                    viewModelScope.launch {
                         try {
                             updateDiaryUseCase(deleteDiary)
-                            withContext(Dispatchers.Main) {
-                                reduce { state.copy(loading = AddDiaryLoadingState.Complete) }
-                            }
+                            reduce { state.copy(loading = AddDiaryLoadingState.Complete) }
                         } catch (e: Exception) {
                             reduce { state.copy(loading = AddDiaryLoadingState.Error(e)) }
                         }

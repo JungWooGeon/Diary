@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pass.domain.usecase.settings.font.GetCurrentFontUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -22,7 +21,7 @@ class ThemeViewModel @Inject constructor(
     }
 
     private fun getCurrentFont() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             getCurrentFontUseCase().collect { font ->
                 _currentFont.value = font
             }

@@ -18,7 +18,6 @@ import com.pass.presentation.intent.SettingsIntent
 import com.pass.presentation.sideeffect.SettingSideEffect
 import com.pass.presentation.state.screen.SettingState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.Container
@@ -103,7 +102,7 @@ class SettingsViewModel @Inject constructor(
             }
 
             is SettingsIntent.Logout -> {
-                viewModelScope.launch(Dispatchers.IO) {
+                viewModelScope.launch {
                     logOutForGoogleUseCase()
                     postSideEffect(SettingSideEffect.Toast("로그아웃을 완료하였습니다."))
                     checkIsLoggedIn()
@@ -119,7 +118,7 @@ class SettingsViewModel @Inject constructor(
                     )
                 }
 
-                viewModelScope.launch(Dispatchers.IO) {
+                viewModelScope.launch {
                     try {
                         backupDiariesToGoogleDrive(getAllDiariesUseCase())
                         postSideEffect(SettingSideEffect.Toast("백업을 완료하였습니다."))
@@ -137,7 +136,7 @@ class SettingsViewModel @Inject constructor(
             is SettingsIntent.Restore -> {
                 reduce { state.copy(isBackUpLoading = true) }
 
-                viewModelScope.launch(Dispatchers.IO) {
+                viewModelScope.launch {
                     try {
                         val diaries = restoreDiariesForGoogleDrive()
 

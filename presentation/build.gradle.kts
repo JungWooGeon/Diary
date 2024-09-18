@@ -93,7 +93,7 @@ dependencies {
     implementation("androidx.compose.material:material")
     implementation("androidx.navigation:navigation-compose:2.8.0")
     implementation("androidx.test:runner:1.6.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("androidx.annotation:annotation:1.8.2")
 
     // test
@@ -107,7 +107,7 @@ dependencies {
     testImplementation("io.mockk:mockk-agent:1.13.8")
     androidTestImplementation("io.mockk:mockk-android:1.13.8")
     androidTestImplementation("io.mockk:mockk-agent:1.13.8")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     androidTestImplementation("androidx.test:core-ktx:1.6.1")
     debugImplementation("androidx.test:core:1.6.1")
 
