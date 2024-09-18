@@ -66,12 +66,12 @@ class GoogleManagerRepositoryImpl @Inject constructor(
         FirebaseAuth.getInstance().signOut()
     }
 
-    override suspend fun isLoggedIn(): Boolean {
+    override suspend fun isLoggedIn(): Boolean = withContext(ioDispatcher) {
         // 로그인 상태 확인 전에 클라이언트들 초기화
         initializeGoogleClients()
 
         // Firebase와 Google SignIn 모두 로그인되어 있는지 확인
-        return FirebaseAuth.getInstance().currentUser != null && credential != null
+        FirebaseAuth.getInstance().currentUser != null && credential != null
     }
 
     override suspend fun restoreDiariesForGoogleDrive(): List<Diary>? = withContext(ioDispatcher) {

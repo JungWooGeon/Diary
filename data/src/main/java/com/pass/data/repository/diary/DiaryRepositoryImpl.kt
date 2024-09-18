@@ -26,27 +26,25 @@ import javax.inject.Singleton
 @Singleton
 class DiaryRepositoryImpl @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    private val db: DiaryDataBase
+    private val db: DiaryDataBase,
+    private val service: SummaryService
 ) : DiaryRepository {
 
-    @Inject
-    lateinit var service: SummaryService
-
-    override suspend fun getDiariesByMonth(year: String, month: String): List<Diary> {
+    override suspend fun getDiariesByMonth(year: String, month: String): List<Diary> = withContext(ioDispatcher) {
         val diaryEntity = db.diaryDao().getDiariesByMonth(year, month)
-        return DiaryMapper.toDomainWithList(diaryEntity)
+        DiaryMapper.toDomainWithList(diaryEntity)
     }
 
-    override suspend fun addDiary(diary: Diary) {
-        return db.diaryDao().addDiary(DiaryMapper.fromDomain(diary))
+    override suspend fun addDiary(diary: Diary) = withContext(ioDispatcher) {
+        db.diaryDao().addDiary(DiaryMapper.fromDomain(diary))
     }
 
-    override suspend fun updateDiary(diary: Diary) {
-        return db.diaryDao().updateDiary(DiaryMapper.fromDomain(diary))
+    override suspend fun updateDiary(diary: Diary) = withContext(ioDispatcher) {
+        db.diaryDao().updateDiary(DiaryMapper.fromDomain(diary))
     }
 
-    override suspend fun deleteDiary(diary: Diary) {
-        return db.diaryDao().deleteDiary(DiaryMapper.fromDomain(diary))
+    override suspend fun deleteDiary(diary: Diary) = withContext(ioDispatcher) {
+        db.diaryDao().deleteDiary(DiaryMapper.fromDomain(diary))
     }
 
     override suspend fun summaryDiary(content: String): Flow<String> = withContext(ioDispatcher) {
