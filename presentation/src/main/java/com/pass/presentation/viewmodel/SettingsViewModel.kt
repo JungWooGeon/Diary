@@ -16,12 +16,9 @@ import com.pass.domain.usecase.settings.font.UpdateCurrentFontUseCase
 import com.pass.domain.usecase.settings.font.UpdateCurrentTextSizeUseCase
 import com.pass.presentation.intent.SettingsIntent
 import com.pass.presentation.sideeffect.SettingSideEffect
-import com.pass.presentation.state.screen.LoginState
 import com.pass.presentation.state.screen.SettingState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.Container
@@ -49,19 +46,21 @@ class SettingsViewModel @Inject constructor(
     )
 
     init {
-        // 텍스트 크기, 폰트, 구글 로그인 정보 초기화
+        // text size collect
         intent {
             getCurrentTextSizeUseCase().collect { newSize ->
                 reduce { state.copy(textSize = newSize) }
             }
         }
 
+        // font collect
         intent {
             getCurrentFontUseCase().collect { newFont ->
                 reduce { state.copy(textFont = newFont) }
             }
         }
 
+        // 구글 로그인 정보 초기화
         checkIsLoggedIn()
     }
 

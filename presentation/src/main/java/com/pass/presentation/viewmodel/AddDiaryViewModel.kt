@@ -17,6 +17,7 @@ import com.simform.ssjetpackcomposeprogressbuttonlibrary.SSButtonState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.orbitmvi.orbit.Container
@@ -44,17 +45,14 @@ class AddDiaryViewModel @Inject constructor(
     init {
         intent { reduce { state.copy(loading = AddDiaryLoadingState.Loading) } }
 
-        viewModelScope.launch(Dispatchers.Main) {
-            withContext(Dispatchers.IO) {
-                getCurrentTextSizeUseCase()
-            }.collect { size ->
-                intent {
-                    reduce {
-                        state.copy(
-                            textSizeState = size,
-                            loading = AddDiaryLoadingState.Standby
-                        )
-                    }
+        viewModelScope.launch(Dispatchers.IO) {
+            val size = getCurrentTextSizeUseCase().first()
+            intent {
+                reduce {
+                    state.copy(
+                        textSizeState = size,
+                        loading = AddDiaryLoadingState.Standby
+                    )
                 }
             }
         }
@@ -200,11 +198,11 @@ class AddDiaryViewModel @Inject constructor(
                     // 요약하기
                     postSideEffect(AddDiarySideEffect.ChangeTitle(""))
 
-                    viewModelScope.launch(Dispatchers.Main) {
+                    viewModelScope.launch(Dispatchers.IO) {
                         try {
-                            withContext(Dispatchers.IO) {
-                                summaryDiaryUseCase(intent.contentText)
-                            }.collect { summary ->
+                            val summary = summaryDiaryUseCase(intent.contentText).first()
+
+                            withContext(Dispatchers.Main) {
                                 if (summary == "") {
                                     reduce { state.copy(submitButtonState = SSButtonState.FAILURE) }
 

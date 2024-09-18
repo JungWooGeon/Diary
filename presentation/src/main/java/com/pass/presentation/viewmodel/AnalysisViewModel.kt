@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import com.pass.domain.usecase.diary.GetDiariesByMonthUseCase
 import com.pass.presentation.intent.AnalysisIntent
 import com.pass.presentation.sideeffect.AnalysisSideEffect
-import com.pass.presentation.sideeffect.CalendarSideEffect
 import com.pass.presentation.state.screen.AnalysisLoadingState
 import com.pass.presentation.state.screen.AnalysisState
 import dagger.hilt.android.lifecycle.HiltViewModel

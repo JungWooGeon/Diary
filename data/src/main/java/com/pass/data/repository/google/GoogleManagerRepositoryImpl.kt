@@ -44,9 +44,11 @@ class GoogleManagerRepositoryImpl @Inject constructor(private val context: Conte
                         initializeGoogleClients()
                     }
                     trySend(task.isSuccessful)
+                    close()
                 }
         } catch (e: Exception) {
             trySend(false)
+            close()
         }
 
         awaitClose()
