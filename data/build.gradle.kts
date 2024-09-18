@@ -79,6 +79,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
+    implementation("com.google.firebase:firebase-storage-ktx:21.0.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
@@ -98,8 +99,10 @@ dependencies {
     implementation("com.google.api-client:google-api-client-android:1.26.0")
     implementation("com.google.apis:google-api-services-drive:v3-rev136-1.25.0")
 
-    // firebase auth
+    // firebase auth / storage
+    implementation(platform("com.google.firebase:firebase-bom:33.3.0"))
     implementation("com.google.firebase:firebase-auth:23.0.0")
+    implementation("com.google.firebase:firebase-storage")
 
     // Preferences Data Store
     implementation("androidx.datastore:datastore-preferences:1.1.1")

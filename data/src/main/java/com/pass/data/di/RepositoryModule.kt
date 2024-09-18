@@ -3,9 +3,11 @@ package com.pass.data.di
 import com.pass.data.repository.diary.DiaryRepositoryImpl
 import com.pass.data.repository.google.GoogleManagerRepositoryImpl
 import com.pass.data.repository.settings.SettingsRepositoryImpl
+import com.pass.data.repository.storage.FirebaseStorageRepositoryImpl
 import com.pass.domain.repository.diary.DiaryRepository
 import com.pass.domain.repository.google.GoogleManagerRepository
 import com.pass.domain.repository.settings.SettingsRepository
+import com.pass.domain.repository.storage.StorageRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -23,4 +25,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindsSettingsRepository(repository: SettingsRepositoryImpl): SettingsRepository
+
+    @Binds
+    abstract fun bindsStorageRepository(repository: FirebaseStorageRepositoryImpl): StorageRepository
 }

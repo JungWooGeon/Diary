@@ -8,6 +8,7 @@ import com.pass.domain.usecase.diary.DeleteDiaryUseCase
 import com.pass.domain.usecase.diary.SummaryDiaryUseCase
 import com.pass.domain.usecase.diary.UpdateDiaryUseCase
 import com.pass.domain.usecase.settings.font.GetCurrentTextSizeUseCase
+import com.pass.domain.usecase.storage.AddImageWithDiaryUseCase
 import com.pass.presentation.intent.AddDiaryIntent
 import com.pass.presentation.sideeffect.AddDiarySideEffect
 import com.pass.presentation.state.screen.AddDiaryLoadingState
@@ -30,7 +31,9 @@ class AddDiaryViewModel @Inject constructor(
     private val updateDiaryUseCase: UpdateDiaryUseCase,
     private val deleteDiaryUseCase: DeleteDiaryUseCase,
     private val getCurrentTextSizeUseCase: GetCurrentTextSizeUseCase,
-    private val summaryDiaryUseCase: SummaryDiaryUseCase
+    private val summaryDiaryUseCase: SummaryDiaryUseCase,
+    private val addImageWithDiaryUseCase: AddImageWithDiaryUseCase,
+    private val deleteImageWithDiaryUseCase: AddImageWithDiaryUseCase
 ) : ViewModel(), ContainerHost<AddDiaryState, AddDiarySideEffect> {
 
     override val container: Container<AddDiaryState, AddDiarySideEffect> = container(
@@ -56,9 +59,9 @@ class AddDiaryViewModel @Inject constructor(
         }
     }
 
-    fun processIntent(intent: AddDiaryIntent) {
+    fun processIntent(intent: AddDiaryIntent) = intent {
         when (intent) {
-            is AddDiaryIntent.Initialize -> intent {
+            is AddDiaryIntent.Initialize -> {
                 // 수정하기 화면일 경우 초기화
                 if (intent.diary != null) {
                     updateDiary = intent.diary
@@ -79,13 +82,14 @@ class AddDiaryViewModel @Inject constructor(
                                 (if (intent.diary.emoticonId3 == null) -1 else intent.diary.emoticonId3)?.let {
                                     add(it)
                                 }
-                            }
+                            },
+                            imageUri = intent.diary.imageUri.orEmpty()
                         )
                     }
                 }
             }
 
-            is AddDiaryIntent.AddDiary -> intent {
+            is AddDiaryIntent.AddDiary -> {
                 reduce { state.copy(loading = AddDiaryLoadingState.Loading) }
 
                 val addDiary = createDiary(
@@ -105,7 +109,7 @@ class AddDiaryViewModel @Inject constructor(
                 }
             }
 
-            is AddDiaryIntent.DeleteDiary -> intent {
+            is AddDiaryIntent.DeleteDiary -> {
                 reduce { state.copy(loading = AddDiaryLoadingState.Loading) }
                 viewModelScope.launch {
                     try {
@@ -117,11 +121,11 @@ class AddDiaryViewModel @Inject constructor(
                 }
             }
 
-            is AddDiaryIntent.SelectDate -> intent {
-                reduce { state.copy(selectedDateWithLocalDate = intent.localDate) }
+            is AddDiaryIntent.SelectDate -> reduce {
+                state.copy(selectedDateWithLocalDate = intent.localDate)
             }
 
-            is AddDiaryIntent.DeleteEmoticon -> intent {
+            is AddDiaryIntent.DeleteEmoticon -> {
                 if (state.emoticonIdList[1] == -1) {
                     postSideEffect(AddDiarySideEffect.Toast("1개까지 삭제할 수 있습니다."))
                     return@intent
@@ -152,27 +156,27 @@ class AddDiaryViewModel @Inject constructor(
                 }
             }
 
-            is AddDiaryIntent.UpdateAddDialog -> intent {
-                reduce { state.copy(isDialogAddState = intent.isOpen) }
+            is AddDiaryIntent.UpdateAddDialog -> reduce {
+                state.copy(isDialogAddState = intent.isOpen)
             }
 
-            is AddDiaryIntent.UpdateEditDialog -> intent {
-                reduce { state.copy(isDialogEditState = intent.index) }
+            is AddDiaryIntent.UpdateEditDialog -> reduce {
+                state.copy(isDialogEditState = intent.index)
             }
 
-            is AddDiaryIntent.UpdateDatePickerDialog -> intent {
-                reduce { state.copy(isDatePickerOpenState = intent.isOpen) }
+            is AddDiaryIntent.UpdateDatePickerDialog -> reduce {
+                state.copy(isDatePickerOpenState = intent.isOpen)
             }
 
-            is AddDiaryIntent.UpdateRecordDialog -> intent {
-                reduce { state.copy(isRecordDialogState = intent.isOpen) }
+            is AddDiaryIntent.UpdateRecordDialog -> reduce {
+                state.copy(isRecordDialogState = intent.isOpen)
             }
 
-            is AddDiaryIntent.UpdateDeleteDialog -> intent {
-                reduce { state.copy(isDeleteDialogState = intent.isOpen) }
+            is AddDiaryIntent.UpdateDeleteDialog -> reduce {
+                state.copy(isDeleteDialogState = intent.isOpen)
             }
 
-            is AddDiaryIntent.OnClickSSProgressButton -> intent {
+            is AddDiaryIntent.OnClickSSProgressButton -> {
                 // 요약 중에는 버튼 클릭 방지
                 if (state.submitButtonState == SSButtonState.LOADING) return@intent
 
@@ -258,7 +262,7 @@ class AddDiaryViewModel @Inject constructor(
                 }
             }
 
-            is AddDiaryIntent.OnSelectEmoticon -> intent {
+            is AddDiaryIntent.OnSelectEmoticon -> {
                 if (state.isDialogEditState == Constants.NOT_EDIT_INDEX) {
                     // 이모티콘 추가할 인덱스 탐색
                     var index = -1
@@ -295,6 +299,10 @@ class AddDiaryViewModel @Inject constructor(
                         )
                     }
                 }
+            }
+
+            is AddDiaryIntent.OnSelectImageUri -> reduce {
+                state.copy(imageUri = intent.imageUri.toString())
             }
         }
     }

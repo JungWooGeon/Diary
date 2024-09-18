@@ -30,8 +30,7 @@ fun ContentBox(
 ) {
     Surface(
         shape = RoundedCornerShape(10.dp),
-        modifier = modifier
-            .fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Box(
             modifier = Modifier

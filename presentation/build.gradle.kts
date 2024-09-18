@@ -114,7 +114,7 @@ dependencies {
     implementation("com.airbnb.android:lottie-compose:6.4.1")
 
     // compose permission
-    implementation("com.google.accompanist:accompanist-permissions:0.33.2-alpha")
+    implementation("com.google.accompanist:accompanist-permissions:0.36.0")
 
     // google auth + drive
     implementation("com.google.android.gms:play-services-auth:21.2.0")
@@ -133,6 +133,9 @@ dependencies {
     implementation("org.orbit-mvi:orbit-core:9.0.0")
     implementation("org.orbit-mvi:orbit-viewmodel:9.0.0")
     implementation("org.orbit-mvi:orbit-compose:9.0.0")
+
+    // coil
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     implementation("com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava")
 }

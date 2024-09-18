@@ -3,6 +3,7 @@ package com.pass.presentation.view.screen
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -16,15 +17,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-//noinspection UsingMaterialAndMaterial3Libraries
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,13 +40,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.pass.domain.entity.Diary
 import com.pass.presentation.intent.AddDiaryIntent
 import com.pass.presentation.sideeffect.AddDiarySideEffect
@@ -47,6 +57,7 @@ import com.pass.presentation.state.screen.AddDiaryLoadingState
 import com.pass.presentation.view.composable.AddDiaryAppBar
 import com.pass.presentation.view.composable.AddEmoticonDialog
 import com.pass.presentation.view.composable.BottomEditor
+import com.pass.presentation.view.composable.BottomSheetImageContent
 import com.pass.presentation.view.composable.ContentBox
 import com.pass.presentation.view.composable.CustomSpinnerDatePicker
 import com.pass.presentation.view.composable.EmoticonBox
@@ -60,6 +71,7 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 import java.lang.Math.PI
 import java.time.LocalDate
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = hiltViewModel()) {
 
@@ -81,6 +93,9 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = hiltViewModel()
         ), label = ""
     )
 
+    val sheetState = rememberModalBottomSheetState()
+    var isBottomSheetShowState by remember { mutableStateOf(false) }
+
     viewModel.collectSideEffect { sideEffect ->
         when(sideEffect) {
             is AddDiarySideEffect.Toast -> {
@@ -96,6 +111,8 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = hiltViewModel()
 
     AddDiaryScreen(
         context = context,
+        isBottomSheetShowState = isBottomSheetShowState,
+        sheetState = sheetState,
         loadingState = addDiaryState.loading,
         isEditScreen = (diary != null),
         textSize = addDiaryState.textSizeState,
@@ -110,6 +127,7 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = hiltViewModel()
         isDeleteDialogState = addDiaryState.isDeleteDialogState,
         isRecordDialogState = addDiaryState.isRecordDialogState,
         shakeContentBox = shakeContentBox,
+        imageUri = addDiaryState.imageUri,
         onAddDiary = {
             viewModel.processIntent(
                 AddDiaryIntent.AddDiary(contentText = contentText, titleText = titleText)
@@ -129,14 +147,20 @@ fun AddDiaryScreen(diary: Diary?, viewModel: AddDiaryViewModel = hiltViewModel()
         )) },
         onSelectEmoticon = { emoticonId -> viewModel.processIntent(AddDiaryIntent.OnSelectEmoticon(emoticonId)) },
         onSelectDate = { date -> viewModel.processIntent(AddDiaryIntent.SelectDate(date)) },
-        onDeleteDiary = { viewModel.processIntent(AddDiaryIntent.DeleteDiary) }
+        onDeleteDiary = { viewModel.processIntent(AddDiaryIntent.DeleteDiary) },
+        onOpenImageBottomSheet = { isBottomSheetShowState = true },
+        onCloseImageBottomSheet = { isBottomSheetShowState = false },
+        onSelectImageUri = { uri -> viewModel.processIntent(AddDiaryIntent.OnSelectImageUri(uri)) }
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UseOfNonLambdaOffsetOverload")
 @Composable
 fun AddDiaryScreen(
     context: Context,
+    isBottomSheetShowState: Boolean,
+    sheetState: SheetState,
     loadingState: AddDiaryLoadingState,
     isEditScreen: Boolean,
     textSize: Float,
@@ -151,6 +175,7 @@ fun AddDiaryScreen(
     isDeleteDialogState: Boolean,
     isRecordDialogState: Boolean,
     shakeContentBox: Float,
+    imageUri: String,
     onAddDiary: () -> Unit,
     onUpdateDatePickerDialog: (Boolean) -> Unit,
     onUpdateDeleteDialog: (Boolean) -> Unit,
@@ -164,13 +189,36 @@ fun AddDiaryScreen(
     onSelectEmoticon: (Int) -> Unit,
     onSelectDate: (LocalDate) -> Unit,
     onDeleteDiary: () -> Unit,
+    onOpenImageBottomSheet: () -> Unit,
+    onCloseImageBottomSheet: () -> Unit,
+    onSelectImageUri: (Uri) -> Unit
  ) {
     when (loadingState) {
         is AddDiaryLoadingState.Standby -> {
+            val url = "https://img3.daumcdn.net/thumb/R658x0.q70/?fname=https://t1.daumcdn.net/news/202403/03/gajinews/20240303164440068dofo.jpg"
+
+            val url2 = "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FIdgEc%2FbtscQyEA9aW%2Fr3zBGNYD9OD5liNsnBnQG0%2Fimg.jpg"
+
+            val url3 = "https://img1.daumcdn.net/thumb/R1280x0/?fname=http://t1.daumcdn.net/brunch/service/user/7upb/image/v8L7ol-vzUGCUmgjpYZqsbximkA.jpg"
+
+            if (imageUri != "") {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    AsyncImage(
+                        model = imageUri,
+                        contentDescription = null,
+                        alpha = 0.6f,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.White),
+                    .background(Color.Transparent)
+                    .alpha(if (imageUri != "") 0.6f else 1f)
+                    .then(if (imageUri == "") { Modifier.background(Color.White) } else { Modifier }),
                 verticalArrangement = Arrangement.Top,
             ) {
                 AddDiaryAppBar(
@@ -182,40 +230,46 @@ fun AddDiaryScreen(
                     onDeleteDiary = { onUpdateDeleteDialog(true) }
                 )
 
-                EmoticonBox(
-                    emoticonIdList = emoticonIdList,
-                    onDatePickerOpen = { onUpdateEmoticonAddDialog(true) },
-                    onEmoticonChange = onUpdateEmoticonEditDialog,
-                    onEmotionDelete = onDeleteEmoticon
-                )
-
-                // 제목
-                ContentBox(
-                    contentText = titleText,
-                    hintText = "제목을 입력해주세요.",
+                Column(
                     modifier = Modifier
-                        .offset(x = (kotlin.math.sin(shakeContentBox * 2 * PI) * 10).dp)
-                        .padding(horizontal = 20.dp),
-                    textSize = textSize,
-                    onTextChanged = onChangeTitle
-                )
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    EmoticonBox(
+                        emoticonIdList = emoticonIdList,
+                        onDatePickerOpen = { onUpdateEmoticonAddDialog(true) },
+                        onEmoticonChange = onUpdateEmoticonEditDialog,
+                        onEmotionDelete = onDeleteEmoticon
+                    )
 
-                // 본문
-                ContentBox(
-                    contentText = contentText,
-                    hintText = "오늘은 무슨 일이 있었나요?",
-                    modifier = Modifier
-                        .weight(1F)
-                        .padding(20.dp),
-                    textSize = textSize,
-                    onTextChanged = onChangeContent
-                )
+                    // 제목
+                    ContentBox(
+                        contentText = titleText,
+                        hintText = "제목을 입력해주세요.",
+                        modifier = Modifier
+                            .offset(x = (kotlin.math.sin(shakeContentBox * 2 * PI) * 10).dp)
+                            .padding(horizontal = 20.dp),
+                        textSize = textSize,
+                        onTextChanged = onChangeTitle
+                    )
+
+                    // 본문
+                    ContentBox(
+                        contentText = contentText,
+                        hintText = "오늘은 무슨 일이 있었나요?",
+                        modifier = Modifier
+                            .heightIn(min = 400.dp)
+                            .padding(20.dp),
+                        textSize = textSize,
+                        onTextChanged = onChangeContent
+                    )
+                }
 
                 // '수정하기' or '요약하기' 버튼
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
+                        .padding(start = 20.dp, end = 20.dp, top = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     SSJetPackComposeProgressButton(
@@ -232,7 +286,7 @@ fun AddDiaryScreen(
 
                 BottomEditor(
                     onOpenRecordDialog = { onUpdateRecordDialog(true) },
-                    onClickAddImage = { Toast.makeText(context, "업데이트 예정입니다.", Toast.LENGTH_SHORT).show() },
+                    onClickAddImage = onOpenImageBottomSheet,
                     onClickSortImage =  { Toast.makeText(context, "업데이트 예정입니다.", Toast.LENGTH_SHORT).show() },
                 )
             }
@@ -328,6 +382,22 @@ fun AddDiaryScreen(
                             ) {
                                 Text("취소")
                             }
+                        }
+                    )
+                }
+            }
+
+            // image bottom sheet
+            if (isBottomSheetShowState) {
+                ModalBottomSheet(
+                    onDismissRequest = onCloseImageBottomSheet,
+                    sheetState = sheetState
+                ) {
+                    BottomSheetImageContent(
+                        isAdd = imageUri == "",
+                        onSelectImageUri = { uri ->
+                            onSelectImageUri(uri)
+                            onCloseImageBottomSheet()
                         }
                     )
                 }

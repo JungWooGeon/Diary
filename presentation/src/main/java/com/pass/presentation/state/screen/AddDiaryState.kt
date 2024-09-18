@@ -42,7 +42,9 @@ data class AddDiaryState(
     // 녹음 다이얼로그
     val isRecordDialogState: Boolean = false,
 
-    val shouldShake: Boolean = false
+    val shouldShake: Boolean = false,
+
+    val imageUri: String = ""
 )
 
 sealed class AddDiaryLoadingState {

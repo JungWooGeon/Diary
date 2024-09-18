@@ -1,5 +1,6 @@
 package com.pass.presentation.intent
 
+import android.net.Uri
 import com.pass.domain.entity.Diary
 import java.time.LocalDate
 
@@ -19,4 +20,6 @@ sealed class AddDiaryIntent {
 
     data class OnClickSSProgressButton(val contentText: String, val titleText: String) : AddDiaryIntent()
     data class OnSelectEmoticon(val emoticonId: Int) : AddDiaryIntent()
+
+    data class OnSelectImageUri(val imageUri: Uri) : AddDiaryIntent()
 }
