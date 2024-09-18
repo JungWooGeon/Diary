@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -95,6 +96,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 driveLauncher.launch(sideEffect.error)
             }
         }
+    }
+
+    BackHandler(
+        enabled = settingsState.settingRouteState != SettingRouteState.DefaultSettingRoute
+    ) {
+        viewModel.processIntent(SettingsIntent.OnNavigateSettingsScreen(SettingRouteState.DefaultSettingRoute))
     }
 
     SettingsScreen(
@@ -265,11 +272,6 @@ fun SettingsScreen(
             }
 
             SettingRouteState.StartDateSettingRoute -> {
-                onShowToast("업데이트 예정입니다.")
-                onNavigateSettingsScreen(SettingRouteState.DefaultSettingRoute)
-            }
-
-            SettingRouteState.ThemeSettingRoute -> {
                 onShowToast("업데이트 예정입니다.")
                 onNavigateSettingsScreen(SettingRouteState.DefaultSettingRoute)
             }

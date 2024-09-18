@@ -3,6 +3,7 @@ package com.pass.data.repository
 import com.pass.data.db.diary.DiaryDao
 import com.pass.data.db.diary.DiaryDataBase
 import com.pass.data.mapper.DiaryMapper
+import com.pass.data.remote.service.SummaryService
 import com.pass.domain.entity.Diary
 import com.pass.data.repository.diary.DiaryRepositoryImpl
 import io.mockk.Runs
@@ -14,9 +15,12 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class DiaryRepositoryTest {
 
@@ -30,7 +34,18 @@ class DiaryRepositoryTest {
             every { it.diaryDao() } returns diaryDao
         }
 
-        diaryRepository = DiaryRepositoryImpl(diaryDataBase)
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://naveropenapi.apigw.ntruss.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val service = retrofit.create(SummaryService::class.java)
+
+        diaryRepository = DiaryRepositoryImpl(
+            Dispatchers.IO,
+            diaryDataBase,
+            service
+        )
     }
 
     @Test

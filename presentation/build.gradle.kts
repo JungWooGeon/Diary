@@ -71,7 +71,6 @@ android {
             useLegacyPackaging = true
         }
     }
-
     kapt {
         correctErrorTypes = true
     }

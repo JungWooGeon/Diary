@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,15 +29,6 @@ fun SettingDefault(
         iconResource = R.drawable.ic_font,
         iconDescription = "폰트",
         onClick = { onClick(SettingRouteState.FontSettingRoute) }
-    )
-
-    SettingRow(
-        iconResource = R.drawable.ic_theme,
-        iconDescription = "테마",
-        onClick = {
-            //@TODO 테마 설정 화면 전환
-            onClick(SettingRouteState.ThemeSettingRoute)
-        }
     )
 
     SettingRow(
@@ -65,10 +57,10 @@ fun SettingDefault(
         }
     )
 
-    Divider(
-        color = LineGray,
+    HorizontalDivider(
+        modifier = Modifier.padding(top = 30.dp),
         thickness = 1.dp,
-        modifier = Modifier.padding(top = 30.dp)
+        color = LineGray
     )
 
     Text(

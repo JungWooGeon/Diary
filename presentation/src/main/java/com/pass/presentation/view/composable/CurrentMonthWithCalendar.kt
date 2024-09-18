@@ -6,9 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +33,7 @@ fun CurrentMonthWithCalendar(
             .padding(10.dp),
     ) {
         IconButton(onClick = { onSelectPreviousMonth() }) {
-            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "이전 달")
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "이전 달")
         }
 
         Text(
@@ -42,7 +43,7 @@ fun CurrentMonthWithCalendar(
         )
 
         IconButton(onClick = { onSelectNextMonth() }) {
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "다음 달")
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "다음 달")
         }
     }
 }

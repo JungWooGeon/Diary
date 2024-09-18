@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.pass.data.repository.settings.SettingsRepositoryImpl
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -18,7 +19,7 @@ class SettingsRepositoryTest {
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
-        settingsRepository = SettingsRepositoryImpl(context)
+        settingsRepository = SettingsRepositoryImpl(Dispatchers.IO, context)
     }
 
     @Test

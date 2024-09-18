@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -67,9 +68,9 @@ fun DiaryItem(
         }
     }
 
-    Divider(
-        color = LineGray,
+    HorizontalDivider(
+        modifier = Modifier.padding(top = 20.dp),
         thickness = 1.dp,
-        modifier = Modifier.padding(top = 20.dp)
+        color = LineGray
     )
 }

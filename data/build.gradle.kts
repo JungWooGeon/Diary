@@ -56,7 +56,17 @@ android {
     buildFeatures {
         buildConfig = true
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1,DEPENDENCIES}"
+            resources.excludes.add("META-INF/LICENSE.md")
+            resources.excludes.add("META-INF/LICENSE-notice.md")
+        }
 
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
     kapt {
         correctErrorTypes = true
     }

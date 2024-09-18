@@ -3,7 +3,6 @@ package com.pass.presentation.state
 sealed class SettingRouteState {
     data object DefaultSettingRoute: SettingRouteState()
     data object FontSettingRoute: SettingRouteState()
-    data object ThemeSettingRoute: SettingRouteState()
     data object NotificationSettingRoute: SettingRouteState()
     data object ScreenLockSettingRoute: SettingRouteState()
     data object StartDateSettingRoute: SettingRouteState()
