@@ -24,6 +24,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.launch
 
@@ -57,7 +58,13 @@ fun BottomSheetImageContent(
     }
 
     val selectImageWithRequestPermission: () -> Unit = {
-        if (recordPermissionsState.allPermissionsGranted) {
+        val permissionGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            recordPermissionsState.permissions.map { it.status.isGranted }.any { it }
+        } else {
+            recordPermissionsState.allPermissionsGranted
+        }
+
+        if (permissionGranted) {
             // 권한 허용 - 사진 선택
             pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         } else if (recordPermissionsState.shouldShowRationale) {
