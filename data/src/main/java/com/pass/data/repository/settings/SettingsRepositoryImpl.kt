@@ -25,10 +25,12 @@ class SettingsRepositoryImpl @Inject constructor(
     companion object {
         private val TEXT_SIZE_KEY = floatPreferencesKey("text_size")
         private val FONT_KEY = stringPreferencesKey("text_font")
+        private val PASSWORD_KEY = stringPreferencesKey("lock_password")
     }
 
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
     private val Context.fontDataStore: DataStore<Preferences> by preferencesDataStore(name = "font_settings")
+    private val Context.passwordDataStore: DataStore<Preferences> by preferencesDataStore(name = "password_settings")
 
     override suspend fun updateCurrentTextSize(textSize: Float): Unit = withContext(ioDispatcher) {
         context.dataStore.edit { preferences ->
@@ -51,6 +53,18 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun getCurrentFont(): Flow<String> = withContext(ioDispatcher) {
         context.fontDataStore.data.map { preferences ->
             preferences[FONT_KEY] ?: "default"
+        }
+    }
+
+    override suspend fun updateCurrentPassword(password: String) {
+        context.passwordDataStore.edit { preferences ->
+            preferences[PASSWORD_KEY] = password
+        }
+    }
+
+    override suspend fun getCurrentPassword(): Flow<String> = withContext(ioDispatcher) {
+        context.passwordDataStore.data.map { preferences ->
+            preferences[PASSWORD_KEY] ?: ""
         }
     }
 }

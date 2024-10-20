@@ -7,4 +7,6 @@ interface SettingsRepository {
     suspend fun getCurrentTextSize(): Flow<Float>
     suspend fun updateCurrentFont(font: String)
     suspend fun getCurrentFont(): Flow<String>
+    suspend fun updateCurrentPassword(password: String)
+    suspend fun getCurrentPassword(): Flow<String>
 }

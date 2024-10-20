@@ -1,11 +1,8 @@
 package com.pass.presentation.state.screen
 
-import android.content.Intent
 import androidx.compose.runtime.Immutable
 import com.pass.presentation.intent.SettingsIntent
-import com.pass.presentation.state.SettingRouteState
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.pass.presentation.state.route.SettingRouteState
 
 @Immutable
 data class SettingState(
@@ -27,7 +24,10 @@ data class SettingState(
     // 구글 로그인
     val isLoggedIn: Boolean = false,
 
-    val drivePendingActionIntent: SettingsIntent = SettingsIntent.Backup
+    val drivePendingActionIntent: SettingsIntent = SettingsIntent.Backup,
+
+    // 비밀번호
+    val password: String = ""
 )
 
 sealed class LoginState {

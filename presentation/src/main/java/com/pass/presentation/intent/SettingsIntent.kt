@@ -1,7 +1,7 @@
 package com.pass.presentation.intent
 
 import android.content.Intent
-import com.pass.presentation.state.SettingRouteState
+import com.pass.presentation.state.route.SettingRouteState
 
 sealed class SettingsIntent {
     data class OnNavigateSettingsScreen(val state: SettingRouteState) : SettingsIntent()
@@ -14,4 +14,6 @@ sealed class SettingsIntent {
     data object Logout : SettingsIntent()
     data object Backup : SettingsIntent()
     data object Restore : SettingsIntent()
+
+    data class UpdatePassword(val password: String) : SettingsIntent()
 }

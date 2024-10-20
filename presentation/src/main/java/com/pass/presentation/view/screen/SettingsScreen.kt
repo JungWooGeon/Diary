@@ -18,9 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.AlertDialog
@@ -46,12 +44,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.pass.diary.BuildConfig
 import com.pass.presentation.intent.SettingsIntent
 import com.pass.presentation.sideeffect.SettingSideEffect
-import com.pass.presentation.state.SettingRouteState
+import com.pass.presentation.state.route.SettingRouteState
 import com.pass.presentation.ui.theme.LineGray
 import com.pass.presentation.view.composable.SettingBackup
 import com.pass.presentation.view.composable.SettingDefault
 import com.pass.presentation.view.composable.SettingFont
 import com.pass.presentation.view.composable.SettingLicense
+import com.pass.presentation.view.composable.SettingLock
 import com.pass.presentation.viewmodel.SettingsViewModel
 import org.orbitmvi.orbit.compose.collectAsState
 import org.orbitmvi.orbit.compose.collectSideEffect
@@ -113,6 +112,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         textSize = settingsState.textSize,
         textFont = settingsState.textFont,
         isLoggedIn = settingsState.isLoggedIn,
+        isLock = settingsState.password != "",
         onNavigateSettingsScreen = { viewModel.processIntent(SettingsIntent.OnNavigateSettingsScreen(it)) },
         onNavigatePrivacyPolicyScreen = {
             val url = "https://ai-diary-privacy-policy.co.kr/"
@@ -145,7 +145,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         onRestore = { viewModel.processIntent(SettingsIntent.Restore) },
         onShowToast = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() },
         onUpdateCurrentTextSize = { viewModel.processIntent(SettingsIntent.UpdateCurrentTextSize(it)) },
-        onUpdateCurrentFont = { viewModel.processIntent(SettingsIntent.UpdateCurrentFont(it)) }
+        onUpdateCurrentFont = { viewModel.processIntent(SettingsIntent.UpdateCurrentFont(it)) },
+        onUpdatePassword = { viewModel.processIntent(SettingsIntent.UpdatePassword(it)) }
     )
 }
 
@@ -157,6 +158,7 @@ fun SettingsScreen(
     textSize: Float,
     textFont: String,
     isLoggedIn: Boolean,
+    isLock: Boolean,
     onNavigateSettingsScreen: (SettingRouteState) -> Unit,
     onNavigatePrivacyPolicyScreen: () -> Unit,
     onNavigateReviewScreen: () -> Unit,
@@ -168,7 +170,8 @@ fun SettingsScreen(
     onRestore: () -> Unit,
     onShowToast: (String) -> Unit,
     onUpdateCurrentTextSize: (Float) -> Unit,
-    onUpdateCurrentFont: (String) -> Unit
+    onUpdateCurrentFont: (String) -> Unit,
+    onUpdatePassword: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -269,8 +272,26 @@ fun SettingsScreen(
             }
 
             SettingRouteState.ScreenLockSettingRoute -> {
-                onShowToast("업데이트 예정입니다.")
-                onNavigateSettingsScreen(SettingRouteState.DefaultSettingRoute)
+                SettingLock(
+                    isLock = isLock,
+                    onClickChangePassword = {
+                        if (isLock) onNavigateSettingsScreen(SettingRouteState.LockPasswordSettingRoute)
+                        else onShowToast("비밀번호를 설정해주세요.")
+                    },
+                    onTogglePassword = {
+                        if (isLock) { onUpdatePassword("") }
+                        else { onNavigateSettingsScreen(SettingRouteState.LockPasswordSettingRoute) }
+                    }
+                )
+            }
+
+            SettingRouteState.LockPasswordSettingRoute -> {
+                LockScreen(
+                    onComplete = {
+                        onUpdatePassword(it)
+                        onNavigateSettingsScreen(SettingRouteState.ScreenLockSettingRoute)
+                    }
+                )
             }
 
             SettingRouteState.StartDateSettingRoute -> {

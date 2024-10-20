@@ -14,6 +14,8 @@ import com.pass.domain.usecase.settings.font.GetCurrentFontUseCase
 import com.pass.domain.usecase.settings.font.GetCurrentTextSizeUseCase
 import com.pass.domain.usecase.settings.font.UpdateCurrentFontUseCase
 import com.pass.domain.usecase.settings.font.UpdateCurrentTextSizeUseCase
+import com.pass.domain.usecase.settings.password.GetCurrentPasswordUseCase
+import com.pass.domain.usecase.settings.password.UpdateCurrentPasswordUseCase
 import com.pass.presentation.intent.SettingsIntent
 import com.pass.presentation.sideeffect.SettingSideEffect
 import com.pass.presentation.state.screen.SettingState
@@ -37,7 +39,9 @@ class SettingsViewModel @Inject constructor(
     private val restoreDiariesForGoogleDrive: RestoreDiariesForGoogleDriveUseCase,
     private val getAllDiariesUseCase: GetAllDiariesUseCase,
     private val isLoggedInUseCase: IsLoggedInUseCase,
-    private val addDiaryUseCase: AddDiaryUseCase
+    private val addDiaryUseCase: AddDiaryUseCase,
+    private val getCurrentPasswordUseCase: GetCurrentPasswordUseCase,
+    private val updateCurrentPasswordUseCase: UpdateCurrentPasswordUseCase
 ) : ViewModel(), ContainerHost<SettingState, SettingSideEffect> {
 
     override val container: Container<SettingState, SettingSideEffect> = container(
@@ -56,6 +60,13 @@ class SettingsViewModel @Inject constructor(
         intent {
             getCurrentFontUseCase().collect { newFont ->
                 reduce { state.copy(textFont = newFont) }
+            }
+        }
+
+        // password collect
+        intent {
+            getCurrentPasswordUseCase().collect { newPassword ->
+                reduce { state.copy(password = newPassword) }
             }
         }
 
@@ -157,6 +168,11 @@ class SettingsViewModel @Inject constructor(
                         reduce { state.copy(isBackUpLoading = false) }
                     }
                 }
+            }
+
+            is SettingsIntent.UpdatePassword -> {
+                updateCurrentPasswordUseCase(intent.password)
+                postSideEffect(SettingSideEffect.Toast("비밀번호 설정을 변경하였습니다."))
             }
         }
     }
