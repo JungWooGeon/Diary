@@ -81,6 +81,8 @@ import com.pass.diary.core.designsystem.readableWidth
 import com.pass.diary.core.model.Photo
 import com.pass.diary.core.model.Tag
 import com.pass.diary.core.vision.Handwriting
+import com.pass.diary.core.data.SettingsRepository
+import kotlinx.coroutines.flow.first
 import com.pass.diary.core.vision.InkPoint
 import com.pass.diary.core.vision.PhotoTags
 import com.pass.diary.core.vision.Readiness
@@ -121,7 +123,10 @@ class VisionViewModel @Inject constructor(
     private val vision: Vision,
     val ink: Handwriting,
     @ApplicationContext private val context: Context,
+    settings: SettingsRepository,
 ) : ViewModel() {
+    /** 설정 › AI "감정·태그·제목 추천" off = no photo labeling at all (all AI off = 순수한 일기장). */
+    internal var aiSuggest: suspend () -> Boolean = { settings.settings.first().aiSuggest }
     private val _state = MutableStateFlow(VisionState())
     val state = _state.asStateFlow()
     private val labeled = mutableMapOf<String, List<Tag>>()
@@ -130,6 +135,7 @@ class VisionViewModel @Inject constructor(
     fun labelPhotos(photos: List<Photo>) {
         labeling?.cancel()
         labeling = viewModelScope.launch {
+            if (!aiSuggest()) { _state.update { it.copy(photoTags = emptyList()) }; return@launch }
             // The module may still be arriving right after the first prepare(): a few tries, then give up quietly.
             repeat(LABEL_TRIES) { attempt ->
                 if (attempt > 0) delay(LABEL_RETRY_MS)

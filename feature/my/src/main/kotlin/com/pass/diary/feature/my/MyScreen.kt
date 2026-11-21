@@ -613,6 +613,10 @@ fun AiSettingsScreen(onBack: () -> Unit, vm: MyViewModel = hiltViewModel()) {
                     Divider(Modifier.padding(vertical = 12.dp))
                     Text("온이는 의료·상담 서비스가 아니에요.", style = OdType.caption1, color = c.ink2)
                 }
+                Text(
+                    "사진·글자 AI(ML Kit)는 기능 개선을 위해 사용 통계(사진·글 내용은 제외)를 Google에 보내요.",
+                    style = OdType.caption2, color = c.ink3, modifier = Modifier.padding(horizontal = 4.dp),
+                )
             }
             Spacer(Modifier.navigationBarsPadding().height(24.dp))
         }

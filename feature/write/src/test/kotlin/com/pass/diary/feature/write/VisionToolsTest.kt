@@ -1,5 +1,6 @@
 package com.pass.diary.feature.write
 
+import com.pass.diary.core.data.SettingsRepository
 import com.pass.diary.core.model.Photo
 import com.pass.diary.core.vision.FakeHandwriting
 import com.pass.diary.core.vision.FakeVision
@@ -26,9 +27,20 @@ class VisionToolsTest {
 
     private val photo = Photo(id = "p1", entryId = "e", localPath = "/x/p1.jpg", w = 1, h = 1)
 
+    private fun vm(vision: FakeVision, aiSuggest: Boolean = true) = RuntimeEnvironment.getApplication().let { app ->
+        VisionViewModel(vision, FakeHandwriting(), app, SettingsRepository(app)).also { it.aiSuggest = { aiSuggest } }
+    }
+
+    @Test fun noPhotoLabelingWhenSuggestionsAreOff() {
+        val vision = FakeVision(ready = Readiness.READY, labels = listOf(ImageLabel("Dog", 0.9f)))
+        val vm = vm(vision, aiSuggest = false)
+        vm.labelPhotos(listOf(photo))
+        assertEquals(emptyList<String>(), vm.state.value.photoTags.map { it.value })
+    }
+
     @Test fun photoLabelsBecomeChipsOnlyWhenTheModuleIsReady() {
         val vision = FakeVision(ready = Readiness.PREPARING, labels = listOf(ImageLabel("Dog", 0.9f)))
-        val vm = VisionViewModel(vision, FakeHandwriting(), RuntimeEnvironment.getApplication())
+        val vm = vm(vision)
         vm.labelPhotos(listOf(photo))
         assertEquals(emptyList<String>(), vm.state.value.photoTags.map { it.value }) // still downloading: nothing, no crash
 

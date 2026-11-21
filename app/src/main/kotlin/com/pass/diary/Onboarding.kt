@@ -230,7 +230,7 @@ private fun Consent(onBack: () -> Unit, onDone: (reminder: Boolean, ai: Boolean)
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         AiBadge("AI"); Text("감정 추천은 AI가 해요", style = OdType.title3)
                     }
-                    Text("온이 답장은 준비해 둔 문장에서 골라요. 모든 처리는 이 폰 안에서만 하고, 일기는 폰 밖으로 나가지 않아요. 설정에서 언제든 끌 수 있어요.", style = OdType.caption1, color = c.ink2, modifier = Modifier.padding(top = 8.dp))
+                    Text("온이 답장은 준비해 둔 문장에서 골라요. AI는 폰 안에서만 일기를 읽어요. 백업은 내 Google 드라이브에만 가요. 설정에서 언제든 끌 수 있어요.", style = OdType.caption1, color = c.ink2, modifier = Modifier.padding(top = 8.dp))
                     CheckRow("온이 답장·감정 추천 받기", "선택", ai, link = false) { ai = it }
                     Divider(Modifier.padding(bottom = 12.dp))
                     Text(
