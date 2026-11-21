@@ -50,3 +50,4 @@ __pycache__/
 
 keystore.properties
 keystore_candidates.txt
+.claude/
