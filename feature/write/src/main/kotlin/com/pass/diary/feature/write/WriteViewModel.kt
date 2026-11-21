@@ -130,7 +130,11 @@ class WriteViewModel @Inject constructor(
     private suspend fun saveNow() = withContext(NonCancellable) {
         saveLock.withLock {
             val e = _state.value.entry ?: return@withLock
-            if (!e.hasContent() && !_state.value.persisted) return@withLock
+            if (!e.hasContent()) {
+                // Typed then erased (or emotions un-picked): an already-written draft goes, nothing empty stays behind.
+                if (_state.value.persisted) { repository.delete(e.id); _state.update { it.copy(persisted = false) } }
+                return@withLock
+            }
             _state.update { it.copy(saving = true) }
             repository.save(e)
             _state.update { it.copy(saving = false, persisted = true, savedAt = System.currentTimeMillis()) }
@@ -148,7 +152,7 @@ class WriteViewModel @Inject constructor(
         pending?.cancel()
         val s = _state.value
         val e = s.entry ?: return
-        if (e.title.isBlank() && !s.suggestedTitle.isNullOrBlank()) _state.update { it.copy(entry = e.copy(title = s.suggestedTitle)) }
+        if (e.title.isBlank() && !s.suggestedTitle.isNullOrBlank() && e.hasContent()) _state.update { it.copy(entry = e.copy(title = s.suggestedTitle)) }
         viewModelScope.launch { saveNow(); if (_state.value.persisted) then(e.id) }
     }
 
@@ -244,7 +248,8 @@ class WriteViewModel @Inject constructor(
         if (pending?.isActive == true) {
             pending?.cancel()
             val e = _state.value.entry
-            if (e != null && (e.hasContent() || _state.value.persisted)) outliving.launch { repository.save(e) }
+            if (e != null && e.hasContent()) outliving.launch { repository.save(e) }
+            else if (e != null && _state.value.persisted) outliving.launch { repository.delete(e.id) }
         }
     }
 
@@ -252,6 +257,9 @@ class WriteViewModel @Inject constructor(
         const val AUTOSAVE_MS = 1_000L
         const val KEY_DRAFT = "draftEntryId"
         val outliving = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        fun Entry.hasContent() = emotions.isNotEmpty() || title.isNotBlank() || body.isNotBlank() || photos.isNotEmpty() || tags.isNotEmpty()
+        /** A template's starter lines ("1. ", "Q. …") alone are not content. */
+        fun Entry.hasContent() = emotions.isNotEmpty() || title.isNotBlank() || photos.isNotEmpty() || tags.isNotEmpty() ||
+            body.lines().any { l -> l.isNotBlank() && l.trim() !in starterLines && !(template == Template.QUESTION && l.startsWith("Q. ")) }
+        val starterLines = Template.entries.flatMap { it.starter.lines() }.map { it.trim() }.filter { it.isNotEmpty() }.toSet()
     }
 }

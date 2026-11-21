@@ -7,7 +7,10 @@ import com.pass.diary.core.data.PhotoStore
 import com.pass.diary.core.data.ReplyReports
 import com.pass.diary.core.data.db.DiaryDatabase
 import com.pass.diary.core.data.db.ReplyEntity
+import com.pass.diary.core.model.EmotionKey
 import com.pass.diary.core.model.Entry
+import com.pass.diary.core.model.Template
+import kotlinx.coroutines.flow.first
 import com.pass.diary.core.model.ReplySource
 import java.util.concurrent.Executors
 import kotlinx.coroutines.Dispatchers
@@ -164,5 +167,47 @@ class WriteFlowTest {
         assertEquals(vm.state.value.entry!!.id, again.state.value.entry!!.id)
         assertEquals("새벽에 쓴 일기", again.state.value.entry!!.body)
         assertTrue(again.state.value.persisted)
+    }
+
+    // ---- blank drafts never stay ----
+    private fun newVm(): WriteViewModel = WriteViewModel(SavedStateHandle(), repo, PhotoStore(ctx), NoAssistant).also { vm ->
+        waitFor("entry") { vm.state.value.entry != null }
+    }
+    private fun WriteViewModel.flushNow() { var done = false; flush { done = true }; waitFor("flushed") { done } }
+    private fun stored(vm: WriteViewModel) = runBlocking { repo.get(vm.state.value.entry!!.id) }
+
+    @Test fun typedThenErasedLeavesNoEntry() {
+        val vm = newVm()
+        vm.setBody("hello")
+        waitFor("autosaved") { vm.state.value.persisted }
+        vm.setBody("")
+        vm.flushNow()
+        assertTrue(stored(vm)?.deleted ?: true)
+        assertTrue(runBlocking { repo.observeDay(EntryRepository.today()).first() }.isEmpty())
+    }
+
+    @Test fun unpickedMoodLeavesNoEntry() {
+        val vm = newVm()
+        vm.toggleEmotion(EmotionKey.JOY)
+        vm.flushNow()
+        assertTrue(vm.state.value.persisted)
+        vm.toggleEmotion(EmotionKey.JOY)
+        vm.flushNow()
+        assertTrue(runBlocking { repo.observeDay(EntryRepository.today()).first() }.isEmpty())
+    }
+
+    @Test fun templateStarterAloneIsNotSaved() {
+        val vm = newVm()
+        vm.setTemplate(Template.THREE_LINES)
+        vm.flushNow()
+        assertNull(stored(vm))
+    }
+
+    @Test fun draftWithContentIsKept() {
+        val vm = newVm()
+        vm.setTemplate(Template.THREE_LINES)
+        vm.setBody("1. hello\n2. \n3. ")
+        vm.flushNow()
+        assertEquals("1. hello\n2. \n3. ", stored(vm)!!.body)
     }
 }

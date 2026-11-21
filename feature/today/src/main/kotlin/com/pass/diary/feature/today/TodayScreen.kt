@@ -94,6 +94,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -164,19 +166,19 @@ class TodayViewModel @Inject constructor(
         return pool[abs((today.toEpochDay() * 31 + day.size / 3).toInt()) % pool.size].second
     }
 
-    fun quickMood(key: EmotionKey) = viewModelScope.launch {
-        val e = repository.quickMood(key)
-        lastQuick = e.id
+    /**
+     * Saves at once; the returned id goes with that save's snackbar, so 되돌리기 removes exactly that entry even when
+     * tapped before the save finished or after another mood was tapped.
+     */
+    fun quickMood(key: EmotionKey): Deferred<String> = viewModelScope.async {
+        val id = repository.quickMood(key).id
         justSaved.value = key
-        delay(3_000)
-        if (justSaved.value == key) justSaved.value = null
+        viewModelScope.launch { delay(3_000); if (justSaved.value == key) justSaved.value = null } // not a child: await() must not wait 3 s
+        id
     }
 
-    private var lastQuick: String? = null
-
-    fun undoQuick() = viewModelScope.launch {
-        lastQuick?.let { repository.delete(it) }
-        lastQuick = null
+    fun undoQuick(saved: Deferred<String>) = viewModelScope.launch {
+        repository.delete(saved.await())
         justSaved.value = null
     }
 }
@@ -232,11 +234,11 @@ fun TodayScreen(
             }
             Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 110.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 val pick: (EmotionKey) -> Unit = { k ->
-                    vm.quickMood(k)
+                    val saved = vm.quickMood(k)
                     scope.launch {
                         snackbar.currentSnackbarData?.dismiss()
                         val r = snackbar.showSnackbar("${k.label}으로 기록했어요".josa(k.label), actionLabel = "되돌리기", duration = SnackbarDuration.Short)
-                        if (r == SnackbarResult.ActionPerformed) vm.undoQuick()
+                        if (r == SnackbarResult.ActionPerformed) vm.undoQuick(saved)
                     }
                 }
                 if (empty) OdCard(Modifier.padding(top = 4.dp)) {
