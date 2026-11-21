@@ -2,10 +2,6 @@
 <resources>
     <!-- Temporary name (CONTRACTS §2). The only place the app name lives. -->
     <string name="app_name">온이 일기</string>
-    <string name="tab_today">오늘</string>
-    <string name="tab_calendar">캘린더</string>
-    <string name="tab_report">리포트</string>
-    <string name="tab_my">마이</string>
     <string name="migrated_title">이전 일기를 옮겼어요</string>
     <string name="migrated_body">v1 일기 %1$d개를 옮겼어요. 잠금 암호는 안전을 위해 새로 설정해 주세요.</string>
     <string name="ok">확인</string>

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="lock_title">암호를 입력해 주세요</string>
     <string name="lock_wrong">암호가 맞지 않아요 (%1$d번)</string>
     <string name="lock_locked_out">잠시 후 다시 시도해 주세요 (%1$d초)</string>
     <string name="lock_biometric">지문·얼굴로 열기</string>
