@@ -163,7 +163,12 @@ fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavContro
             composable<ChatRoute> {
                 ChatScreen(
                     onBack = { nav.popBackStack() },
-                    onComposed = { id -> nav.navigate(WriteRoute(entryId = id)) { popUpTo<ChatRoute> { inclusive = true } } },
+                    onComposed = { id ->
+                        // Opened from an editor: that editor goes too, so 저장 → 답장 → 확인 lands on home, not on it.
+                        nav.popBackStack<ChatRoute>(inclusive = true)
+                        if (nav.currentBackStackEntry?.destination?.hasRoute<WriteRoute>() == true) nav.popBackStack()
+                        nav.navigate(WriteRoute(entryId = id))
+                    },
                     onWake = { nav.navigate(WakeRoute) },
                 )
             }

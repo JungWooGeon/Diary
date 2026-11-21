@@ -75,6 +75,8 @@ class WriteViewModel @Inject constructor(
     val state: StateFlow<WriteState> = _state.asStateFlow()
     private var pending: Job? = null
     private val saveLock = Mutex()
+    /** updatedAt of the stored copy this editor last loaded or wrote; a newer one was written elsewhere (chat, compose). */
+    private var known = Long.MIN_VALUE
 
     init {
         assistant.warmUp()
@@ -91,8 +93,17 @@ class WriteViewModel @Inject constructor(
                 n
             }
             val step = if (existing != null || route.question != null) WriteStep.EDIT else WriteStep.PICK
+            known = existing?.updatedAt ?: Long.MIN_VALUE
             _state.value = WriteState(entry, step = step, focus = entry.emotions.lastOrNull()?.key, persisted = existing != null)
             if (existing == null && entry.emotions.isNotEmpty()) scheduleSave(0)
+            // This editor stays in the back stack under 대화로 쓰기 (which writes the same entry): take the newer copy
+            // instead of later saving this stale one over it. Unsaved typing here (pending) still wins.
+            repository.observe(draftId).collect { db ->
+                if (db != null && !db.deleted && db.updatedAt > known && pending?.isActive != true && !saveLock.isLocked) {
+                    known = db.updatedAt
+                    _state.update { it.copy(entry = db, persisted = true) }
+                }
+            }
         }
         // AI suggestions follow the body, 1.2 s after typing stops.
         viewModelScope.launch {
@@ -136,7 +147,7 @@ class WriteViewModel @Inject constructor(
                 return@withLock
             }
             _state.update { it.copy(saving = true) }
-            repository.save(e)
+            known = repository.save(e).updatedAt
             _state.update { it.copy(saving = false, persisted = true, savedAt = System.currentTimeMillis()) }
         }
     }

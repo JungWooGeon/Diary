@@ -187,6 +187,18 @@ class WriteFlowTest {
         assertTrue(runBlocking { repo.observeDay(EntryRepository.today()).first() }.isEmpty())
     }
 
+    @Test fun editorUnderChatTakesTheComposedEntry() {
+        // 쓰기(그리움) → 대화로 → 일기 만들기 writes the entry while this editor waits in the back stack.
+        val vm = newVm()
+        vm.toggleEmotion(EmotionKey.MISS)
+        vm.flushNow()
+        val id = vm.state.value.entry!!.id
+        runBlocking { repo.save(repo.get(id)!!.copy(body = "정리된 일기")) }
+        waitFor("reloaded") { vm.state.value.entry?.body == "정리된 일기" }
+        vm.flushNow() // 확인 → back to this editor → back out
+        assertEquals("정리된 일기", stored(id)!!.body)
+    }
+
     @Test fun deleteKeepsOnlyTheTombstone() {
         val photo = java.io.File(ctx.filesDir, "p1.jpg").apply { writeText("x") }
         val e = runBlocking {
