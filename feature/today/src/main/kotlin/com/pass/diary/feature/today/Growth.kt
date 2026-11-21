@@ -109,9 +109,10 @@ class GrowthViewModel @Inject constructor(
             newReward = Gating.REWARDS.lastOrNull { it.reached(progress) && it.palette.key !in seenNow }, // one dialog: the newest
             trialEnded = s.paletteTrialUntil.takeIf { s.paletteTrial != null && it in 1 until System.currentTimeMillis() },
         ))
-    }.mapLatest { (recent, heavyRun, g) ->
-        // Crisis rules over the last week's entries whenever the mood ran heavy (the check-in would show).
-        if (heavyRun < Insights.CHECK_IN_DAYS) g else g.copy(crisis = recent.any { runCatching { ai.isCrisis(it.text()) }.getOrDefault(false) })
+    }.mapLatest { (recent, _, g) ->
+        // Crisis rules over the last week's entries, always: the help card replaces the check-in on a heavy run, and
+        // with or without one nothing is sold right after such an entry (a 7일 연속 nudge the day after was the bug).
+        g.copy(crisis = recent.any { runCatching { ai.isCrisis(it.text()) }.getOrDefault(false) })
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun celebrated(r: Gating.Reward) {
