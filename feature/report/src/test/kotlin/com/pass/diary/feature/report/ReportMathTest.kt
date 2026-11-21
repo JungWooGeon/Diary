@@ -1,5 +1,6 @@
 package com.pass.diary.feature.report
 
+import com.pass.diary.core.data.Insights
 import com.pass.diary.core.model.EmotionGroup
 import com.pass.diary.core.model.EmotionKey.*
 import com.pass.diary.core.model.Entry
@@ -17,13 +18,14 @@ class ReportMathTest {
         Entry(date = date, time = time, createdAt = 0, updatedAt = 0, emotions = em.toList(), tags = tags)
     private val walk = listOf(Tag(TagKind.ACTIVITY, "산책"))
 
-    @Test fun `relations lift the group of tagged days over baseline`() {
+    @Test fun `causes lift the group of tagged days over baseline`() {
         val es = (1..3).map { e("2026-11-0$it", "12:00", EntryEmotion(COMFY, 3), tags = walk) } +
             (4..9).map { e("2026-11-0$it", "12:00", EntryEmotion(TIRED, 3)) }
-        val r = relations(es)
-        assertEquals(listOf(Relation("산책한 날", EmotionGroup.CALM, 67)), r) // 100% vs 33%
-        assertEquals("민지와 만난 날", tagDayLabel(TagKind.PERSON, "민지"))
-        assertEquals("지민과 만난 날", tagDayLabel(TagKind.PERSON, "지민"))
+        val r = Insights.causes(es)
+        assertEquals(listOf(Insights.Cause("산책한 날", EmotionGroup.CALM, 67, 3)), r) // 100% vs 33%
+        assertEquals(emptyList<Insights.Cause>(), Insights.causes(es.take(5))) // too few days to say anything
+        assertEquals("민지와 만난 날", Insights.tagDayLabel(TagKind.PERSON, "민지"))
+        assertEquals("지민과 만난 날", Insights.tagDayLabel(TagKind.PERSON, "지민"))
     }
 
     @Test fun `pattern buckets by slot and weekday and summarizes`() {
@@ -39,7 +41,7 @@ class ReportMathTest {
 
     @Test fun `streak counts back from today or yesterday`() {
         val t = LocalDate.of(2026, 11, 21)
-        assertEquals(3, streak(setOf(t, t.minusDays(1), t.minusDays(2), t.minusDays(4)), t))
+        assertEquals(4, streak(setOf(t, t.minusDays(1), t.minusDays(2), t.minusDays(4)), t)) // one missed day is forgiven
         assertEquals(2, streak(setOf(t.minusDays(1), t.minusDays(2)), t))
         assertEquals(0, streak(setOf(t.minusDays(3)), t))
     }

@@ -86,4 +86,14 @@ class ReminderLogicTest {
         assertEquals("평일", ReminderLogic.daysLabel(DayOfWeek.entries.take(5).toSet()))
         assertEquals("월·수·금", ReminderLogic.daysLabel(setOf(FRIDAY, MONDAY, WEDNESDAY)))
     }
+
+    @Test fun insightCheckIsNoonOrSundayNight() {
+        // 2026-11-22 is a Sunday.
+        assertEquals(at(seoul, 2026, 11, 22, 21), ReminderLogic.nextInsight(at(seoul, 2026, 11, 22, 13), ReminderPrefs()))
+        assertEquals(at(seoul, 2026, 11, 23, 12), ReminderLogic.nextInsight(at(seoul, 2026, 11, 22, 21), ReminderPrefs()))
+        assertEquals(at(seoul, 2026, 11, 29, 21), ReminderLogic.nextInsight(at(seoul, 2026, 11, 22, 21), ReminderPrefs(forecast = false)))
+        assertEquals(null, ReminderLogic.nextInsight(at(seoul, 2026, 11, 22, 21), ReminderPrefs(weekly = false, forecast = false)))
+        assertTrue(ReminderLogic.isLetterTime(at(seoul, 2026, 11, 22, 21)))
+        assertFalse(ReminderLogic.isLetterTime(at(seoul, 2026, 11, 22, 12)))
+    }
 }

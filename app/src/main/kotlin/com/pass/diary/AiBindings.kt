@@ -4,6 +4,10 @@ import android.util.Log
 import com.pass.diary.core.ai.AiEvent
 import com.pass.diary.core.ai.AiPipeline
 import com.pass.diary.core.ai.CrisisDetector
+import com.pass.diary.core.ai.EmbeddingIndex
+import com.pass.diary.core.ai.SentenceEmbedder
+import com.pass.diary.feature.report.ReportAi
+import com.pass.diary.feature.today.TodayAi
 import com.pass.diary.core.ai.EmotionClassifier
 import com.pass.diary.core.ai.TagExtractor
 import com.pass.diary.core.ai.TemplateReplyEngine
@@ -128,9 +132,47 @@ internal fun List<ChatTurn>.toPairs(): List<Pair<String, String>> = buildList {
     for (t in this@toPairs) if (t.fromOni) q = t.text else { add((q ?: "") to t.text); q = null }
 }
 
+// ---------------------------------------------------------------------------------------------------- 리포트 · 오늘 (E7 E11 E13)
+
+/** AI is "off" for the report only when the user turned both AI switches off (설정 › AI: 순수 일기장). */
+private suspend fun SettingsRepository.aiOff() = settings.first().let { !it.aiReply && !it.aiSuggest }
+
+class AiReport @Inject constructor(
+    private val embedder: Lazy<SentenceEmbedder>,
+    private val crisis: Lazy<CrisisDetector>,
+    private val tags: Lazy<TagExtractor>,
+    private val settings: SettingsRepository,
+) : ReportAi {
+    override suspend fun centralSentence(bodies: List<String>): String? = withContext(Dispatchers.Default) {
+        if (settings.aiOff()) return@withContext null
+        val e = embedder.get()
+        if (!e.available) return@withContext null
+        // A diary with crisis wording gives no sentence at all: it must never come back as "the month's line".
+        val sentences = bodies.filter { !crisis.get().detect(it).crisis }
+            .flatMap { SentenceEmbedder.splitSentences(it) }.filter { it.length in 8..80 }.distinct()
+        if (sentences.size < 3) return@withContext null
+        // ponytail: at most MAX_SENTENCES embeddings (~1 s on a mid phone), sampled evenly; the mean barely moves past that.
+        val pool = if (sentences.size <= MAX_SENTENCES) sentences else List(MAX_SENTENCES) { sentences[it * sentences.size / MAX_SENTENCES] }
+        val vecs = pool.mapNotNull { s -> e.embed(s)?.let { s to it } }
+        vecs.getOrNull(EmbeddingIndex.centralIndex(vecs.map { it.second }))?.first
+    }
+
+    override suspend fun tags(body: String): List<Tag> = withContext(Dispatchers.Default) {
+        if (body.isBlank() || settings.aiOff()) emptyList() else tags.get().extract(body)
+    }
+
+    private companion object { const val MAX_SENTENCES = 80 }
+}
+
+class AiToday @Inject constructor(private val crisis: Lazy<CrisisDetector>) : TodayAi {
+    override suspend fun isCrisis(text: String) = withContext(Dispatchers.Default) { crisis.get().detect(text).crisis }
+}
+
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class AiBindingModule {
+    @Binds abstract fun report(impl: AiReport): ReportAi
+    @Binds abstract fun today(impl: AiToday): TodayAi
     @Binds abstract fun reply(impl: AiReplyProvider): ReplyProvider
     @Binds abstract fun chat(impl: AiChatResponder): ChatResponder
     @Binds abstract fun assistant(impl: AiWritingAssistant): WritingAssistant

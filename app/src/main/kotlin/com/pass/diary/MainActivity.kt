@@ -81,8 +81,8 @@ class MainViewModel @Inject constructor(
     val premium = billing.isPremium
 
     /** 꾸미기 as shown: premium/streak/trial gating applied (a finished trial or refund falls back to the free choice). */
-    val look = combine(settingsRepo.settings, billing.isPremium, entries.observeRange("0000-01-01", "9999-12-31").map { l -> Gating.bestStreak(l.map { it.date }) }) { s, p, streak ->
-        Gating.effective(s, p, streak, System.currentTimeMillis())
+    val look = combine(settingsRepo.settings, billing.isPremium, entries.observeRange("0000-01-01", "9999-12-31").map { l -> Gating.Progress.of(l.map { it.date }) }) { s, p, progress ->
+        Gating.effective(s, p, progress, System.currentTimeMillis())
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     init {

@@ -17,9 +17,11 @@ import androidx.core.content.ContextCompat
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.pass.diary.core.data.EntryRepository
+import com.pass.diary.core.data.Insights
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -42,6 +44,10 @@ private val DAYS = stringPreferencesKey("days") // DayOfWeek values, e.g. "12345
 private val SKIP = booleanPreferencesKey("skip_if_written")
 private val YEAR_AGO = booleanPreferencesKey("year_ago")
 private val RECENT = stringPreferencesKey("recent_lines")
+private val AUTO = booleanPreferencesKey("auto_time")
+private val WEEKLY = booleanPreferencesKey("weekly_letter")
+private val FORECAST = booleanPreferencesKey("forecast")
+private val FORECAST_SENT = longPreferencesKey("forecast_sent_day")
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -53,7 +59,11 @@ object Reminders {
     private const val CHANNEL = "reminder"
     private const val ID_REMIND = 5101
     private const val ID_YEAR = 5102
+    private const val ID_LETTER = 5103
+    private const val ID_FORECAST = 5104
+    private const val CODE_INSIGHT = 1
     internal const val EXTRA_AT = "at"
+    internal const val EXTRA_INSIGHT = "insight"
     /** Android 12+ refuses shorter windows anyway. */
     private const val WINDOW_MS = 10 * 60_000L
     /** An alarm delivered this late (phone dozing all night) is dropped rather than shown after midnight. */
@@ -65,6 +75,7 @@ object Reminders {
             enabled = p[ENABLED] ?: d.enabled, hour = p[HOUR] ?: d.hour, minute = p[MINUTE] ?: d.minute,
             days = p[DAYS]?.mapNotNull { it.digitToIntOrNull()?.takeIf { n -> n in 1..7 }?.let(DayOfWeek::of) }?.toSet()?.ifEmpty { null } ?: d.days,
             skipIfWritten = p[SKIP] ?: d.skipIfWritten, yearAgo = p[YEAR_AGO] ?: d.yearAgo,
+            auto = p[AUTO] ?: d.auto, weekly = p[WEEKLY] ?: d.weekly, forecast = p[FORECAST] ?: d.forecast,
         )
     }
 
@@ -74,6 +85,7 @@ object Reminders {
             it[ENABLED] = n.enabled; it[HOUR] = n.hour; it[MINUTE] = n.minute
             it[DAYS] = n.days.sorted().joinToString("") { d -> d.value.toString() }
             it[SKIP] = n.skipIfWritten; it[YEAR_AGO] = n.yearAgo
+            it[AUTO] = n.auto; it[WEEKLY] = n.weekly; it[FORECAST] = n.forecast
         }
         schedule(context, n)
     }
@@ -96,25 +108,83 @@ object Reminders {
      * maintenance window or the screen turning on, which for a "come write" nudge is when it's useful anyway.
      * WorkManager would also work but adds its own deferral and can't wake the device at a set clock time.
      */
-    private fun schedule(context: Context, p: ReminderPrefs) {
+    private suspend fun schedule(context: Context, p: ReminderPrefs) {
         val am = context.getSystemService(AlarmManager::class.java)
+        val now = ZonedDateTime.now()
         val days = p.alarmDays
-        if (days == null) { am.cancel(alarmIntent(context, 0)); return }
-        val at = ReminderLogic.next(ZonedDateTime.now(), p.time, days).toInstant().toEpochMilli()
-        am.setWindow(AlarmManager.RTC_WAKEUP, at, WINDOW_MS, alarmIntent(context, at))
+        if (days == null) am.cancel(alarmIntent(context, 0))
+        else {
+            // E12: the learned time when 자동 is on and there's enough to learn from; the user's own time otherwise.
+            val time = (if (p.auto) usualTime(context) else null) ?: p.time
+            val at = ReminderLogic.next(now, time, days).toInstant().toEpochMilli()
+            am.setWindow(AlarmManager.RTC_WAKEUP, at, WINDOW_MS, alarmIntent(context, at))
+        }
+        // E9 / E10 ride a second alarm of the same kind (no new permission, no exact alarms).
+        val insight = ReminderLogic.nextInsight(now, p)
+        if (insight == null) am.cancel(alarmIntent(context, 0, CODE_INSIGHT))
+        else insight.toInstant().toEpochMilli().let { am.setWindow(AlarmManager.RTC_WAKEUP, it, WINDOW_MS, alarmIntent(context, it, CODE_INSIGHT)) }
     }
 
-    private fun alarmIntent(context: Context, at: Long) = PendingIntent.getBroadcast(
-        context, 0, Intent(context, ReminderReceiver::class.java).putExtra(EXTRA_AT, at),
+    private fun alarmIntent(context: Context, at: Long, code: Int = 0) = PendingIntent.getBroadcast(
+        context, code, Intent(context, ReminderReceiver::class.java).putExtra(EXTRA_AT, at).putExtra(EXTRA_INSIGHT, code == CODE_INSIGHT),
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
+
+    private fun entries(context: Context) = EntryPointAccessors.fromApplication(context.applicationContext, ReminderDeps::class.java).entries()
+
+    private suspend fun allEntries(context: Context) = entries(context).observeRange("0000-01-01", "9999-12-31").first()
+
+    /** E12: when the user usually starts writing (null = fewer than 7 days to learn from). */
+    suspend fun usualTime(context: Context): java.time.LocalTime? = Insights.usualTime(allEntries(context), LocalDate.now())
+
+    /** E10 일요일 밤 (a letter only for a week with records: no guilt for a quiet one) · E9 마음 예보 (≤ once a week). */
+    internal suspend fun fireInsight(context: Context, scheduledAt: Long) {
+        val p = prefs(context).first()
+        schedule(context, p)
+        if (scheduledAt > 0 && System.currentTimeMillis() - scheduledAt > TOO_LATE_MS) return
+        if (!canNotify(context)) return
+        val now = ZonedDateTime.now()
+        val today = now.toLocalDate()
+        val all = allEntries(context)
+        if (ReminderLogic.isLetterTime(now)) {
+            val monday = today.with(java.time.DayOfWeek.MONDAY).toString()
+            if (p.weekly && all.any { it.date >= monday }) letter(context)
+            return
+        }
+        val last = context.reminderStore.data.first()[FORECAST_SENT] ?: Long.MIN_VALUE
+        if (p.forecast && today.toEpochDay() - last >= ReminderLogic.FORECAST_EVERY_DAYS && Insights.forecast(all, today) != null) {
+            context.reminderStore.edit { it[FORECAST_SENT] = today.toEpochDay() }
+            forecast(context)
+        }
+    }
+
+    /** Fixed lines, never diary content or mood (the shade isn't behind the app lock). */
+    @SuppressLint("MissingPermission")
+    private fun letter(context: Context) {
+        val n = builder(context)
+            .setContentTitle("이번 주 온이 편지가 도착했어")
+            .setContentText("한 주 동안 켜 준 빛을 모아 편지로 써 뒀어.")
+            .setContentIntent(open(context, 4, "letter"))
+            .build()
+        NotificationManagerCompat.from(context).notify(ID_LETTER, n)
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun forecast(context: Context) {
+        val n = builder(context)
+            .setContentTitle("온이")
+            .setContentText("오늘의 마음 예보가 있어. 살짝 보고 갈래?")
+            .setContentIntent(open(context, 5, "today"))
+            .build()
+        NotificationManagerCompat.from(context).notify(ID_FORECAST, n)
+    }
 
     internal suspend fun fire(context: Context, scheduledAt: Long) {
         val p = prefs(context).first()
         schedule(context, p) // tomorrow's (or the next chosen day's) first
         if (scheduledAt > 0 && System.currentTimeMillis() - scheduledAt > TOO_LATE_MS) return
         if (!canNotify(context)) return
-        val entries = EntryPointAccessors.fromApplication(context.applicationContext, ReminderDeps::class.java).entries()
+        val entries = entries(context)
         val today = LocalDate.now()
         val written = entries.observeDay(today.format(EntryRepository.DATE)).first().isNotEmpty()
         if (ReminderLogic.shouldRemind(p, today.dayOfWeek, written)) remind(context)
@@ -169,7 +239,10 @@ object Reminders {
 }
 
 class ReminderReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) = async { Reminders.fire(context, intent.getLongExtra(Reminders.EXTRA_AT, 0)) }
+    override fun onReceive(context: Context, intent: Intent) = async {
+        val at = intent.getLongExtra(Reminders.EXTRA_AT, 0)
+        if (intent.getBooleanExtra(Reminders.EXTRA_INSIGHT, false)) Reminders.fireInsight(context, at) else Reminders.fire(context, at)
+    }
 }
 
 class RescheduleReceiver : BroadcastReceiver() {

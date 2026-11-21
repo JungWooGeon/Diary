@@ -33,6 +33,8 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -105,13 +107,16 @@ fun ReminderSettingsScreen(onBack: () -> Unit) {
         }
     }
     var picking by remember { mutableStateOf(false) }
+    // E12: when the user usually starts writing, learned from their own entries on the phone.
+    val usual by produceState<java.time.LocalTime?>(null) { value = runCatching { Reminders.usualTime(ctx) }.getOrNull() }
     if (picking) {
         val state = rememberTimePickerState(p.hour, p.minute, is24Hour = false)
         AlertDialog(
             onDismissRequest = { picking = false },
             title = { Text("언제 불러 줄까요?", style = OdType.title3) },
             text = { TimePicker(state) },
-            confirmButton = { TextButton(onClick = { picking = false; set { it.copy(hour = state.hour, minute = state.minute) } }) { Text("확인", color = c.ink, fontWeight = FontWeight.Bold) } },
+            // The user's own time always wins over the learned one (E12).
+            confirmButton = { TextButton(onClick = { picking = false; set { it.copy(hour = state.hour, minute = state.minute, auto = false) } }) { Text("확인", color = c.ink, fontWeight = FontWeight.Bold) } },
             dismissButton = { TextButton(onClick = { picking = false }) { Text("취소", color = c.ink2) } },
             containerColor = c.surface,
         )
@@ -137,7 +142,32 @@ fun ReminderSettingsScreen(onBack: () -> Unit) {
                     }
                     if (p.enabled) {
                         Divider()
-                        ListRow(null, "시간", ReminderLogic.timeLabel(p.hour, p.minute), { picking = true }, height = 52.dp)
+                        val u = usual
+                        ListRow(
+                            null, "시간",
+                            if (p.auto && u != null) "${ReminderLogic.timeLabel(u.hour, u.minute)} · 자동" else ReminderLogic.timeLabel(p.hour, p.minute),
+                            { picking = true }, height = 52.dp,
+                        )
+                        Divider()
+                        ToggleRow(
+                            "주로 쓰는 시간에 맞추기",
+                            when {
+                                u == null -> "일주일쯤 기록하면 주로 쓰는 시간을 알려 줄게요"
+                                else -> "요즘은 주로 ${ReminderLogic.timeLabel(u.hour, u.minute)}쯤 써요. 시간을 직접 고르면 그 시간이 우선이에요"
+                            },
+                            p.auto,
+                        ) { on -> set { it.copy(auto = on) } }
+                        if (!p.auto && u != null && kotlin.math.abs((u.hour * 60 + u.minute) - (p.hour * 60 + p.minute)) >= 60) {
+                            Row(
+                                Modifier.fillMaxWidth().padding(bottom = 12.dp).clip(RoundedCornerShape(12.dp)).background(c.surface2)
+                                    .clickable { set { it.copy(hour = u.hour, minute = u.minute) } }.padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                OdIcon(OdIcon.Sparkle, size = 16.dp)
+                                Text("${ReminderLogic.timeLabel(u.hour, u.minute)}으로 바꿔 볼까요?", style = OdType.caption1, modifier = Modifier.weight(1f))
+                                Text("바꾸기", style = OdType.buttonSm)
+                            }
+                        }
                         Divider()
                         Text("요일", style = OdType.body2.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.padding(top = 14.dp))
                         Row(Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -153,6 +183,15 @@ fun ReminderSettingsScreen(onBack: () -> Unit) {
                         }
                         Divider()
                         ToggleRow("오늘 이미 썼으면 쉬기", "그날 기록이 있으면 알림을 보내지 않아요", p.skipIfWritten) { on -> set { it.copy(skipIfWritten = on) } }
+                    }
+                }
+                OdCard(padding = PaddingValues(horizontal = 18.dp, vertical = 6.dp)) {
+                    ToggleRow("주간 온이 편지", "일요일 밤, 한 주의 빛을 모은 편지가 도착해요", p.weekly) { on ->
+                        if (on) turnOn { it.copy(weekly = true) } else set { it.copy(weekly = false) }
+                    }
+                    Divider()
+                    ToggleRow("마음 예보", "요일마다 반복되는 흐름이 보이면 그날 낮에 살짝 알려 줘요 (일주일에 한 번까지)", p.forecast) { on ->
+                        if (on) turnOn { it.copy(forecast = true) } else set { it.copy(forecast = false) }
                     }
                 }
                 OdCard(padding = PaddingValues(horizontal = 18.dp, vertical = 6.dp)) {

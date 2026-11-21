@@ -98,8 +98,8 @@ class DecorateViewModel @Inject constructor(
 ) : ViewModel() {
     val settings = repo.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Settings())
     val premium = premium.isPremium.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
-    val bestStreak = entries.observeRange("0000-01-01", "9999-12-31").map { l -> Gating.bestStreak(l.map { it.date }) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    val progress = entries.observeRange("0000-01-01", "9999-12-31").map { l -> Gating.Progress.of(l.map { it.date }) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Gating.Progress())
 
     fun setTheme(m: ThemeMode) = viewModelScope.launch { repo.setThemeMode(m) }
     fun setPalette(p: LightPaletteId) = viewModelScope.launch { repo.setPalette(p) }
@@ -123,11 +123,11 @@ fun DecorateScreen(onBack: () -> Unit, onPremium: () -> Unit, vm: DecorateViewMo
     val ads = LocalAdManager.current
     val settings by vm.settings.collectAsStateWithLifecycle()
     val premium by vm.premium.collectAsStateWithLifecycle()
-    val streak by vm.bestStreak.collectAsStateWithLifecycle()
+    val progress by vm.progress.collectAsStateWithLifecycle()
     var offer by remember { mutableStateOf<LightPaletteId?>(null) }
     LaunchedEffect(ads, premium) { if (!premium) ads?.loadRewarded(ctx) }
     val now = System.currentTimeMillis()
-    val shown = Gating.effective(settings, premium, streak, now)
+    val shown = Gating.effective(settings, premium, progress, now)
     BackHandler(onBack = onBack)
     Column(Modifier.fillMaxSize().background(c.bg).statusBarsPadding().verticalScroll(rememberScrollState())) {
         OdTopBar(title = "꾸미기", left = { IconBtn(OdIcon.Back, onBack, "뒤로") })
@@ -153,18 +153,19 @@ fun DecorateScreen(onBack: () -> Unit, onPremium: () -> Unit, vm: DecorateViewMo
             }
             ListRow(null, "시스템 설정 따르기", height = 48.dp, trailing = { OdToggle(settings.themeMode == ThemeMode.SYSTEM, { vm.setTheme(if (it) ThemeMode.SYSTEM else if (c.dark) ThemeMode.DARK else ThemeMode.LIGHT) }) })
 
-            val sunsetOwned = Gating.paletteUnlocked(LightPaletteId.SUNSET, premium, streak)
-            Section("빛 팔레트", if (sunsetOwned) "노을은 연속 기록 선물" else "노을은 ${Gating.SUNSET_STREAK_DAYS}일 연속 기록 선물", top = 16.dp)
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                LightPaletteId.entries.forEach { id ->
+            Section("빛 팔레트", "기록으로 모으는 빛 · 특별한 빛", top = 16.dp)
+            // 3 per row: 6 palettes no longer fit one row on a phone.
+            LightPaletteId.entries.chunked(3).forEachIndexed { row, ids -> Row(Modifier.padding(top = if (row == 0) 0.dp else 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                ids.forEach { id ->
                     // Swatches are drawn raw (not through the active palette): each shows its own colors.
                     val cols = if (id == LightPaletteId.BASIC) listOf(0xF5A957) + Palette[id].glows.take(4) else Palette[id].glows
-                    val unlocked = Gating.paletteUnlocked(id, premium, streak, settings.paletteTrial, settings.paletteTrialUntil, now)
+                    val unlocked = Gating.paletteUnlocked(id, premium, progress, settings.paletteTrial, settings.paletteTrialUntil, now)
+                    val reward = Gating.reward(id)
                     Column(
                         Modifier.weight(1f).clickable {
                             when {
                                 unlocked -> vm.setPalette(id)
-                                id == LightPaletteId.SUNSET -> toast(ctx, "${Gating.SUNSET_STREAK_DAYS}일 연속으로 기록하면 받아요 · 지금 최고 ${streak}일")
+                                reward != null -> toast(ctx, "${reward.condition}이면 받아요 · 지금 ${reward.progress(progress)}/${reward.need}")
                                 else -> offer = id
                             }
                         },
@@ -182,11 +183,38 @@ fun DecorateScreen(onBack: () -> Unit, onPremium: () -> Unit, vm: DecorateViewMo
                                 }
                             }
                             if (id.premium && !premium) PremiumBadge(null, Modifier.align(Alignment.TopEnd).offset(x = 3.dp, y = (-7).dp), height = 20.dp)
+                            else if (!unlocked) Box(
+                                Modifier.align(Alignment.TopEnd).offset(x = 3.dp, y = (-7).dp).size(20.dp).clip(CircleShape).background(c.surface2),
+                                contentAlignment = Alignment.Center,
+                            ) { OdIcon(OdIcon.Lock, size = 12.dp, tint = c.ink2) }
                         }
                         val trial = id.premium && !premium && unlocked
                         Text(if (trial) "${id.label} · 오늘만" else id.label, style = OdType.caption2.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.padding(top = 6.dp), maxLines = 1)
                     }
                 }
+            } }
+
+            // 빛 수집 (PLAN §3.3): what recording earns, with progress. Premium opens these too.
+            Section("빛 수집", "기록할수록 모여요", top = 22.dp)
+            OdCard(padding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)) {
+                Gating.REWARDS.forEachIndexed { i, r ->
+                    if (i > 0) com.pass.diary.core.designsystem.Divider()
+                    val done = r.reached(progress)
+                    Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy((-5).dp)) {
+                            Palette[r.palette].glows.take(3).forEach { col -> Box(Modifier.size(18.dp).clip(CircleShape).background(c.surface).padding(1.dp).clip(CircleShape).background(Color(0xFF000000 or col.toLong()))) }
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text("「${r.palette.label}」", style = OdType.body2.copy(fontWeight = FontWeight.SemiBold))
+                            Text(r.condition, style = OdType.caption2, color = c.ink2)
+                            Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(5.dp).clip(RoundedCornerShape(3.dp)).background(c.surface2)) {
+                                Box(Modifier.fillMaxWidth(r.progress(progress) / r.need.toFloat()).height(5.dp).clip(RoundedCornerShape(3.dp)).background(OdColors.BrandGlow))
+                            }
+                        }
+                        Text(if (done) "모았어요" else "${r.progress(progress)}/${r.need}", style = OdType.caption1.copy(fontWeight = FontWeight.Bold), color = if (done) c.ink else c.ink2)
+                    }
+                }
+                Text("연속 기록은 하루쯤 빠져도 이어져요 (일주일에 한 번).", style = OdType.caption2, color = c.ink3, modifier = Modifier.padding(bottom = 8.dp))
             }
 
             Section("글꼴", top = 24.dp)
