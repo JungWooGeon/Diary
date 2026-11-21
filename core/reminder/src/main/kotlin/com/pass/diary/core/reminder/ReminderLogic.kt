@@ -12,6 +12,12 @@ data class ReminderPrefs(
     val days: Set<DayOfWeek> = DayOfWeek.entries.toSet(),
     val skipIfWritten: Boolean = true,
     val yearAgo: Boolean = false,
+    /** E12: follow the time the user usually writes ([Insights.usualTime]) instead of [hour]:[minute]. Picking a time turns it off. */
+    val auto: Boolean = false,
+    /** E10: 일요일 밤 주간 온이 편지 알림. */
+    val weekly: Boolean = true,
+    /** E9: 마음 예보 알림, at most once a week. */
+    val forecast: Boolean = true,
 ) {
     val time: LocalTime get() = LocalTime.of(hour, minute)
     /** 1년 전 오늘 is checked every day, so it keeps the alarm daily whatever [days] says. */
@@ -46,6 +52,21 @@ object ReminderLogic {
     }
 
     fun remember(recent: List<Int>, sent: Int): List<Int> = (recent + sent).takeLast(NO_REPEAT)
+
+    /** 주간 온이 편지: Sunday at this time. */
+    val LETTER_TIME: LocalTime = LocalTime.of(21, 0)
+    /** 마음 예보: checked at noon, so it lands before the evening it is about. */
+    val FORECAST_TIME: LocalTime = LocalTime.of(12, 0)
+    const val FORECAST_EVERY_DAYS = 7
+
+    /** Next E9/E10 check, or null when both are off. */
+    fun nextInsight(now: ZonedDateTime, p: ReminderPrefs): ZonedDateTime? = listOfNotNull(
+        if (p.weekly) next(now, LETTER_TIME, setOf(DayOfWeek.SUNDAY)) else null,
+        if (p.forecast) next(now, FORECAST_TIME, DayOfWeek.entries.toSet()) else null,
+    ).minOrNull()
+
+    /** Which one a check at [at] is for. The letter wins on Sunday evening. */
+    fun isLetterTime(at: ZonedDateTime) = at.dayOfWeek == DayOfWeek.SUNDAY && at.hour >= 20
 
     /** "오후 10:00" */
     fun timeLabel(hour: Int, minute: Int) = "%s %d:%02d".format(if (hour < 12) "오전" else "오후", (hour + 11) % 12 + 1, minute)

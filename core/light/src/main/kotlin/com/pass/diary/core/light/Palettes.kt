@@ -52,6 +52,8 @@ class Palette private constructor(val id: LightPaletteId, glows: Map<EmotionGrou
         val all: Map<LightPaletteId, Palette> = listOf(
             Palette(LightPaletteId.BASIC, EmotionGroup.entries.associateWith { it.glow }),
             of(LightPaletteId.SUNSET, 0xF0C36A, 0xF7A26B, 0xE58C8A, 0x7E86C4, 0xB98BB8),
+            of(LightPaletteId.DAWN, 0xF3D29C, 0xA8D5C6, 0xF2B5C4, 0x8EA6D8, 0xB9A5DA),
+            of(LightPaletteId.FIREFLY, 0xE6DD6E, 0x9BD47C, 0xF1A877, 0x6C9DC0, 0x9A8BC6),
             of(LightPaletteId.WINTER, 0xF6E9C9, 0xBFD7F2, 0xE7D9F7, 0x9FB6E6, 0xC9B8EC),
             of(LightPaletteId.SPRING, 0xFFE3A6, 0xC7E8B8, 0xF9C6D3, 0xB9D3F0, 0xD6C5F0),
         ).associateBy { it.id }

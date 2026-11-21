@@ -86,8 +86,12 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK, PAPER }
 /** 꾸미기 › 빛 팔레트. Display-only: stored light colors stay canonical (CONTRACTS §3). */
 enum class LightPaletteId(val key: String, val label: String, val premium: Boolean) {
     BASIC("basic", "기본", false),
-    /** Gift for a 14-day streak (or premium). */
+    /** 빛 수집 gifts (Gating.REWARDS): 14-day streak (or premium). */
     SUNSET("sunset", "노을", false),
+    /** 빛 수집: 30 recorded days. */
+    DAWN("dawn", "새벽", false),
+    /** 빛 수집: 100 recorded days. */
+    FIREFLY("firefly", "반딧불", false),
     WINTER("winter", "겨울밤", true),
     SPRING("spring", "봄", true);
 

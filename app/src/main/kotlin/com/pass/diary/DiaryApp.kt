@@ -99,6 +99,8 @@ import com.pass.diary.feature.report.ReportRoute
 import com.pass.diary.feature.report.ReportScreen
 import com.pass.diary.feature.report.YearLightRoute
 import com.pass.diary.feature.report.YearLightScreen
+import com.pass.diary.feature.report.WeeklyLetterRoute
+import com.pass.diary.feature.report.WeeklyLetterScreen
 import com.pass.diary.feature.today.TodayRoute
 import com.pass.diary.feature.today.TodayScreen
 import com.pass.diary.feature.write.ChatRoute
@@ -131,7 +133,7 @@ fun DiaryApp(
         val (r, arg) = (debugNav ?: return@LaunchedEffect).split(":", limit = 2).let { it[0] to it.getOrNull(1) }
         nav.navigate(
             when (r) {
-                "calendar" -> CalendarRoute; "search" -> SearchRoute(arg); "report" -> ReportRoute; "year" -> YearLightRoute; "letters" -> LettersRoute
+                "calendar" -> CalendarRoute; "search" -> SearchRoute(arg); "report" -> ReportRoute; "year" -> YearLightRoute; "letters" -> LettersRoute; "letter" -> WeeklyLetterRoute(arg?.toIntOrNull() ?: 0)
                 "my" -> MyRoute; "premium" -> PremiumRoute; "lock" -> LockSettingsRoute; "decorate" -> DecorateRoute; "licenses" -> LicensesRoute; "ai" -> AiSettingsRoute; "reminder" -> ReminderSettingsRoute
                 "trash" -> TrashRoute; "export" -> ExportRoute
                 "write" -> WriteRoute(entryId = arg); "view" -> EntryViewRoute(arg!!); "question" -> WriteRoute(question = arg); "chat" -> ChatRoute(arg); "reply" -> ReplyRoute(arg!!)
@@ -173,6 +175,8 @@ fun DiaryApp(
                     onOpen = { nav.navigate(WriteRoute(entryId = it)) },
                     onLetters = { nav.navigate(LettersRoute) },
                     onBackup = { goTab(MyRoute) },
+                    onPremium = { nav.navigate(PremiumRoute) },
+                    onDecorate = { nav.navigate(DecorateRoute) },
                 )
             }
             composable<CalendarRoute>(enterTransition = { EnterTransition.None }, exitTransition = { ExitTransition.None }) {
@@ -190,8 +194,12 @@ fun DiaryApp(
                 Readable { EntryViewScreen(onBack = { nav.popBackStack() }, onEdit = { nav.navigate(WriteRoute(entryId = it)) }, onRead = { nav.navigate(EntryViewRoute(it)) }) }
             }
             composable<ReportRoute>(enterTransition = { EnterTransition.None }, exitTransition = { ExitTransition.None }) {
-                ReportScreen(onLetters = { nav.navigate(LettersRoute) }, onYear = { nav.navigate(YearLightRoute) })
+                ReportScreen(
+                    onLetters = { nav.navigate(LettersRoute) }, onYear = { nav.navigate(YearLightRoute) },
+                    onWeeklyLetter = { nav.navigate(WeeklyLetterRoute(it)) }, onPremium = { nav.navigate(PremiumRoute) },
+                )
             }
+            composable<WeeklyLetterRoute> { Readable { WeeklyLetterScreen(onBack = { nav.popBackStack() }, onPremium = { nav.navigate(PremiumRoute) }) } }
             composable<YearLightRoute> { Readable { YearLightScreen(onBack = { nav.popBackStack() }, onPremium = { nav.navigate(PremiumRoute) }) } }
             composable<LettersRoute> { Readable { LettersScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(WriteRoute(entryId = it)) }) } }
             composable<MyRoute>(enterTransition = { EnterTransition.None }, exitTransition = { ExitTransition.None }) {

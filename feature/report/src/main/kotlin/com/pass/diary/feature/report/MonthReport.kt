@@ -1,13 +1,14 @@
 package com.pass.diary.feature.report
 
+import com.pass.diary.core.data.Insights
 import com.pass.diary.core.light.LightMixer
+import com.pass.diary.core.model.Gating
 import com.pass.diary.core.model.EmotionGroup
 import com.pass.diary.core.model.EmotionKey
 import com.pass.diary.core.model.Entry
 import com.pass.diary.core.model.TagKind
 import java.time.DayOfWeek
 import java.time.LocalDate
-import kotlin.math.roundToInt
 
 /** Computed on device (PLAN §3.5). Weights are intensities; `unsure` counts in [emotions] but has no group. */
 data class MonthReport(
@@ -37,48 +38,11 @@ data class MonthReport(
     }
 }
 
-/** "산책한 날 → 평온 +40%": [lift] = percentage points above the period's baseline share of [group]. */
-data class Relation(val label: String, val group: EmotionGroup, val lift: Int)
+internal fun hasBatchim(s: String) = Insights.hasBatchim(s)
 
-/** Each day's dominant group (all entries of the day mixed). */
-private fun dayGroups(entries: List<Entry>): Map<String, EmotionGroup> =
-    entries.groupBy { it.date }.mapNotNull { (d, l) -> LightMixer.dominantGroup(l.flatMap { it.emotions })?.let { d to it } }.toMap()
+val SLOTS = Insights.SLOTS
 
-private fun hasBatchim(s: String): Boolean = s.lastOrNull()?.let { it in '가'..'힣' && (it - '가') % 28 != 0 } ?: false
-
-fun tagDayLabel(kind: TagKind, value: String): String = when (kind) {
-    TagKind.ACTIVITY -> "${value}한 날"
-    TagKind.PERSON -> "$value${if (hasBatchim(value)) "과" else "와"} 만난 날"
-    TagKind.PLACE -> "${value}에 간 날"
-    TagKind.FREE -> "#$value 날"
-}
-
-/** Tags seen in ≥ [minCount] entries: which group lights up more on those days than usual. Top 3, positive lifts only. */
-fun relations(entries: List<Entry>, minCount: Int = 3): List<Relation> {
-    val days = dayGroups(entries)
-    if (days.isEmpty()) return emptyList()
-    val base = days.values.groupingBy { it }.eachCount().mapValues { it.value / days.size.toFloat() }
-    return entries.flatMap { e -> e.tags.map { (it.kind to it.value) to e } }
-        .groupBy({ it.first }, { it.second })
-        .filter { (_, es) -> es.size >= minCount }
-        .mapNotNull { (tag, es) ->
-            val tagDays = es.map { it.date }.distinct().mapNotNull { days[it] }
-            if (tagDays.isEmpty()) return@mapNotNull null
-            val share = tagDays.groupingBy { it }.eachCount()
-            share.map { (g, n) -> g to ((n / tagDays.size.toFloat() - (base[g] ?: 0f)) * 100).roundToInt() }
-                .maxByOrNull { it.second }?.takeIf { it.second > 0 }
-                ?.let { (g, lift) -> Relation(tagDayLabel(tag.first, tag.second), g, lift) }
-        }
-        .sortedByDescending { it.lift }.take(3)
-}
-
-/** 아침 5–11 · 낮 11–17 · 저녁 17–22 · 밤 22–5. */
-val SLOTS = listOf("아침", "낮", "저녁", "밤")
-
-fun slotOf(time: String): Int {
-    val h = time.substringBefore(":").trim().toIntOrNull() ?: 0
-    return when (h) { in 5..10 -> 0; in 11..16 -> 1; in 17..21 -> 2; else -> 3 }
-}
+fun slotOf(time: String) = Insights.slotOf(time)
 
 /** One pattern cell: dominant group and its weight relative to the busiest cell (0..1). */
 data class PatternCell(val group: EmotionGroup?, val amount: Float)
@@ -114,13 +78,8 @@ fun patternSummary(grid: List<List<PatternCell>>): List<Pair<String, Boolean>>? 
     }
 }
 
-/** Consecutive days with an entry ending today (or yesterday, so an unwritten evening doesn't break it). */
-fun streak(dates: Set<LocalDate>, today: LocalDate): Int {
-    var d = if (today in dates) today else today.minusDays(1)
-    var n = 0
-    while (d in dates) { n++; d = d.minusDays(1) }
-    return n
-}
+/** Consecutive recorded days ending today or yesterday; one missed day forgiven (Gating.streak). */
+fun streak(dates: Set<LocalDate>, today: LocalDate): Int = Gating.streak(dates, today)
 
 /** Monday of [date]'s week. */
 fun weekStart(date: LocalDate): LocalDate = date.with(DayOfWeek.MONDAY)

@@ -49,7 +49,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import coil3.compose.AsyncImage
+import com.pass.diary.core.billing.PremiumNudgeSheet
+import com.pass.diary.core.billing.StoryShareDialog
 import com.pass.diary.core.data.EntryRepository
+import com.pass.diary.core.data.Insights
 import com.pass.diary.core.data.db.ReplyDao
 import com.pass.diary.core.data.db.ReplyEntity
 import com.pass.diary.core.designsystem.AiBadge
@@ -192,10 +195,15 @@ fun TodayScreen(
     onOpen: (entryId: String) -> Unit,
     onLetters: () -> Unit,
     onBackup: () -> Unit = {},
+    onPremium: () -> Unit = {},
+    onDecorate: () -> Unit = {},
     vm: TodayViewModel = hiltViewModel(),
+    gvm: GrowthViewModel = hiltViewModel(),
 ) {
     val c = Od.c
     val ui by vm.ui.collectAsStateWithLifecycle()
+    val growth by gvm.growth.collectAsStateWithLifecycle()
+    var sharing by remember { mutableStateOf(false) }
     val justSaved by vm.justSaved.collectAsStateWithLifecycle()
     val u = ui ?: return
     val all = u.entries.flatMap { it.emotions }
@@ -255,6 +263,11 @@ fun TodayScreen(
         }
     }
     val cards: @Composable () -> Unit = {
+        growth?.let { g ->
+            // E11 first (and then no forecast): a heavy run gets a gentle 안부, a crisis the help card.
+            if (g.heavy >= Insights.CHECK_IN_DAYS) CheckInCard(g.crisis, onTalk = { onWrite(null) }, onDismiss = gvm::dismissCheckIn)
+            else g.forecast?.let { ForecastCard(it) }
+        }
         // 하루의 빛
         OdCard {
             if (empty) {
@@ -266,6 +279,13 @@ fun TodayScreen(
                 DayLightStrip(u.entries.map { DayMark(it.time, it.emotions) })
                 // Today's records, newest first: tap to open.
                 u.entries.reversed().forEach { e -> EntryLine(e) { onOpen(e.id) } }
+                Row(
+                    Modifier.padding(top = 10.dp).clip(RoundedCornerShape(10.dp)).clickable { sharing = true }.padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    OdIcon(OdIcon.Share, size = 16.dp)
+                    Text("오늘의 빛 카드로 공유", style = OdType.buttonSm)
+                }
             }
         }
         // 오늘의 질문
@@ -334,6 +354,18 @@ fun TodayScreen(
             }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = layout.bottomBar + 24.dp))
+    }
+    if (sharing && !empty) StoryShareDialog("오늘의 빛", "onee_day_${u.date}", ambientGlow, { sharing = false }, onPremium, "오늘의 빛을 한 장에 담았어요") { theme ->
+        TodayCard(u.date, u.entries, light, theme)
+    }
+    val g = growth ?: return
+    g.newReward?.let { r -> RewardDialog(r, onSee = { gvm.celebrated(r); onDecorate() }, onClose = { gvm.celebrated(r) }) }
+    // AI_GROWTH §5 ①② (7일 연속, 체험 끝): soft, once a day at most, never over a reward or a heavy day.
+    val premium = Od.premium
+    var nudge by remember(g.streak, g.trialEnded) { mutableStateOf(nudgeFor(g, premium, gvm.nudges)) }
+    nudge?.let { (reason, key) ->
+        LaunchedEffect(key) { gvm.nudges.shown(key) }
+        PremiumNudgeSheet(reason, gvm.nudges, onPremium = { nudge = null; onPremium() }, onDismiss = { nudge = null })
     }
 }
 
