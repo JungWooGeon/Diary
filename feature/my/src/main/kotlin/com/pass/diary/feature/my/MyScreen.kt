@@ -159,19 +159,65 @@ class MyViewModel @Inject constructor(
     fun setAiChat(on: Boolean) = viewModelScope.launch { settingsRepo.setAiChat(on) }
     fun setHideWidget(on: Boolean) = viewModelScope.launch { settingsRepo.setHideWidgetContent(on) }
 
-    /** Sign in → drive.appdata consent (if needed, via [launchConsent]) → first sync. */
+    /** A different Google account than the one this phone backed up to before: the user decides, never a silent merge. */
+    data class AccountChange(val email: String, val previous: String, val previousClean: Boolean?)
+    val accountChange = MutableStateFlow<AccountChange?>(null)
+    private var switchAfterConsent = false
+
+    /** Sign in (also "다시 연결") → [AccountChange] if the account differs → drive.appdata consent (if needed) → first sync. */
     fun signIn(activity: Activity, webClientId: String, launchConsent: (android.app.PendingIntent) -> Unit, onError: () -> Unit) =
         viewModelScope.launch {
             runCatching {
-                auth.signIn(activity, webClientId)
-                account.value = store.meta(DriveAuth.META_ACCOUNT)
-                val consent = auth.authorize()
-                if (consent != null) launchConsent(consent) else SyncScheduler.syncNow(context)
+                val email = auth.pickAccount(activity, webClientId)
+                val previous = auth.previousAccount(email)
+                if (previous != null) accountChange.value = AccountChange(email, previous, auth.previousAccountWasClean())
+                else connect(email, launchConsent)
             }.onFailure { onError() }
         }
 
-    fun onConsent(data: Intent?) { if (auth.onConsentResult(data)) SyncScheduler.syncNow(context) }
+    /** "이 폰 일기를 새 계정에도 백업": keep everything local, merge with whatever the new Drive has. */
+    fun mergeInto(change: AccountChange, launchConsent: (android.app.PendingIntent) -> Unit) = viewModelScope.launch {
+        accountChange.value = null
+        runCatching { connect(change.email, launchConsent) }
+    }
+
+    /** "새 계정의 일기로 바꾸기": this phone's diaries are wiped and the new account's Drive is restored after a restart. */
+    fun switchTo(change: AccountChange, launchConsent: (android.app.PendingIntent) -> Unit) = viewModelScope.launch {
+        accountChange.value = null
+        runCatching {
+            auth.connect(change.email)
+            val consent = auth.authorize()
+            if (consent != null) { switchAfterConsent = true; launchConsent(consent) } else wipeForRestore()
+        }
+    }
+
+    private suspend fun connect(email: String, launchConsent: (android.app.PendingIntent) -> Unit) {
+        auth.connect(email)
+        account.value = store.meta(DriveAuth.META_ACCOUNT)
+        val consent = auth.authorize()
+        if (consent != null) launchConsent(consent) else SyncScheduler.syncNow(context)
+    }
+
+    fun onConsent(data: Intent?) {
+        val ok = auth.onConsentResult(data)
+        if (switchAfterConsent) { switchAfterConsent = false; if (ok) viewModelScope.launch { wipeForRestore() }; return }
+        if (ok) SyncScheduler.syncNow(context)
+    }
+
+    /** Keeps AI models and sync_meta (the new account, its consent already given); on restart the full listing restores. */
+    private suspend fun wipeForRestore() {
+        SyncScheduler.cancelAll(context)
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            repository.closeDatabase()
+            com.pass.diary.core.data.AppDataWiper.wipe(context.dataDir, setOf("files/models", "shared_prefs/oni_model.xml", "files/datastore/sync_meta.preferences_pb"))
+        }
+        context.packageManager.getLaunchIntentForPackage(context.packageName)?.component?.let { context.startActivity(Intent.makeRestartActivityTask(it)) }
+        Runtime.getRuntime().exit(0)
+    }
+
     fun syncNow() = SyncScheduler.syncNow(context)
+    fun setPhotosOff(off: Boolean) = viewModelScope.launch { sync.setPhotosOff(off); if (!off) SyncScheduler.syncNow(context) }
+    fun photosOffAndBackUp() = viewModelScope.launch { sync.setPhotosOff(true); SyncScheduler.syncNow(context) }
     fun signOut() = viewModelScope.launch { auth.signOut(); SyncScheduler.cancelAll(context); refresh() }
 
     val deleting = MutableStateFlow(false)
@@ -359,8 +405,9 @@ private fun BackupCard(vm: MyViewModel) {
     var message by remember { mutableStateOf<String?>(null) }
     val consent = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { vm.onConsent(it.data) }
     LaunchedEffect(status.running) { if (!status.running) vm.refresh() }
+    val launchConsent: (android.app.PendingIntent) -> Unit = { pi -> consent.launch(IntentSenderRequest.Builder(pi).build()) }
     val signIn = {
-        activity?.let { vm.signIn(it, clientId, { pi -> consent.launch(IntentSenderRequest.Builder(pi).build()) }, { message = "로그인하지 못했어요. 다시 시도해 주세요" }) }
+        activity?.let { vm.signIn(it, clientId, launchConsent, { message = "로그인하지 못했어요. 다시 시도해 주세요" }) }
         Unit
     }
     OdCard(padding = PaddingValues(horizontal = 18.dp, vertical = 16.dp)) {
@@ -383,28 +430,82 @@ private fun BackupCard(vm: MyViewModel) {
         val line = when {
             account == null -> "켜면 저장할 때마다 내 드라이브에 자동으로 백업해요"
             status.running -> "백업하는 중…"
-            status.lastBackupAt != null -> "마지막 백업 ${backupTime(status.lastBackupAt!!)}$countText"
+            status.lastBackupAt != null -> "마지막 백업 ${backupTime(status.lastBackupAt!!)}$countText" + if (status.photosOff) " · 사진 제외" else ""
             else -> "아직 백업하지 않았어요$countText"
         }
         Text(line, style = OdType.caption1, color = c.ink2, modifier = Modifier.padding(top = 6.dp))
         Text(if (account != null) "내 Google 드라이브의 앱 전용 폴더에 보관돼요 · $account" else "내 Google 드라이브의 앱 전용 폴더에 보관돼요", style = OdType.caption2, color = c.ink2, modifier = Modifier.padding(top = 2.dp))
         val err = status.error?.let {
             when (it) {
-                SyncError.NOT_SIGNED_IN -> "다시 로그인하면 백업을 이어 갈게요"
+                SyncError.NOT_SIGNED_IN -> "드라이브 연결이 끊겼어요. 다시 연결하면 이어서 백업해요 (일기는 이 폰에 그대로 있어요)"
+                SyncError.STORAGE_FULL -> "드라이브 저장 공간이 부족해요. 일기는 이 폰에 그대로 있고, 공간이 생기면 이어서 백업해요"
                 SyncError.VERIFY_FAILED -> "백업 확인이 끝나지 않았어요. 곧 다시 시도할게요"
                 SyncError.NETWORK -> "인터넷에 연결되면 이어서 백업할게요"
                 SyncError.UNKNOWN -> "백업이 잠시 멈췄어요"
             }
         }
         val msg = err ?: message ?: if (account != null && status.pending > 0 && !status.running) "올릴 기록 ${status.pending}개가 기다리고 있어요" else null
-        if (msg != null) Row(Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(c.surface2).padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(msg, style = OdType.caption2, color = c.ink2, modifier = Modifier.weight(1f).padding(vertical = 8.dp))
-            if (account != null) Text(
-                "지금 백업", style = OdType.caption2.copy(fontWeight = FontWeight.Bold), color = c.ink,
-                modifier = Modifier.clickable { message = null; vm.syncNow() }.padding(horizontal = 12.dp, vertical = 8.dp),
-            )
+        val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+        @Composable fun Action(label: String, onClick: () -> Unit) = Text(
+            label, style = OdType.caption2.copy(fontWeight = FontWeight.Bold), color = c.ink,
+            modifier = Modifier.clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp),
+        )
+        if (msg != null) Column(Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(c.surface2).padding(start = 12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(msg, style = OdType.caption2, color = c.ink2, modifier = Modifier.weight(1f).padding(vertical = 8.dp))
+                when {
+                    account == null -> Unit
+                    status.error == SyncError.NOT_SIGNED_IN -> Action("다시 연결") { message = null; signIn() }
+                    status.error != SyncError.STORAGE_FULL -> Action("지금 백업") { message = null; vm.syncNow() }
+                }
+            }
+            if (account != null && status.error == SyncError.STORAGE_FULL) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                // Google One's storage page: what's using the 15GB, and where to free it up.
+                Action("공간 확보 안내") { uriHandler.openUri("https://one.google.com/storage") }
+                if (!status.photosOff) Action("사진 제외하고 일기만 백업") { vm.photosOffAndBackUp() } else Action("다시 시도") { vm.syncNow() }
+            }
+        }
+        if (account != null) Row(Modifier.padding(top = 10.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("사진도 백업", style = OdType.caption1.copy(fontWeight = FontWeight.SemiBold))
+                if (status.photosOff) Text("끄면 일기 글만 올라가요. 사진은 이 폰에만 있어요", style = OdType.caption2, color = c.ink2)
+            }
+            OdToggle(!status.photosOff, { on -> vm.setPhotosOff(!on) })
         }
     }
+    vm.accountChange.collectAsStateWithLifecycle().value?.let { change ->
+        AccountChangeDialog(change, onMerge = { vm.mergeInto(change, launchConsent) }, onSwitch = { vm.switchTo(change, launchConsent) }, onDismiss = { vm.accountChange.value = null })
+    }
+}
+
+@Composable
+private fun AccountChangeDialog(change: MyViewModel.AccountChange, onMerge: () -> Unit, onSwitch: () -> Unit, onDismiss: () -> Unit) {
+    val c = Od.c
+    var confirmSwitch by remember { mutableStateOf(false) }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (confirmSwitch) "이 폰의 일기를 지울까요?" else "다른 계정이에요", style = OdType.title3) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (!confirmSwitch) {
+                    Text("전에는 ${change.previous}에 백업했어요. ${change.email}(으)로 어떻게 할까요?", style = OdType.body2, color = c.ink2)
+                    OdButton("이 폰 일기를 이 계정에도 백업", onMerge, kind = ButtonKind.Primary, modifier = Modifier.fillMaxWidth())
+                    OdButton("이 계정의 일기로 바꾸기", { confirmSwitch = true }, kind = ButtonKind.Secondary, modifier = Modifier.fillMaxWidth())
+                } else {
+                    Text(
+                        "이 폰의 일기·사진·설정을 지우고 ${change.email} 드라이브의 일기를 내려받아요. ${change.previous} 드라이브의 백업은 그대로 남아요." +
+                            if (change.previousClean == true) "" else "\n\n${change.previous}에 아직 올라가지 않은 기록이 있었다면 사라져요.",
+                        style = OdType.body2, color = c.ink2,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            if (confirmSwitch) androidx.compose.material3.TextButton(onClick = onSwitch) { Text("지우고 바꾸기", color = c.ink, fontWeight = FontWeight.Bold) }
+        },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text("취소", color = c.ink2) } },
+        containerColor = c.surface,
+    )
 }
 
 // ======================================================================= 온이 깨우기

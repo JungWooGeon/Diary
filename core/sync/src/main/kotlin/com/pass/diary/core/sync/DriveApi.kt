@@ -1,6 +1,7 @@
 package com.pass.diary.core.sync
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -19,6 +20,7 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import javax.inject.Inject
+import kotlin.random.Random
 
 @Serializable
 data class DriveFile(
@@ -43,7 +45,14 @@ data class DriveFile(
 
 @Serializable private class StartToken(val startPageToken: String)
 
-class DriveHttpException(val code: Int, message: String) : IOException("Drive HTTP $code: $message")
+/** [reason] = Drive's `error.errors[0].reason`, e.g. storageQuotaExceeded, rateLimitExceeded. */
+class DriveHttpException(val code: Int, message: String, val reason: String? = null) : IOException("Drive HTTP $code $reason: $message") {
+    /** The user's 15GB (Drive+Gmail+Photos) is full: nothing new fits until they free space or upgrade. */
+    val isStorageFull get() = code == 403 && reason == "storageQuotaExceeded"
+    val isRetryable get() = code == 429 || code >= 500 || (code == 403 && reason in RATE_LIMITS)
+
+    private companion object { val RATE_LIMITS = setOf("rateLimitExceeded", "userRateLimitExceeded") }
+}
 
 /** The slice of Drive REST v3 that sync needs; everything lives in `appDataFolder`. Faked in tests. */
 interface DriveApi {
@@ -130,22 +139,33 @@ class OkHttpDriveApi @Inject constructor(private val auth: AccessTokenProvider) 
     private suspend inline fun <reified T> get(url: HttpUrl): T = json.decodeFromString(call(Request.Builder().url(url)).decodeToString())
     private suspend fun send(b: Request.Builder): DriveFile = json.decodeFromString(call(b).decodeToString())
 
-    /** One retry after invalidating the token on 401 (expired/revoked cached token). */
+    /**
+     * 401: invalidate the cached token and retry once; a second 401 means access was revoked (password change,
+     * removed in Google account settings) -> [SyncAuthException]. 429/5xx/rate-limit 403: up to 3 retries with
+     * exponential backoff + jitter, then the worker's own backoff takes over.
+     */
     private suspend fun call(b: Request.Builder): ByteArray = withContext(Dispatchers.IO) {
         var token = auth.token()
-        repeat(2) { attempt ->
-            http.newCall(b.header("Authorization", "Bearer $token").build()).execute().use { r ->
+        var reauthed = false
+        var retries = 0
+        while (true) {
+            val (code, body) = http.newCall(b.header("Authorization", "Bearer $token").build()).execute().use { r ->
                 if (r.isSuccessful) return@withContext r.body.bytes()
-                if (r.code == 401 && attempt == 0) {
-                    auth.invalidate(token); token = auth.token(); return@use
-                }
-                throw DriveHttpException(r.code, r.body.string().take(300))
+                r.code to r.body.string()
+            }
+            val e = DriveHttpException(code, body.take(300), REASON.find(body)?.groupValues?.get(1))
+            when {
+                code == 401 && !reauthed -> { reauthed = true; auth.invalidate(token); token = auth.token() }
+                code == 401 -> throw SyncAuthException("Drive access revoked")
+                e.isRetryable && retries < 3 -> delay((1000L shl retries++) + Random.nextLong(1000))
+                else -> throw e
             }
         }
-        error("unreachable")
+        @Suppress("UNREACHABLE_CODE") error("unreachable")
     }
 
     private companion object {
         const val FIELDS = "id,name,md5Checksum,modifiedTime,appProperties"
+        val REASON = Regex("\"reason\"\\s*:\\s*\"([^\"]+)\"")
     }
 }

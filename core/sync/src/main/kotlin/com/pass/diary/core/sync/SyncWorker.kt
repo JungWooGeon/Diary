@@ -31,8 +31,10 @@ class SyncWorker @AssistedInject constructor(
         engine.sync(pushOnly = inputData.getBoolean(KEY_PUSH_ONLY, false))
         Result.success()
     } catch (e: SyncAuthException) {
-        Result.failure() // needs the UI; status already says NOT_SIGNED_IN
+        Result.failure() // needs the UI ("다시 연결"); status already says NOT_SIGNED_IN
     } catch (e: Exception) {
+        // Network / 5xx / Drive full: WorkManager's exponential backoff (30s doubling, max 5h). After MAX_ATTEMPTS the
+        // next save, app open or the daily job tries again, so a Drive that got space back resumes by itself.
         if (runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.failure()
     }
 
@@ -53,7 +55,9 @@ object SyncScheduler {
         enqueue(context, pushOnly = false)
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             DAILY, ExistingPeriodicWorkPolicy.KEEP,
-            PeriodicWorkRequestBuilder<SyncWorker>(1, TimeUnit.DAYS).setConstraints(online)
+            // Daily pull+push; the weekly 백업 상태 확인 (SyncEngine.audit) rides on it.
+            PeriodicWorkRequestBuilder<SyncWorker>(1, TimeUnit.DAYS)
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).setRequiresBatteryNotLow(true).build())
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS).build(),
         )
     }

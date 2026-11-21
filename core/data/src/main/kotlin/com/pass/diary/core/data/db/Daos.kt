@@ -131,6 +131,7 @@ interface CollectionDao {
 @Dao
 interface SyncStateDao {
     @Query("SELECT * FROM sync_state WHERE entityId = :id") suspend fun get(id: String): SyncStateEntity?
+    @Query("SELECT * FROM sync_state") suspend fun all(): List<SyncStateEntity>
     @Upsert suspend fun upsert(state: SyncStateEntity)
     @Query("DELETE FROM sync_state") suspend fun clear()
 }

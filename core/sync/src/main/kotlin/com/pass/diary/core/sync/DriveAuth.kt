@@ -11,6 +11,8 @@ import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.AuthorizationResult
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.RevokeAccessRequest
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.common.api.Scope
 import com.google.android.gms.tasks.Task
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
@@ -29,7 +31,7 @@ import kotlin.coroutines.resumeWithException
  * (what: AuthorizationClient grants drive.appdata and hands out access tokens). Manual test steps: README.md.
  *
  * UI flow (feature:my 백업·계정):
- *  1. `signIn(activity, webClientId)`  -> account email
+ *  1. `pickAccount(activity, webClientId)` -> email; if `previousAccount(email)` != null ask the user; then `connect(email)`
  *  2. `authorize()`; if it returns a PendingIntent, launch it with
  *     `ActivityResultContracts.StartIntentSenderForResult` and pass the result Intent to `onConsentResult`.
  *  3. Enqueue `SyncScheduler.syncNow`.
@@ -41,13 +43,25 @@ class DriveAuth @Inject constructor(
     private val store: SyncLocalStore,
 ) : AccessTokenProvider {
 
-    suspend fun signIn(activity: Activity, webClientId: String): String {
-        val email = chooseAccount(activity, webClientId)
+    /** Credential Manager account picker. Changes nothing: check [previousAccount] first, then [connect]. */
+    suspend fun pickAccount(activity: Activity, webClientId: String): String = chooseAccount(activity, webClientId)
+
+    /**
+     * The account this phone backed up to before (kept across sign-out), if it is not [email]. Non-null = ask the
+     * user before [connect]: silently pulling a second person's Drive into this diary would merge two diaries.
+     */
+    suspend fun previousAccount(email: String): String? = store.meta(META_LAST_ACCOUNT)?.takeUnless { it.equals(email, ignoreCase = true) }
+
+    /** Whether everything was verified on Drive when the previous account was signed out (null = unknown). */
+    suspend fun previousAccountWasClean(): Boolean? = store.meta(META_CLEAN_SIGN_OUT)?.toBoolean()
+
+    suspend fun connect(email: String) {
         // sync_state rows without (or from another) account: a DB restored by Auto Backup (sync_meta is not backed up).
         // They may describe another Drive; forgetting them makes everything re-checked and re-uploaded, never skipped.
         if (store.meta(META_ACCOUNT) != email) store.clearSyncState()
         store.setMeta(META_ACCOUNT, email)
-        return email
+        store.setMeta(META_LAST_ACCOUNT, email)
+        store.setMeta(META_CLEAN_SIGN_OUT, null)
     }
 
     /** "PIN을 잊었어요": Credential Manager again; true only for the account Drive backup already uses. Changes nothing. */
@@ -73,6 +87,7 @@ class DriveAuth @Inject constructor(
 
     /** Also forgets every sync_state row: another account's Drive has none of our files. */
     suspend fun signOut() {
+        if (store.meta(META_ACCOUNT) != null) store.setMeta(META_CLEAN_SIGN_OUT, store.pending().isEmpty().toString())
         store.setMeta(META_ACCOUNT, null)
         store.clearSyncState()
     }
@@ -93,7 +108,13 @@ class DriveAuth @Inject constructor(
 
     override suspend fun token(): String {
         if (store.meta(META_ACCOUNT) == null) throw SyncAuthException("not signed in")
-        val r = request()
+        val r = try {
+            request()
+        } catch (e: ApiException) {
+            // Account removed from the phone / password changed (invalid_grant) -> needs the UI; network stays retryable.
+            if (e.statusCode == CommonStatusCodes.NETWORK_ERROR) throw java.io.IOException(e)
+            throw SyncAuthException("authorization failed: ${e.statusCode}")
+        }
         if (r.hasResolution()) throw SyncAuthException("drive.appdata consent needed", r.pendingIntent)
         return r.accessToken ?: throw SyncAuthException("no access token")
     }
@@ -116,5 +137,8 @@ class DriveAuth @Inject constructor(
     companion object {
         const val DRIVE_APPDATA = "https://www.googleapis.com/auth/drive.appdata"
         const val META_ACCOUNT = "sync.account"
+        /** Not "sync.*": survives sign-out and clearSyncState so an account change can be noticed. */
+        const val META_LAST_ACCOUNT = "backup.lastAccount"
+        private const val META_CLEAN_SIGN_OUT = "backup.cleanSignOut"
     }
 }

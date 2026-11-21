@@ -37,6 +37,8 @@ enum class DocName(val id: String, val path: String) { SETTINGS("settings", "set
 interface SyncLocalStore {
     suspend fun pending(): List<Pending>
     suspend fun syncState(entityId: String): SyncState?
+    /** Every sync_state row (entityId -> Drive fileId), for the weekly "is it all still on Drive" check. */
+    suspend fun syncedFiles(): Map<String, String?>
     suspend fun setSyncState(entityId: String, state: SyncState)
     /** Drop all sync_state rows and the sync.* meta keys (account switch): everything becomes pending again. */
     suspend fun clearSyncState()
@@ -62,15 +64,23 @@ interface SyncLocalStore {
     suspend fun setMeta(key: String, value: String?)
 }
 
-enum class SyncError { NOT_SIGNED_IN, VERIFY_FAILED, NETWORK, UNKNOWN }
+enum class SyncError { NOT_SIGNED_IN, STORAGE_FULL, VERIFY_FAILED, NETWORK, UNKNOWN }
 
-data class SyncStatus(val lastBackupAt: Long? = null, val pending: Int = 0, val running: Boolean = false, val error: SyncError? = null)
+/** [photosOff] = "사진 제외하고 일기만 백업" (then [pending] doesn't count photos). */
+data class SyncStatus(
+    val lastBackupAt: Long? = null, val pending: Int = 0, val running: Boolean = false, val error: SyncError? = null,
+    val photosOff: Boolean = false,
+)
 
 class VerificationException(message: String) : java.io.IOException(message)
 
 /**
  * Pull (changes since page token; full listing on an empty token = restore) then push (pending items, each
  * verified by re-reading md5Checksum). Conflicts: highest updatedAt wins, the loser is kept 30 days.
+ *
+ * Room is the source of truth; Drive is only a copy. Nothing on Drive ever deletes a local entry except an entry
+ * file whose JSON says `deleted: true` (a tombstone our app wrote). Files that vanish from Drive (404, removed in the
+ * changes feed, "Delete hidden app data" in Drive settings) only make the local copy pending again -> re-uploaded.
  */
 @Singleton
 class SyncEngine @Inject constructor(
@@ -84,8 +94,18 @@ class SyncEngine @Inject constructor(
 
     /** Cheap: refresh the UI's pending count / last backup time without network. */
     suspend fun refreshStatus() {
-        _status.update { it.copy(pending = store.pending().size, lastBackupAt = store.meta(META_LAST_BACKUP)?.toLong()) }
+        val photosOff = photosOff()
+        val error = store.meta(META_LAST_ERROR)?.let { runCatching { SyncError.valueOf(it) }.getOrNull() }
+        _status.update {
+            it.copy(pending = store.pending().count { p -> !(photosOff && p is Pending.Photo) }, lastBackupAt = store.meta(META_LAST_BACKUP)?.toLong(),
+                error = error, photosOff = photosOff)
+        }
     }
+
+    /** "사진 제외하고 일기만 백업": photos then live only on this phone (Android Auto Backup doesn't carry them either). */
+    suspend fun setPhotosOff(off: Boolean) { store.setMeta(META_PHOTOS_OFF, if (off) "1" else null); refreshStatus() }
+
+    private suspend fun photosOff() = store.meta(META_PHOTOS_OFF) != null
 
     /** Throws on failure (after recording it in [status]) so the worker can retry. */
     suspend fun sync(pushOnly: Boolean = false) = mutex.withLock {
@@ -93,9 +113,10 @@ class SyncEngine @Inject constructor(
         try {
             if (!pushOnly) pull()
             push()
-            _status.update { it.copy(error = null) }
+            store.setMeta(META_LAST_ERROR, null)
         } catch (e: Exception) {
-            _status.update { it.copy(error = e.toSyncError()) }
+            // Persisted: the status survives the process (the worker may have failed hours ago).
+            if (e !is kotlinx.coroutines.CancellationException) store.setMeta(META_LAST_ERROR, e.toSyncError().name)
             throw e
         } finally {
             refreshStatus()
@@ -115,8 +136,33 @@ class SyncEngine @Inject constructor(
     // ---------- pull ----------
 
     private suspend fun pull() {
-        pullChanges()
+        val suspicious = pullChanges()
+        val lastAudit = store.meta(META_LAST_AUDIT)?.toLongOrNull() ?: 0
+        if (suspicious || now() - lastAudit > AUDIT_EVERY_MS) audit()
         fetchMissingPhotos()
+    }
+
+    /**
+     * 백업 상태 확인 (weekly, and whenever files were removed on Drive or we had to re-list): every sync_state row
+     * whose Drive file is gone becomes pending again, so push() re-uploads it. Costs one list call per 1000 files.
+     */
+    private suspend fun audit() {
+        val remote = HashSet<String>()
+        var manifest = false
+        var page: String? = null
+        do {
+            val p = api.listAll(page)
+            p.files.forEach { remote += it.id; if (it.entityId == MANIFEST) manifest = true }
+            page = p.nextPageToken
+        } while (page != null)
+        var missing = 0
+        for ((entity, fileId) in store.syncedFiles()) if (fileId != null && fileId !in remote) {
+            store.setSyncState(entity, SyncState(null, -1))
+            missing++
+        }
+        if (!manifest) store.setMeta(META_MANIFEST_OK, null)
+        if (missing > 0) android.util.Log.w("SyncEngine", "audit: $missing files missing on Drive, re-uploading")
+        store.setMeta(META_LAST_AUDIT, now().toString())
     }
 
     /**
@@ -132,20 +178,31 @@ class SyncEngine @Inject constructor(
         }
     }
 
-    private suspend fun pullChanges() {
+    /** Returns true when the remote side looks thinner than we thought (full re-list, or files removed). */
+    private suspend fun pullChanges(): Boolean {
         val token = store.meta(META_PAGE_TOKEN)
         if (token == null) {
             // Take the token BEFORE listing so nothing written meanwhile is missed (re-seeing a file is harmless).
-            val start = api.startPageToken()
-            var page: String? = null
+            // Both the token and the listing position are saved, so a big restore cut off by WorkManager's
+            // 10-minute limit continues where it stopped instead of starting over.
+            val start = store.meta(META_LIST_START) ?: api.startPageToken().also { store.setMeta(META_LIST_START, it) }
+            var page: String? = store.meta(META_LIST_PAGE)
             do {
-                val p = api.listAll(page)
+                val p = try {
+                    api.listAll(page)
+                } catch (e: DriveHttpException) {
+                    if (page != null && e.code == 400) { store.setMeta(META_LIST_PAGE, null); store.setMeta(META_LIST_START, null) }
+                    throw e // stale listing position: start over on the retry
+                }
                 p.files.forEach { absorb(it) }
                 page = p.nextPageToken
+                store.setMeta(META_LIST_PAGE, page)
             } while (page != null)
             store.setMeta(META_PAGE_TOKEN, start)
-            return
+            store.setMeta(META_LIST_START, null)
+            return true
         }
+        var removed = false
         var t: String = token
         while (true) {
             val p = try {
@@ -155,9 +212,10 @@ class SyncEngine @Inject constructor(
                 store.setMeta(META_PAGE_TOKEN, null) // token expired/invalid -> full re-list next time
                 return pullChanges()
             }
-            p.changes.forEach { c -> if (!c.removed) c.file?.let { absorb(it) } }
-            p.newStartPageToken?.let { store.setMeta(META_PAGE_TOKEN, it); return }
-            t = p.nextPageToken ?: return
+            // A removal is never applied locally (only tombstone files delete); it just triggers the audit.
+            p.changes.forEach { c -> if (c.removed || c.file == null) removed = true else absorb(c.file) }
+            p.newStartPageToken?.let { store.setMeta(META_PAGE_TOKEN, it); return removed }
+            t = p.nextPageToken ?: return removed
             store.setMeta(META_PAGE_TOKEN, t) // resume mid-way after a crash
         }
     }
@@ -170,6 +228,8 @@ class SyncEngine @Inject constructor(
                 f.name == DocName.ENTITLEMENT.path -> mergeDoc(DocName.ENTITLEMENT, f)
                 // photos are fetched on demand by the entry that references them; manifest is write-mostly
             }
+        } catch (e: DriveHttpException) {
+            if (e.code != 404) throw e // removed between listing and download: nothing to take
         } catch (e: IllegalArgumentException) {
             // Unparseable file (half-written by another client, hand-edited): skip it rather than block all sync.
             // SerializationException is an IllegalArgumentException. A later valid write shows up as a new change.
@@ -225,14 +285,26 @@ class SyncEngine @Inject constructor(
     // ---------- push ----------
 
     private suspend fun push() {
+        val photosOff = photosOff()
+        var full: DriveHttpException? = null
         // Photos first, so another device never sees an entry whose photo is not on Drive yet.
         for (p in store.pending().sortedBy { it !is Pending.Photo }) {
-            when (p) {
-                is Pending.Entry -> upload(p.entityId, p.doc.path, "entry", JSON, DriveJson.encodeToString(EntryDoc.serializer(), p.doc).encodeToByteArray(), p.doc.updatedAt)
-                is Pending.Photo -> upload(p.entityId, "photos/${p.entityId}.jpg", "photo", JPEG, store.photoBytes(p.entityId), 0)
-                is Pending.Doc -> upload(p.entityId, p.name.path, p.name.id, JSON, p.json.encodeToByteArray(), p.updatedAt)
+            if (p is Pending.Photo && (photosOff || full != null)) continue
+            try {
+                when (p) {
+                    is Pending.Entry -> upload(p.entityId, p.doc.path, "entry", JSON, DriveJson.encodeToString(EntryDoc.serializer(), p.doc).encodeToByteArray(), p.doc.updatedAt)
+                    is Pending.Photo -> upload(p.entityId, "photos/${p.entityId}.jpg", "photo", JPEG, store.photoBytes(p.entityId), 0)
+                    is Pending.Doc -> upload(p.entityId, p.name.path, p.name.id, JSON, p.json.encodeToByteArray(), p.updatedAt)
+                }
+            } catch (e: DriveHttpException) {
+                if (!e.isStorageFull) throw e
+                // Drive full: skip the remaining photos but still try the diaries (a few KB each may fit);
+                // once even text is refused, stop. Everything stays pending; the worker backs off and retries.
+                full = e
+                if (p !is Pending.Photo) break
             }
         }
+        full?.let { throw it }
         writeManifest()
         store.setMeta(META_LAST_BACKUP, now().toString()) // = "everything on this device is verified on Drive as of now"
     }
@@ -259,7 +331,8 @@ class SyncEngine @Inject constructor(
         if (store.meta(META_MANIFEST_OK) != null) return
         val device = store.meta(META_DEVICE_ID) ?: UUID.randomUUID().toString().also { store.setMeta(META_DEVICE_ID, it) }
         val existing = api.findByEntityId(MANIFEST)
-        val old = existing?.let { DriveJson.decodeFromString<ManifestDoc>(api.download(it.id).decodeToString()) }
+        // Unreadable manifest (another client, hand edit): ours to rewrite, never a reason to stop backing up.
+        val old = existing?.let { runCatching { DriveJson.decodeFromString<ManifestDoc>(api.download(it.id).decodeToString()) }.getOrNull() }
         if (old == null || device !in old.deviceIds) {
             val doc = ManifestDoc(1, (old?.deviceIds.orEmpty() + device).distinct(), now())
             val bytes = DriveJson.encodeToString(ManifestDoc.serializer(), doc).encodeToByteArray()
@@ -269,10 +342,11 @@ class SyncEngine @Inject constructor(
         store.setMeta(META_MANIFEST_OK, "1")
     }
 
-    private fun Exception.toSyncError() = when (this) {
-        is SyncAuthException -> SyncError.NOT_SIGNED_IN
-        is VerificationException -> SyncError.VERIFY_FAILED
-        is java.io.IOException -> SyncError.NETWORK
+    private fun Exception.toSyncError() = when {
+        this is SyncAuthException -> SyncError.NOT_SIGNED_IN
+        this is DriveHttpException && isStorageFull -> SyncError.STORAGE_FULL
+        this is VerificationException -> SyncError.VERIFY_FAILED
+        this is java.io.IOException -> SyncError.NETWORK
         else -> SyncError.UNKNOWN
     }
 
@@ -281,6 +355,13 @@ class SyncEngine @Inject constructor(
         const val META_LAST_BACKUP = "sync.lastBackupAt"
         const val META_DEVICE_ID = "sync.deviceId"
         private const val META_MANIFEST_OK = "sync.manifestOk"
+        private const val META_LAST_ERROR = "sync.lastError"
+        private const val META_LAST_AUDIT = "sync.lastAuditAt"
+        private const val META_LIST_START = "sync.listStart"
+        private const val META_LIST_PAGE = "sync.listPage"
+        /** Not "sync.*": a preference that survives an account switch. */
+        private const val META_PHOTOS_OFF = "backup.photosOff"
+        const val AUDIT_EVERY_MS = 7L * 24 * 60 * 60 * 1000
         const val LOSER_KEEP_MS = 30L * 24 * 60 * 60 * 1000
         private const val MANIFEST = "manifest"
         private const val JSON = "application/json"

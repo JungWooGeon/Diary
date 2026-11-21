@@ -86,6 +86,7 @@ class RoomSyncLocalStore @Inject constructor(
     }
 
     override suspend fun syncState(entityId: String) = states.get(entityId)?.let { SyncState(it.remoteFileId, it.remoteVersion) }
+    override suspend fun syncedFiles() = states.all().associate { it.entityId to it.remoteFileId }
     override suspend fun setSyncState(entityId: String, state: SyncState) =
         states.upsert(SyncStateEntity(entityId, localVersion = state.syncedUpdatedAt, remoteVersion = state.syncedUpdatedAt, remoteFileId = state.fileId))
 
