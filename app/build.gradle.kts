@@ -10,11 +10,10 @@ android {
     namespace = "com.pass.diary"
     defaultConfig {
         applicationId = "com.pass.diary"
-        versionCode = 204
+        versionCode = 205
         versionName = "2.0.0"
-        // LiteRT (classifier) natives: 64-bit only.
-        // x86_64 keeps Intel emulators working.
-        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+        // 32-bit arm kept since the LLM (64-bit only) was removed: ~3,000 budget phones. x86_64 keeps Intel emulators working.
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
         // AdMob app id: Google's sample id for debug; 온이 일기's own from local.properties for release
         // (core:billing-ads fails the release build when it is missing).
         manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
