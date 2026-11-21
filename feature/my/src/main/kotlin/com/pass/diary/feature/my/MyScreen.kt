@@ -71,6 +71,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.pass.diary.core.data.EntryRepository
 import com.pass.diary.core.data.SettingsRepository
+import com.pass.diary.core.vision.Handwriting
 import com.pass.diary.core.designsystem.ButtonKind
 import com.pass.diary.core.designsystem.CardHeader
 import com.pass.diary.core.designsystem.Divider
@@ -131,6 +132,7 @@ class MyViewModel @Inject constructor(
     private val auth: DriveAuth,
     private val store: SyncLocalStore,
     private val repository: EntryRepository,
+    private val ink: Handwriting,
 ) : ViewModel() {
     val settings = settingsRepo.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Settings())
     val syncStatus = sync.status
@@ -144,6 +146,12 @@ class MyViewModel @Inject constructor(
     val trashCount = repository.observeTrash().map { it.size }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     init { refresh() }
+
+    /** 설정 › AI: the Korean handwriting model (V5), downloaded on first use. null = not checked yet. */
+    val inkDownloaded = MutableStateFlow<Boolean?>(null)
+    val inkSizeMb get() = ink.modelSizeMb
+    fun checkInk() = viewModelScope.launch { inkDownloaded.value = ink.isDownloaded() }
+    fun deleteInk() = viewModelScope.launch { ink.delete(); inkDownloaded.value = ink.isDownloaded() }
 
     fun refresh() = viewModelScope.launch {
         account.value = store.meta(DriveAuth.META_ACCOUNT)
@@ -581,6 +589,17 @@ fun AiSettingsScreen(onBack: () -> Unit, vm: MyViewModel = hiltViewModel()) {
                     AiToggle("문장별 감정 밑줄", "일기를 볼 때 감정이 진한 문장에 그 빛으로 밑줄을 그어요", s.aiHighlight, vm::setAiHighlight)
                     Divider()
                     AiToggle("비슷했던 날 · 뜻으로 찾기", "결이 비슷한 지난 일기를 보여 주고, 단어가 달라도 비슷한 내용을 찾아요", s.aiRecall, vm::setAiRecall)
+                }
+                val inkDownloaded by vm.inkDownloaded.collectAsStateWithLifecycle()
+                LaunchedEffect(Unit) { vm.checkInk() }
+                if (inkDownloaded == true) OdCard(padding = PaddingValues(horizontal = 18.dp, vertical = 6.dp)) {
+                    Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                            Text("손글씨 모델", style = OdType.body2.copy(fontWeight = FontWeight.SemiBold))
+                            Text("받아 둔 한국어 손글씨 모델 · 약 ${vm.inkSizeMb}MB. 지워도 손글씨로 쓸 때 다시 받을 수 있어요", style = OdType.caption2, color = c.ink2, modifier = Modifier.padding(top = 2.dp))
+                        }
+                        OdButton("지우기", vm::deleteInk, kind = ButtonKind.Secondary, small = true, height = 36.dp)
+                    }
                 }
                 OdCard(flat = true, padding = PaddingValues(horizontal = 18.dp, vertical = 16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
