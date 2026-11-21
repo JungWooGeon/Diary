@@ -230,7 +230,9 @@ fun ReplyScreen(onClose: () -> Unit, onOpenEntry: (String) -> Unit, onLetters: (
                 when (ui) {
                     is ReplyUi.Writing, ReplyUi.Saved -> Text("일기를 저장했어요", style = OdType.caption1.copy(fontWeight = FontWeight.SemiBold), color = c.ink2, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     ReplyUi.Crisis -> Text("이번엔 답장 대신 이 얘기를 꼭 하고 싶었어", style = OdType.caption1.copy(fontWeight = FontWeight.SemiBold), color = c.ink2, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                    is ReplyUi.Arrived -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+                    // No feeling picked = no light: "빛이 바뀌었어요" with the brand glow would be untrue.
+                    is ReplyUi.Arrived -> if (light == null) Text("일기를 저장했어요", style = OdType.caption1.copy(fontWeight = FontWeight.SemiBold), color = c.ink2, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                    else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
                         Dot(glow); Text("오늘 빛이 바뀌었어요", style = OdType.caption1.copy(fontWeight = FontWeight.SemiBold))
                     }
                 }
