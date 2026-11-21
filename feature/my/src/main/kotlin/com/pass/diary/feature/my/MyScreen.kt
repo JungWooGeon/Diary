@@ -143,6 +143,8 @@ class MyViewModel @Inject constructor(
         .map { l -> l.size to l.sumOf { it.photos.size } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    val trashCount = repository.observeTrash().map { it.size }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
     init { refresh() }
 
     fun refresh() = viewModelScope.launch {
@@ -247,6 +249,7 @@ class MyViewModel @Inject constructor(
 @Composable
 fun MyScreen(
     onPremium: () -> Unit, onWake: () -> Unit, onLock: () -> Unit, onDecorate: () -> Unit, onLicenses: () -> Unit, onAi: () -> Unit, onReminder: () -> Unit = {},
+    onTrash: () -> Unit = {}, onExport: () -> Unit = {},
     vm: MyViewModel = hiltViewModel(),
 ) {
     val c = Od.c
@@ -256,6 +259,7 @@ fun MyScreen(
     val lockOn by vm.lock.enabled.collectAsStateWithLifecycle()
     val bio by vm.lock.biometricEnabled.collectAsStateWithLifecycle()
     val models by vm.models.models.collectAsStateWithLifecycle()
+    val trashCount by vm.trashCount.collectAsStateWithLifecycle()
     var confirmWipe by remember { mutableStateOf(false) }
     if (confirmWipe) WipeDialog(vm, onDismiss = { confirmWipe = false })
     Column(Modifier.fillMaxSize().background(c.bg).verticalScroll(rememberScrollState()).statusBarsPadding()) {
@@ -268,6 +272,8 @@ fun MyScreen(
                 ListRow(OdIcon.Lock, "잠금", if (!lockOn) "꺼짐" else if (bio) "PIN · 지문" else "PIN", onLock)
                 ListRow(OdIcon.Palette, "꾸미기", themeName(settings.themeMode), onDecorate)
                 ListRow(OdIcon.Bell, "알림", reminderValue(), onReminder)
+                ListRow(OdIcon.Download, "내보내기", "내 파일로", onExport)
+                ListRow(OdIcon.Trash, "휴지통", trashCount.takeIf { it > 0 }?.let { "${it}개" }, onTrash)
                 // ponytail: 감정 이름·색 편집 aren't built yet; their rows come back with them.
                 // PDF 일기책 is premium and ships in v2.1 (PLAN §6): locked state only for now.
                 ListRow(OdIcon.Doc, "PDF 일기책", if (premium) "v2.1에서 열려요" else "프리미엄", {

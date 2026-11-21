@@ -109,6 +109,7 @@ class MainActivity : FragmentActivity() {
     @Inject lateinit var ads: AdManager
     @Inject lateinit var driveAuth: DriveAuth
     @Inject lateinit var syncStore: SyncLocalStore
+    @Inject lateinit var entries: com.pass.diary.core.data.EntryRepository
     private val vm: MainViewModel by viewModels()
     private val forcedUpdate = ForcedUpdate(this)
     /** 기록 알림 tap target (Reminders.EXTRA_OPEN) or debug `--es nav`, cleared once DiaryApp has navigated. */
@@ -161,7 +162,7 @@ class MainActivity : FragmentActivity() {
                     if (onboarded == false) Onboarding(onDone = vm::finishOnboarding)
                     else {
                         val open by openNav.collectAsStateWithLifecycle()
-                        DiaryApp(debugNav = open, adsAllowed = !locked) // no ad under the lock
+                        DiaryApp(debugNav = open, adsAllowed = !locked, entries = entries) // no ad under the lock
                         LaunchedEffect(open) { openNav.value = null }
                     }
                 }

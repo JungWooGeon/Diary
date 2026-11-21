@@ -245,11 +245,14 @@ class WriteViewModel @Inject constructor(
         photos.delete(photo)
     }
 
+    /** 지우기 → 휴지통 (30 days, 되돌리기 snackbar in the app shell). Unsaved edits are saved first so they come back on restore. */
     fun delete(then: () -> Unit) {
         pending?.cancel()
         val e = _state.value.entry ?: return then()
         viewModelScope.launch {
-            withContext(NonCancellable) { if (_state.value.persisted) repository.delete(e.id) }
+            withContext(NonCancellable) {
+                if (_state.value.persisted) { saveNow(); if (_state.value.persisted) repository.trash(e.id) }
+            }
             then()
         }
     }

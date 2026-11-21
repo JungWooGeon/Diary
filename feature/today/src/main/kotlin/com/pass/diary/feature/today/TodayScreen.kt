@@ -191,6 +191,7 @@ fun TodayScreen(
     onWriteQuestion: (String) -> Unit,
     onOpen: (entryId: String) -> Unit,
     onLetters: () -> Unit,
+    onBackup: () -> Unit = {},
     vm: TodayViewModel = hiltViewModel(),
 ) {
     val c = Od.c
@@ -324,9 +325,9 @@ fun TodayScreen(
                 Modifier.weight(1f).fillMaxHeight().statusBarsPadding().verticalScroll(rememberScrollState())
                     .padding(start = 8.dp, end = 24.dp, top = 76.dp, bottom = 24.dp).navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) { cards() }
+            ) { BackupNoticeBar(onBackup); cards() }
         } else Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())) {
-            Column(Modifier.readableWidth()) { headerHero() }
+            Column(Modifier.readableWidth()) { BackupNoticeBar(onBackup, Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp)); headerHero() }
             Column(Modifier.readableWidth().padding(horizontal = 20.dp).padding(bottom = layout.bottomBar + 42.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 moods()
                 cards()

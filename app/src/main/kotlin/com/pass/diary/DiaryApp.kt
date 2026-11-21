@@ -76,6 +76,10 @@ import com.pass.diary.feature.calendar.SearchScreen
 import com.pass.diary.feature.my.AiSettingsRoute
 import com.pass.diary.feature.my.AiSettingsScreen
 import com.pass.diary.feature.my.DecorateRoute
+import com.pass.diary.feature.my.ExportRoute
+import com.pass.diary.feature.my.ExportScreen
+import com.pass.diary.feature.my.TrashRoute
+import com.pass.diary.feature.my.TrashScreen
 import com.pass.diary.feature.my.DecorateScreen
 import com.pass.diary.feature.my.LicensesRoute
 import com.pass.diary.feature.my.LicensesScreen
@@ -103,6 +107,7 @@ import com.pass.diary.feature.write.ReplyRoute
 import com.pass.diary.feature.write.ReplyScreen
 import com.pass.diary.feature.write.WriteRoute
 import com.pass.diary.feature.write.WriteScreen
+import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
 private data class Tab(val route: Any, val type: KClass<*>, val label: String, val icon: ImageVector?, val odIcon: OdIcon?)
@@ -116,7 +121,10 @@ private val tabs = listOf(
 
 /** App shell: 4 tabs + the raised 쓰기 button (시안 nav); every other screen is full screen above them. */
 @Composable
-fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavController(), debugNav: String? = null, adsAllowed: Boolean = true) {
+fun DiaryApp(
+    start: Any = TodayRoute, nav: NavHostController = rememberNavController(), debugNav: String? = null, adsAllowed: Boolean = true,
+    entries: com.pass.diary.core.data.EntryRepository? = null,
+) {
     // Debug builds: `adb shell am start -n com.pass.diary/.MainActivity --es nav reply:<id>`. Any build: 기록 알림 taps
     // (Reminders.EXTRA_OPEN: "write", "write:<id>", "today").
     androidx.compose.runtime.LaunchedEffect(debugNav) {
@@ -125,6 +133,7 @@ fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavContro
             when (r) {
                 "calendar" -> CalendarRoute; "search" -> SearchRoute(arg); "report" -> ReportRoute; "year" -> YearLightRoute; "letters" -> LettersRoute
                 "my" -> MyRoute; "premium" -> PremiumRoute; "wake" -> WakeRoute; "lock" -> LockSettingsRoute; "decorate" -> DecorateRoute; "licenses" -> LicensesRoute; "ai" -> AiSettingsRoute; "reminder" -> ReminderSettingsRoute
+                "trash" -> TrashRoute; "export" -> ExportRoute
                 "write" -> WriteRoute(entryId = arg); "question" -> WriteRoute(question = arg); "chat" -> ChatRoute(arg); "reply" -> ReplyRoute(arg!!)
                 else -> TodayRoute
             },
@@ -163,6 +172,7 @@ fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavContro
                     onWriteQuestion = { q -> nav.navigate(WriteRoute(question = q)) },
                     onOpen = { nav.navigate(WriteRoute(entryId = it)) },
                     onLetters = { nav.navigate(LettersRoute) },
+                    onBackup = { goTab(MyRoute) },
                 )
             }
             composable<CalendarRoute>(enterTransition = { EnterTransition.None }, exitTransition = { ExitTransition.None }) {
@@ -185,6 +195,7 @@ fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavContro
                     onLock = { nav.navigate(LockSettingsRoute) }, onDecorate = { nav.navigate(DecorateRoute) },
                     onLicenses = { nav.navigate(LicensesRoute) }, onAi = { nav.navigate(AiSettingsRoute) },
                     onReminder = { nav.navigate(ReminderSettingsRoute) },
+                    onTrash = { nav.navigate(TrashRoute) }, onExport = { nav.navigate(ExportRoute) },
                 )
             }
             composable<PremiumRoute> { Readable { PremiumScreen(onClose = { nav.popBackStack() }) } }
@@ -193,6 +204,8 @@ fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavContro
             composable<DecorateRoute> { Readable { DecorateScreen(onBack = { nav.popBackStack() }, onPremium = { nav.navigate(PremiumRoute) }) } }
             composable<LicensesRoute> { Readable { LicensesScreen(onBack = { nav.popBackStack() }) } }
             composable<ReminderSettingsRoute> { Readable { ReminderSettingsScreen(onBack = { nav.popBackStack() }) } }
+            composable<TrashRoute> { Readable { TrashScreen(onBack = { nav.popBackStack() }) } }
+            composable<ExportRoute> { Readable { ExportScreen(onBack = { nav.popBackStack() }) } }
             composable<AiSettingsRoute> { Readable { AiSettingsScreen(onBack = { nav.popBackStack() }, onWake = { nav.navigate(WakeRoute) }) } }
             composable<WriteRoute> {
                 WriteScreen(
@@ -227,7 +240,25 @@ fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavContro
         // Status-bar scrim: scrolled content never runs under the clock/icons.
         Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).background(Od.c.bg.copy(alpha = 0.94f)))
         if (onTab && !layout.rail) BottomBar(dest, Modifier.align(Alignment.BottomCenter), onTab = goTab, onWrite = { nav.navigate(WriteRoute()) })
+        TrashUndo(entries, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = if (onTab && !layout.rail) layout.bottomBar + 24.dp else 24.dp))
     }
+}
+
+/** "휴지통으로 옮겼어요 · 되돌리기" after any 지우기, wherever the user lands next. */
+@Composable
+private fun TrashUndo(entries: com.pass.diary.core.data.EntryRepository?, modifier: Modifier) {
+    val host = remember { androidx.compose.material3.SnackbarHostState() }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    androidx.compose.runtime.LaunchedEffect(entries) {
+        entries?.trashed?.collect { id ->
+            host.currentSnackbarData?.dismiss()
+            scope.launch {
+                val r = host.showSnackbar("휴지통으로 옮겼어요", actionLabel = "되돌리기", duration = androidx.compose.material3.SnackbarDuration.Short)
+                if (r == androidx.compose.material3.SnackbarResult.ActionPerformed) entries.restore(id)
+            }
+        }
+    }
+    androidx.compose.material3.SnackbarHost(host, modifier)
 }
 
 /** Secondary full-screen pages on a big screen: one centered column instead of lines across the whole tablet. */
@@ -237,7 +268,7 @@ private fun Readable(content: @Composable () -> Unit) {
     Box(Modifier.fillMaxSize().background(Od.c.bg)) { Box(Modifier.readableWidth(720.dp).fillMaxHeight()) { content() } }
 }
 
-private val myRows = mapOf("wake" to "온이 깨우기", "lock" to "잠금", "decorate" to "꾸미기", "ai" to "AI 기능", "reminder" to "알림", "licenses" to "오픈소스 라이선스")
+private val myRows = mapOf("wake" to "온이 깨우기", "lock" to "잠금", "decorate" to "꾸미기", "ai" to "AI 기능", "reminder" to "알림", "export" to "내보내기", "trash" to "휴지통", "licenses" to "오픈소스 라이선스")
 
 /** 마이 on a wide screen: settings list on the left, the chosen page on the right (its row highlighted). */
 @Composable
@@ -249,6 +280,7 @@ private fun MyTwoPane(nav: NavHostController) {
                 MyScreen(
                     onPremium = { nav.navigate(PremiumRoute) }, onWake = { sel = "wake" }, onLock = { sel = "lock" },
                     onDecorate = { sel = "decorate" }, onLicenses = { sel = "licenses" }, onAi = { sel = "ai" }, onReminder = { sel = "reminder" },
+                    onTrash = { sel = "trash" }, onExport = { sel = "export" },
                 )
             }
         }
@@ -262,6 +294,8 @@ private fun MyTwoPane(nav: NavHostController) {
                 "ai" -> AiSettingsScreen(onBack = close, onWake = { sel = "wake" })
                 "licenses" -> LicensesScreen(onBack = close)
                 "reminder" -> ReminderSettingsScreen(onBack = close)
+                "trash" -> TrashScreen(onBack = close)
+                "export" -> ExportScreen(onBack = close)
                 else -> PaneEmpty("왼쪽에서 살펴볼 설정을 골라 주세요")
             }
         }

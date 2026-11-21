@@ -446,7 +446,7 @@ private fun Editor(state: WriteState, vm: WriteViewModel, onBack: () -> Unit, on
 
     if (confirmDelete) AlertDialog(
         onDismissRequest = { confirmDelete = false },
-        text = { Text("이 기록을 지울까요?", style = OdType.body1) },
+        text = { Text("이 기록을 휴지통으로 옮길까요?\n30일 동안은 마이 › 휴지통에서 되살릴 수 있어요.", style = OdType.body1) },
         confirmButton = { TextButton(onClick = { confirmDelete = false; vm.delete(onDeleted) }) { Text("지우기", color = c.ink) } },
         dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("취소", color = c.ink2) } },
         containerColor = c.surface,
