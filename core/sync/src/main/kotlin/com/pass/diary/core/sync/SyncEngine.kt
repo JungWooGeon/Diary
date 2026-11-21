@@ -103,6 +103,15 @@ class SyncEngine @Inject constructor(
         }
     }
 
+    /** 계정·데이터 삭제: every file this app has in the user's Drive appDataFolder. Throws if any delete fails. */
+    suspend fun deleteRemote() = mutex.withLock {
+        val ids = buildList {
+            var token: String? = null
+            do { val page = api.listAll(token); page.files.forEach { add(it.id) }; token = page.nextPageToken } while (token != null)
+        }
+        ids.forEach { api.delete(it) }
+    }
+
     // ---------- pull ----------
 
     private suspend fun pull() {

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- TODO(owner): replace with the hosted store/privacy_policy.html URL before release. -->
+    <string name="privacy_policy_url" translatable="false">https://ai-diary-privacy-policy.co.kr/</string>
+</resources>

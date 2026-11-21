@@ -122,6 +122,15 @@ class SyncEngineTest {
         assertTrue(DriveJson.decodeFromString<EntryDoc>(drive.text("entries/2026/11/a.json")).deleted) // file kept
     }
 
+    @Test fun deleteRemoteRemovesEveryFile() = runTest {
+        val (store, engine) = device()
+        (1..5).forEach { store.save(doc("e$it", 10L + it)) } // > one page in FakeDrive
+        engine.sync()
+        assertTrue(drive.files.size >= 5)
+        engine.deleteRemote()
+        assertTrue(drive.files.isEmpty())
+    }
+
     @Test fun scrubbedTombstoneRoundTrips() {
         // What EntryRepository.delete leaves behind: no text/feelings/tags/photos, only the sync fields.
         val t = com.pass.diary.core.model.Entry(id = "a", date = "2026-11-03", time = "21:00", createdAt = 1, updatedAt = 9, deleted = true)

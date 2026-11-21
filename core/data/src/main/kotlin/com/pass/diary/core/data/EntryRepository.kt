@@ -78,6 +78,9 @@ class EntryRepository @Inject constructor(private val db: DiaryDatabase, private
         photos.forEach { File(it).delete() }
     }
 
+    /** Only for 계정·데이터 삭제, right before the files are wiped and the process restarts. */
+    fun closeDatabase() = db.close()
+
     companion object {
         val DATE: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
         val TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")

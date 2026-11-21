@@ -59,7 +59,6 @@ import com.pass.diary.core.designsystem.DayLightStrip
 import com.pass.diary.core.designsystem.DayMark
 import com.pass.diary.core.designsystem.Dot
 import com.pass.diary.core.designsystem.EmptyDayStrip
-import com.pass.diary.core.designsystem.IconBtn
 import com.pass.diary.core.designsystem.Od
 import com.pass.diary.core.designsystem.OdButton
 import com.pass.diary.core.designsystem.OdCard
@@ -221,7 +220,6 @@ fun TodayScreen(
                         OdIcon(OdIcon.Sun, size = 17.dp, tint = c.ink2); Text(com.pass.diary.core.data.Weather.decode(w)?.label ?: w, style = OdType.caption1, color = c.ink2)
                     }
                 }
-                IconBtn(OdIcon.Bell, {}, "알림")
             }
             // Hero: Oni + speech bubble
             Box(Modifier.fillMaxWidth().height(if (empty) 270.dp else 300.dp)) {
@@ -264,7 +262,7 @@ fun TodayScreen(
                     }
                 }
                 // 오늘의 질문
-                OdCard(onClick = { onWriteQuestion(u.question) }) {
+                OdCard(Modifier.fillMaxWidth(), onClick = { onWriteQuestion(u.question) }) {
                     Text("오늘의 질문", style = OdType.caption2.copy(fontWeight = FontWeight.Bold), color = c.ink2)
                     Text(u.question, style = OdType.title3.copy(fontSize = 16.sp, lineHeight = 24.sp), modifier = Modifier.padding(top = 6.dp))
                     Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {

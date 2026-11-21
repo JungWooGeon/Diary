@@ -132,7 +132,7 @@ class MyViewModel @Inject constructor(
     private val auth: DriveAuth,
     private val store: SyncLocalStore,
     val models: ModelStateProvider,
-    repository: EntryRepository,
+    private val repository: EntryRepository,
 ) : ViewModel() {
     val settings = settingsRepo.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Settings())
     val syncStatus = sync.status
@@ -173,6 +173,27 @@ class MyViewModel @Inject constructor(
     fun onConsent(data: Intent?) { if (auth.onConsentResult(data)) SyncScheduler.syncNow(context) }
     fun syncNow() = SyncScheduler.syncNow(context)
     fun signOut() = viewModelScope.launch { auth.signOut(); SyncScheduler.cancelAll(context); refresh() }
+
+    val deleting = MutableStateFlow(false)
+
+    /**
+     * 계정·데이터 삭제: Drive backup files (if signed in) → revoke Drive access & sign out → every local file
+     * (keeping the downloaded AI models when [keepModels]). [onWiped] must restart the process right away.
+     * If Drive can't be reached nothing is deleted, so the user can retry instead of losing the way to their backup.
+     */
+    fun deleteEverything(keepModels: Boolean, onFailed: () -> Unit, onWiped: () -> Unit) = viewModelScope.launch {
+        deleting.value = true
+        if (auth.isSignedIn()) {
+            if (runCatching { sync.deleteRemote() }.isFailure) { deleting.value = false; onFailed(); return@launch }
+            auth.revokeAndSignOut()
+        }
+        SyncScheduler.cancelAll(context)
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            repository.closeDatabase()
+            com.pass.diary.core.data.AppDataWiper.wipe(context.dataDir, if (keepModels) setOf("files/models", "shared_prefs/oni_model.xml") else emptySet())
+        }
+        onWiped()
+    }
 }
 
 // ======================================================================= 마이 홈
@@ -189,8 +210,10 @@ fun MyScreen(
     val lockOn by vm.lock.enabled.collectAsStateWithLifecycle()
     val bio by vm.lock.biometricEnabled.collectAsStateWithLifecycle()
     val models by vm.models.models.collectAsStateWithLifecycle()
+    var confirmWipe by remember { mutableStateOf(false) }
+    if (confirmWipe) WipeDialog(vm, onDismiss = { confirmWipe = false })
     Column(Modifier.fillMaxSize().background(c.bg).verticalScroll(rememberScrollState()).statusBarsPadding()) {
-        TabHeader("마이", right = { IconBtn(OdIcon.Bell, {}, "알림") })
+        TabHeader("마이")
         Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             PremiumHero(onPremium)
             BackupCard(vm)
@@ -198,14 +221,17 @@ fun MyScreen(
                 ListRow(OdIcon.Sparkle, "온이 깨우기", wakeValue(models), onWake)
                 ListRow(OdIcon.Lock, "잠금", if (!lockOn) "꺼짐" else if (bio) "PIN · 지문" else "PIN", onLock)
                 ListRow(OdIcon.Palette, "꾸미기", themeName(settings.themeMode), onDecorate)
-                ListRow(OdIcon.Bell, "알림", "밤 10:30", {})
-                ListRow(OdIcon.Pen, "감정 이름·색 편집", null, {})
+                // ponytail: 알림(밤 리마인더)·감정 이름·색 편집 aren't built yet; their rows (and the bell icons) come back with them.
                 // PDF 일기책 is premium and ships in v2.1 (PLAN §6): locked state only for now.
                 ListRow(OdIcon.Doc, "PDF 일기책", if (premium) "v2.1에서 열려요" else "프리미엄", {
                     if (premium) Toast.makeText(ctx, "PDF 일기책은 다음 업데이트에서 열려요", Toast.LENGTH_SHORT).show() else onPremium()
                 })
                 ListRow(OdIcon.Sparkle, "AI 기능", aiValue(settings), onAi)
-                ListRow(OdIcon.Trash, "계정·데이터 삭제", null, {})
+                ListRow(OdIcon.Trash, "계정·데이터 삭제", null, { confirmWipe = true })
+                ListRow(OdIcon.Doc, "개인정보 처리방침", null, { openUrl(ctx, ctx.getString(com.pass.diary.core.designsystem.R.string.privacy_policy_url)) })
+                val ads = com.pass.diary.core.billing.LocalAdManager.current
+                val activity = LocalActivity.current
+                if (ads != null && activity != null && ads.privacyOptionsRequired(ctx)) ListRow(OdIcon.Doc, "광고 개인정보 옵션", null, { ads.showPrivacyOptions(activity) })
                 ListRow(OdIcon.Doc, "오픈소스 라이선스", null, onLicenses)
             }
             Text(
@@ -215,6 +241,61 @@ fun MyScreen(
         }
         Spacer(Modifier.navigationBarsPadding().height(110.dp))
     }
+}
+
+fun openUrl(ctx: Context, url: String) {
+    runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))) }
+        .onFailure { Toast.makeText(ctx, "브라우저를 열 수 없어요", Toast.LENGTH_SHORT).show() }
+}
+
+@Composable
+private fun WipeDialog(vm: MyViewModel, onDismiss: () -> Unit) {
+    val c = Od.c
+    val ctx = LocalContext.current
+    val deleting by vm.deleting.collectAsStateWithLifecycle()
+    var typed by remember { mutableStateOf("") }
+    var keepModels by remember { mutableStateOf(true) }
+    val signedIn = vm.account.collectAsStateWithLifecycle().value != null
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = { if (!deleting) onDismiss() },
+        title = { Text("모든 기록을 지울까요?", style = OdType.title3) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    "이 폰의 일기·사진·답장·설정이 모두 지워지고 처음 화면으로 돌아가요." +
+                        (if (signedIn) " 구글 드라이브에 백업된 일기도 함께 지워지고 백업 연결이 해제돼요." else "") +
+                        " 지운 기록은 되돌릴 수 없어요.",
+                    style = OdType.body2, color = c.ink2,
+                )
+                Text("지우려면 아래에 \"${com.pass.diary.core.security.WIPE_PHRASE}\"를 입력해요", style = OdType.caption1.copy(fontWeight = FontWeight.SemiBold))
+                androidx.compose.material3.OutlinedTextField(typed, { typed = it }, singleLine = true, enabled = !deleting, placeholder = { Text(com.pass.diary.core.security.WIPE_PHRASE) })
+                Row(
+                    Modifier.fillMaxWidth().clickable(enabled = !deleting) { keepModels = !keepModels },
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    androidx.compose.material3.Checkbox(!keepModels, { keepModels = !it }, enabled = !deleting)
+                    Text("내려받은 AI 모델도 지우기", style = OdType.body2)
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                enabled = typed.trim() == com.pass.diary.core.security.WIPE_PHRASE && !deleting,
+                onClick = {
+                    vm.deleteEverything(
+                        keepModels,
+                        onFailed = { Toast.makeText(ctx, "드라이브 백업을 지우지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.", Toast.LENGTH_LONG).show() },
+                        onWiped = {
+                            ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)?.component?.let { ctx.startActivity(Intent.makeRestartActivityTask(it)) }
+                            Runtime.getRuntime().exit(0)
+                        },
+                    )
+                },
+            ) { Text(if (deleting) "지우는 중…" else "모두 지우기", color = if (typed.trim() == com.pass.diary.core.security.WIPE_PHRASE && !deleting) c.ink else c.ink3, fontWeight = FontWeight.Bold) }
+        },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss, enabled = !deleting) { Text("취소", color = c.ink2) } },
+        containerColor = c.surface,
+    )
 }
 
 private fun aiValue(s: Settings) = listOf(s.aiReply, s.aiSuggest, s.aiChat).count { it }.let { if (it == 3) "켜짐" else if (it == 0) "꺼짐" else "일부 켜짐" }
@@ -478,6 +559,12 @@ fun LockSettingsScreen(onBack: () -> Unit, vm: MyViewModel = hiltViewModel()) {
         }
     }
     if (settingPin) Dialog(onDismissRequest = { settingPin = false }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        // A full-screen dialog has its own window: give it the app's status bar icon color (white icons on paper otherwise).
+        val window = (androidx.compose.ui.platform.LocalView.current.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window
+        val dark = Od.c.dark
+        androidx.compose.runtime.SideEffect {
+            window?.let { androidx.core.view.WindowCompat.getInsetsController(it, it.decorView).isAppearanceLightStatusBars = !dark }
+        }
         PinSetup(onDone = { vm.setPin(it); settingPin = false }, onCancel = { settingPin = false })
     }
 }

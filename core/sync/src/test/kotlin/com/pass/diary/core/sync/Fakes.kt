@@ -37,6 +37,7 @@ class FakeDrive : DriveApi {
     override suspend fun metadata(fileId: String) = files.getValue(fileId).first.also { calls++ }
     override suspend fun download(fileId: String) = files.getValue(fileId).second.also { calls++ }
     override suspend fun startPageToken() = log.size.toString().also { calls++ }
+    override suspend fun delete(fileId: String) { calls++; files.remove(fileId) }
     override suspend fun changes(pageToken: String): ChangePage {
         calls++
         val from = pageToken.toInt()

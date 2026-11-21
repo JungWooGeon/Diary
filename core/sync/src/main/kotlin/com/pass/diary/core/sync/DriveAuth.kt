@@ -10,6 +10,7 @@ import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.AuthorizationResult
 import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.auth.api.identity.RevokeAccessRequest
 import com.google.android.gms.common.api.Scope
 import com.google.android.gms.tasks.Task
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
@@ -74,6 +75,18 @@ class DriveAuth @Inject constructor(
     suspend fun signOut() {
         store.setMeta(META_ACCOUNT, null)
         store.clearSyncState()
+    }
+
+    /** 계정·데이터 삭제: take back the drive.appdata grant and forget the sign-in. Best effort (offline = still signed out locally). */
+    suspend fun revokeAndSignOut() {
+        val account = store.meta(META_ACCOUNT)
+        if (account != null) runCatching {
+            Identity.getAuthorizationClient(context).revokeAccess(
+                RevokeAccessRequest.builder().setAccount(Account(account, "com.google")).setScopes(listOf(Scope(DRIVE_APPDATA))).build(),
+            ).await()
+        }
+        runCatching { CredentialManager.create(context).clearCredentialState(androidx.credentials.ClearCredentialStateRequest()) }
+        signOut()
     }
 
     suspend fun isSignedIn() = store.meta(META_ACCOUNT) != null

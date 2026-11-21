@@ -168,7 +168,7 @@ private fun Consent(onBack: () -> Unit, onDone: (reminder: Boolean, ai: Boolean)
     var age by rememberSaveable { mutableStateOf(false) }
     var terms by rememberSaveable { mutableStateOf(false) }
     var privacy by rememberSaveable { mutableStateOf(false) }
-    var reminder by rememberSaveable { mutableStateOf(false) }
+    val reminder = false
     var ai by rememberSaveable { mutableStateOf(true) }
     Box(Modifier.fillMaxSize().background(c.bg)) {
         Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 140.dp)) {
@@ -182,9 +182,13 @@ private fun Consent(onBack: () -> Unit, onDone: (reminder: Boolean, ai: Boolean)
                 OdCard(Modifier.padding(top = 22.dp), padding = PaddingValues(horizontal = 18.dp, vertical = 6.dp)) {
                     CheckRow("만 14세 이상이에요", "필수", age, link = false) { age = it }
                     Divider()
-                    CheckRow("이용약관 동의", "필수", terms) { terms = it }
-                    CheckRow("개인정보 처리방침 동의", "필수", privacy) { privacy = it }
-                    CheckRow("밤 리마인더 받기", "선택", reminder, link = false) { reminder = it }
+                    // ponytail: no separate 이용약관 document exists yet; add onLink here once it is hosted.
+                    CheckRow("이용약관 동의", "필수", terms, link = false) { terms = it }
+                    val ctx = androidx.compose.ui.platform.LocalContext.current
+                    CheckRow("개인정보 처리방침 동의", "필수", privacy, onLink = {
+                        com.pass.diary.feature.my.openUrl(ctx, ctx.getString(com.pass.diary.core.designsystem.R.string.privacy_policy_url))
+                    }) { privacy = it }
+                    // ponytail: 밤 리마인더 isn't built yet (nothing schedules it); the row returns with the feature.
                 }
                 OdCard(Modifier.padding(top = 12.dp), flat = true, padding = PaddingValues(horizontal = 18.dp, vertical = 16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -209,7 +213,7 @@ private fun Consent(onBack: () -> Unit, onDone: (reminder: Boolean, ai: Boolean)
 }
 
 @Composable
-private fun CheckRow(text: String, req: String, on: Boolean, link: Boolean = true, onChange: (Boolean) -> Unit) {
+private fun CheckRow(text: String, req: String, on: Boolean, link: Boolean = true, onLink: (() -> Unit)? = null, onChange: (Boolean) -> Unit) {
     val c = Od.c
     Row(Modifier.fillMaxWidth().height(48.dp).clickable { onChange(!on) }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(
@@ -223,7 +227,9 @@ private fun CheckRow(text: String, req: String, on: Boolean, link: Boolean = tru
             },
             style = OdType.body2, modifier = Modifier.weight(1f),
         )
-        if (link) OdIcon(OdIcon.ChevR, size = 18.dp, tint = c.ink2)
+        if (link) Box(Modifier.size(40.dp).clip(CircleShape).let { m -> onLink?.let { m.clickable(onClick = it) } ?: m }, contentAlignment = Alignment.Center) {
+            OdIcon(OdIcon.ChevR, size = 18.dp, tint = c.ink2)
+        }
     }
 }
 

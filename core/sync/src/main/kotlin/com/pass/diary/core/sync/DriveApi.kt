@@ -56,6 +56,8 @@ interface DriveApi {
     suspend fun download(fileId: String): ByteArray
     suspend fun startPageToken(): String
     suspend fun changes(pageToken: String): ChangePage
+    /** Permanent delete (appDataFolder files can't be trashed). Already gone = fine. */
+    suspend fun delete(fileId: String)
 }
 
 interface AccessTokenProvider {
@@ -109,6 +111,11 @@ class OkHttpDriveApi @Inject constructor(private val auth: AccessTokenProvider) 
     override suspend fun changes(pageToken: String): ChangePage =
         get(base.newBuilder().addPathSegment("changes").q("pageToken", pageToken).q("spaces", "appDataFolder")
             .q("pageSize", "1000").q("fields", "nextPageToken,newStartPageToken,changes(fileId,removed,file($FIELDS))").build())
+
+    override suspend fun delete(fileId: String) {
+        try { call(Request.Builder().url(base.newBuilder().addPathSegment("files").addPathSegment(fileId).build()).delete()) }
+        catch (e: DriveHttpException) { if (e.code != 404) throw e }
+    }
 
     private fun files() = base.newBuilder().addPathSegment("files").q("spaces", "appDataFolder").q("fields", "nextPageToken,files($FIELDS)")
 
