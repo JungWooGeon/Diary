@@ -215,8 +215,9 @@ private fun Consent(onBack: () -> Unit, onDone: (reminder: Boolean, ai: Boolean)
                 OdCard(Modifier.padding(top = 22.dp), padding = PaddingValues(horizontal = 18.dp, vertical = 6.dp)) {
                     CheckRow("만 14세 이상이에요", "필수", age, link = false) { age = it }
                     Divider()
-                    // ponytail: no separate 이용약관 document exists yet; add onLink here once it is hosted.
-                    CheckRow("이용약관 동의", "필수", terms, link = false) { terms = it }
+                    CheckRow("이용약관 동의", "필수", terms, onLink = {
+                        com.pass.diary.feature.my.openUrl(ctx, ctx.getString(com.pass.diary.core.designsystem.R.string.terms_url))
+                    }) { terms = it }
                     CheckRow("개인정보 처리방침 동의", "필수", privacy, onLink = {
                         com.pass.diary.feature.my.openUrl(ctx, ctx.getString(com.pass.diary.core.designsystem.R.string.privacy_policy_url))
                     }) { privacy = it }

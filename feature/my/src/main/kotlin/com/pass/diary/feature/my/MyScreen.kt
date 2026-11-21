@@ -275,6 +275,7 @@ fun MyScreen(
                 })
                 ListRow(OdIcon.Sparkle, "AI 기능", aiValue(settings), onAi)
                 ListRow(OdIcon.Trash, "계정·데이터 삭제", null, { confirmWipe = true })
+                ListRow(OdIcon.Doc, "이용약관", null, { openUrl(ctx, ctx.getString(com.pass.diary.core.designsystem.R.string.terms_url)) })
                 ListRow(OdIcon.Doc, "개인정보 처리방침", null, { openUrl(ctx, ctx.getString(com.pass.diary.core.designsystem.R.string.privacy_policy_url)) })
                 val ads = com.pass.diary.core.billing.LocalAdManager.current
                 val activity = LocalActivity.current
@@ -291,7 +292,9 @@ fun MyScreen(
 }
 
 fun openUrl(ctx: Context, url: String) {
-    runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))) }
+    // Custom Tabs: the legal pages live on the web, so policy edits never need an app update.
+    runCatching { androidx.browser.customtabs.CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(ctx, android.net.Uri.parse(url)) }
+        .recoverCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))) }
         .onFailure { Toast.makeText(ctx, "브라우저를 열 수 없어요", Toast.LENGTH_SHORT).show() }
 }
 
