@@ -1,0 +1,17 @@
+{
+  "name": "온이 일기",
+  "short_name": "온이 일기",
+  "description": "기분을 톡 누르면 온이가 그 색으로 켜지는 감정 일기장",
+  "lang": "ko",
+  "start_url": "/Diary/",
+  "scope": "/Diary/",
+  "display": "standalone",
+  "background_color": "#FBF7F1",
+  "theme_color": "#FBF7F1",
+  "shortcuts": [{ "name": "일기 쓰기", "url": "/Diary/?write" }],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

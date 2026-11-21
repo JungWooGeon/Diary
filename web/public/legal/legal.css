@@ -1,0 +1,17 @@
+:root { --bg: #FBF7F1; --surface: #FFFFFF; --line: #ECE4DA; --ink: #2E2622; --ink2: #6B5E55; --soft: #F4EEE6; color-scheme: light dark; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1C1830; --surface: #262141; --line: #3A3358; --ink: #F4EFE8; --ink2: #BDB5CC; --soft: #302A4F; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: Pretendard, -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif; font-size: 15px; line-height: 1.75; word-break: keep-all; overflow-wrap: anywhere; letter-spacing: -0.2px; }
+main { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+nav { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; margin-bottom: 24px; }
+a { color: inherit; text-underline-offset: 3px; }
+h1 { font-size: 26px; line-height: 1.4; margin: 0 0 8px; letter-spacing: -0.6px; }
+h2 { font-size: 18px; margin: 36px 0 10px; padding-top: 16px; border-top: 1px solid var(--line); letter-spacing: -0.4px; }
+h3 { font-size: 15px; margin: 20px 0 6px; }
+p, li { color: var(--ink); } .meta { color: var(--ink2); font-size: 14px; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 20px; margin: 16px 0; }
+.box ul { margin: 0; padding-left: 20px; }
+table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14px; display: block; overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+th { background: var(--soft); white-space: nowrap; }
+code { background: var(--soft); padding: 1px 6px; border-radius: 6px; font-size: 13px; }
