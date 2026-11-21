@@ -60,6 +60,9 @@ import com.pass.diary.core.designsystem.DayMark
 import com.pass.diary.core.designsystem.Dot
 import com.pass.diary.core.designsystem.EmptyDayStrip
 import com.pass.diary.core.designsystem.Od
+import com.pass.diary.core.designsystem.layout
+import com.pass.diary.core.designsystem.readableWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import com.pass.diary.core.designsystem.OdButton
 import com.pass.diary.core.designsystem.OdCard
 import com.pass.diary.core.designsystem.OdColors
@@ -210,102 +213,126 @@ fun TodayScreen(
     val scope = rememberCoroutineScope()
     val ambientGlow = if (empty) OdColors.Dusk else rgb(light.glow)
 
-    Box(Modifier.fillMaxSize().background(c.bg).ambient(ambientGlow, if (empty) 0.55f else 1.15f, 190.dp + 32.dp, 460.dp)) {
-        Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())) {
-            // Header: date · weather · bell
-            Row(Modifier.fillMaxWidth().height(52.dp).padding(start = 20.dp, end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("${u.date.monthValue}월 ${u.date.dayOfMonth}일 ${u.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.KOREAN)}", style = OdType.title2, modifier = Modifier.weight(1f))
-                u.entries.lastOrNull { it.weather != null }?.weather?.let { w ->
-                    Row(Modifier.padding(end = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        OdIcon(OdIcon.Sun, size = 17.dp, tint = c.ink2); Text(com.pass.diary.core.data.Weather.decode(w)?.label ?: w, style = OdType.caption1, color = c.ink2)
-                    }
+    val layout = Od.layout
+    val headerHero: @Composable () -> Unit = {
+        // Header: date · weather · bell
+        Row(Modifier.fillMaxWidth().height(52.dp).padding(start = 20.dp, end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("${u.date.monthValue}월 ${u.date.dayOfMonth}일 ${u.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.KOREAN)}", style = OdType.title2, modifier = Modifier.weight(1f))
+            u.entries.lastOrNull { it.weather != null }?.weather?.let { w ->
+                Row(Modifier.padding(end = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    OdIcon(OdIcon.Sun, size = 17.dp, tint = c.ink2); Text(com.pass.diary.core.data.Weather.decode(w)?.label ?: w, style = OdType.caption1, color = c.ink2)
                 }
             }
-            // Hero: Oni + speech bubble
-            Box(Modifier.fillMaxWidth().height(if (empty) 270.dp else 300.dp)) {
-                OniFigure(
-                    light.takeUnless { empty }, expression, 230.dp,
-                    Modifier.align(Alignment.TopCenter).padding(top = 56.dp)
-                        .clickable(remember { MutableInteractionSource() }, null) { poke++ },
-                )
-                SpeechBubble(oniSays(u, light), Modifier.align(Alignment.TopCenter).padding(top = 4.dp, start = 20.dp, end = 20.dp))
+        }
+        // Hero: Oni + speech bubble
+        Box(Modifier.fillMaxWidth().height(if (empty) 270.dp else 300.dp)) {
+            OniFigure(
+                light.takeUnless { empty }, expression, 230.dp,
+                Modifier.align(Alignment.TopCenter).padding(top = 56.dp)
+                    .clickable(remember { MutableInteractionSource() }, null) { poke++ },
+            )
+            SpeechBubble(oniSays(u, light), Modifier.align(Alignment.TopCenter).padding(top = 4.dp, start = 20.dp, end = 20.dp))
+        }
+    }
+    val moods: @Composable () -> Unit = {
+        val pick: (EmotionKey) -> Unit = { k ->
+            val saved = vm.quickMood(k)
+            scope.launch {
+                snackbar.currentSnackbarData?.dismiss()
+                val r = snackbar.showSnackbar("${k.label}으로 기록했어요".josa(k.label), actionLabel = "되돌리기", duration = SnackbarDuration.Short)
+                if (r == SnackbarResult.ActionPerformed) vm.undoQuick(saved)
             }
-            Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 110.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                val pick: (EmotionKey) -> Unit = { k ->
-                    val saved = vm.quickMood(k)
-                    scope.launch {
-                        snackbar.currentSnackbarData?.dismiss()
-                        val r = snackbar.showSnackbar("${k.label}으로 기록했어요".josa(k.label), actionLabel = "되돌리기", duration = SnackbarDuration.Short)
-                        if (r == SnackbarResult.ActionPerformed) vm.undoQuick(saved)
-                    }
-                }
-                if (empty) OdCard(Modifier.padding(top = 4.dp)) {
-                    Text("지금 기분은 어때요?", style = OdType.title2, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                    Text("하나만 눌러도 온이가 켜져요", style = OdType.caption1, color = c.ink2, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 16.dp))
-                    QuickMoodRow(justSaved, pick)
-                    OdButton("여러 감정 고르고 쓰기", { onWrite(null) }, Modifier.fillMaxWidth().padding(top = 16.dp), kind = ButtonKind.Secondary, small = true, icon = OdIcon.Pen, height = 44.dp)
-                } else OdCard(Modifier.padding(top = 4.dp), padding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 18.dp)) {
-                    CardHeader("지금 기분은 어때요?", "톡 누르면 바로 저장돼요", Modifier.padding(start = 4.dp, end = 4.dp, bottom = 14.dp), rightStyle = OdType.caption2)
-                    QuickMoodRow(justSaved, pick)
-                }
-                // 하루의 빛
-                OdCard {
-                    if (empty) {
-                        CardHeader("하루의 빛", "아직 켜진 빛이 없어요", rightStyle = OdType.caption2)
-                        EmptyDayStrip(Modifier.padding(top = 14.dp))
-                        Text("아침·점심·밤, 기록할 때마다 빛이 하나씩 이어져요.", style = OdType.caption2, color = c.ink2, modifier = Modifier.padding(top = 10.dp))
-                    } else {
-                        CardHeader("하루의 빛", "오늘 ${u.entries.size}번 기록했어요", Modifier.padding(bottom = 14.dp), rightStyle = OdType.caption2)
-                        DayLightStrip(u.entries.map { DayMark(it.time, it.emotions) })
-                        // Today's records, newest first: tap to open.
-                        u.entries.reversed().forEach { e -> EntryLine(e) { onOpen(e.id) } }
-                    }
-                }
-                // 오늘의 질문
-                OdCard(Modifier.fillMaxWidth(), onClick = { onWriteQuestion(u.question) }) {
-                    Text("오늘의 질문", style = OdType.caption2.copy(fontWeight = FontWeight.Bold), color = c.ink2)
-                    Text(u.question, style = OdType.title3.copy(fontSize = 16.sp, lineHeight = 24.sp), modifier = Modifier.padding(top = 6.dp))
-                    Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("이 질문으로 쓰기", style = OdType.buttonSm)
-                        OdIcon(OdIcon.ChevR, size = 16.dp, stroke = 2f)
-                    }
-                }
-                // 1년 전 오늘
-                u.yearAgo?.let { e ->
-                    OdCard(onClick = { onOpen(e.id) }) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                            val p = e.photos.firstOrNull()
-                            if (p != null && File(p.localPath).exists()) AsyncImage(File(p.localPath), null, Modifier.size(64.dp).clip(RoundedCornerShape(12.dp)), contentScale = ContentScale.Crop)
-                            else PhotoPlaceholder(e.id.hashCode(), Modifier.size(64.dp).clip(RoundedCornerShape(12.dp)))
-                            Column(Modifier.weight(1f)) {
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Dot(LightMixer.dominantGroup(e.emotions)?.glowColor ?: OdColors.OffGlow)
-                                    val d = LocalDate.parse(e.date)
-                                    Text("1년 전 오늘 · ${d.year}년 ${d.monthValue}월 ${d.dayOfMonth}일", style = OdType.caption2.copy(fontWeight = FontWeight.Bold), color = c.ink2)
-                                }
-                                Text(e.body.ifBlank { e.title }, style = OdType.body2, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
-                            }
+        }
+        if (empty) OdCard(Modifier.padding(top = 4.dp)) {
+            Text("지금 기분은 어때요?", style = OdType.title2, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            Text("하나만 눌러도 온이가 켜져요", style = OdType.caption1, color = c.ink2, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 16.dp))
+            QuickMoodRow(justSaved, pick)
+            OdButton("여러 감정 고르고 쓰기", { onWrite(null) }, Modifier.fillMaxWidth().padding(top = 16.dp), kind = ButtonKind.Secondary, small = true, icon = OdIcon.Pen, height = 44.dp)
+        } else OdCard(Modifier.padding(top = 4.dp), padding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 18.dp)) {
+            CardHeader("지금 기분은 어때요?", "톡 누르면 바로 저장돼요", Modifier.padding(start = 4.dp, end = 4.dp, bottom = 14.dp), rightStyle = OdType.caption2)
+            QuickMoodRow(justSaved, pick)
+        }
+    }
+    val cards: @Composable () -> Unit = {
+        // 하루의 빛
+        OdCard {
+            if (empty) {
+                CardHeader("하루의 빛", "아직 켜진 빛이 없어요", rightStyle = OdType.caption2)
+                EmptyDayStrip(Modifier.padding(top = 14.dp))
+                Text("아침·점심·밤, 기록할 때마다 빛이 하나씩 이어져요.", style = OdType.caption2, color = c.ink2, modifier = Modifier.padding(top = 10.dp))
+            } else {
+                CardHeader("하루의 빛", "오늘 ${u.entries.size}번 기록했어요", Modifier.padding(bottom = 14.dp), rightStyle = OdType.caption2)
+                DayLightStrip(u.entries.map { DayMark(it.time, it.emotions) })
+                // Today's records, newest first: tap to open.
+                u.entries.reversed().forEach { e -> EntryLine(e) { onOpen(e.id) } }
+            }
+        }
+        // 오늘의 질문
+        OdCard(Modifier.fillMaxWidth(), onClick = { onWriteQuestion(u.question) }) {
+            Text("오늘의 질문", style = OdType.caption2.copy(fontWeight = FontWeight.Bold), color = c.ink2)
+            Text(u.question, style = OdType.title3.copy(fontSize = 16.sp, lineHeight = 24.sp), modifier = Modifier.padding(top = 6.dp))
+            Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("이 질문으로 쓰기", style = OdType.buttonSm)
+                OdIcon(OdIcon.ChevR, size = 16.dp, stroke = 2f)
+            }
+        }
+        // 1년 전 오늘
+        u.yearAgo?.let { e ->
+            OdCard(onClick = { onOpen(e.id) }) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    val p = e.photos.firstOrNull()
+                    if (p != null && File(p.localPath).exists()) AsyncImage(File(p.localPath), null, Modifier.size(64.dp).clip(RoundedCornerShape(12.dp)), contentScale = ContentScale.Crop)
+                    else PhotoPlaceholder(e.id.hashCode(), Modifier.size(64.dp).clip(RoundedCornerShape(12.dp)))
+                    Column(Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Dot(LightMixer.dominantGroup(e.emotions)?.glowColor ?: OdColors.OffGlow)
+                            val d = LocalDate.parse(e.date)
+                            Text("1년 전 오늘 · ${d.year}년 ${d.monthValue}월 ${d.dayOfMonth}일", style = OdType.caption2.copy(fontWeight = FontWeight.Bold), color = c.ink2)
                         }
-                    }
-                }
-                // 최근 답장
-                u.recent?.let { r ->
-                    val rl = r.entry?.emotions?.takeIf { it.isNotEmpty() }?.let(LightMixer::mix)
-                    OdCard(onClick = onLetters) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("최근 답장", style = OdType.title3, modifier = Modifier.weight(1f))
-                            AiBadge("온이(AI)가 쓴 답장", icon = false)
-                        }
-                        Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Oni(rl, OniExpression.forGroup(r.entry?.emotions?.let(LightMixer::dominantGroup)).takeUnless { it == OniExpression.SLEEP } ?: OniExpression.DEFAULT, Modifier.size(40.dp), animate = false)
-                            Text(r.reply.text, style = OdType.body2, modifier = Modifier.weight(1f), maxLines = 3, overflow = TextOverflow.Ellipsis)
-                        }
-                        Text("${relDay(r.reply.createdAt)} · 편지함에 보관됨", style = OdType.caption2, color = c.ink2, textAlign = TextAlign.End, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
+                        Text(e.body.ifBlank { e.title }, style = OdType.body2, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
                     }
                 }
             }
         }
-        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 92.dp))
+        // 최근 답장
+        u.recent?.let { r ->
+            val rl = r.entry?.emotions?.takeIf { it.isNotEmpty() }?.let(LightMixer::mix)
+            OdCard(onClick = onLetters) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("최근 답장", style = OdType.title3, modifier = Modifier.weight(1f))
+                    AiBadge("온이(AI)가 쓴 답장", icon = false)
+                }
+                Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Oni(rl, OniExpression.forGroup(r.entry?.emotions?.let(LightMixer::dominantGroup)).takeUnless { it == OniExpression.SLEEP } ?: OniExpression.DEFAULT, Modifier.size(40.dp), animate = false)
+                    Text(r.reply.text, style = OdType.body2, modifier = Modifier.weight(1f), maxLines = 3, overflow = TextOverflow.Ellipsis)
+                }
+                Text("${relDay(r.reply.createdAt)} · 편지함에 보관됨", style = OdType.caption2, color = c.ink2, textAlign = TextAlign.End, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
+            }
+        }
+    }
+    Box(Modifier.fillMaxSize().background(c.bg).then(if (layout.twoPane) Modifier else Modifier.ambient(ambientGlow, if (empty) 0.55f else 1.15f, 190.dp + 32.dp, 460.dp))) {
+        if (layout.twoPane) Row(Modifier.fillMaxSize()) {
+            // Tablet / landscape: Oni and the mood orbs stay in view on the left; the day's records scroll on the right.
+            Column(
+                Modifier.weight(1f).fillMaxHeight().ambient(ambientGlow, if (empty) 0.55f else 1.15f, 190.dp + 32.dp + 24.dp, 460.dp)
+                    .statusBarsPadding().verticalScroll(rememberScrollState()).padding(top = 24.dp, bottom = 24.dp).navigationBarsPadding(),
+            ) {
+                headerHero()
+                Column(Modifier.readableWidth(480.dp).padding(horizontal = 20.dp)) { moods() }
+            }
+            Column(
+                Modifier.weight(1f).fillMaxHeight().statusBarsPadding().verticalScroll(rememberScrollState())
+                    .padding(start = 8.dp, end = 24.dp, top = 76.dp, bottom = 24.dp).navigationBarsPadding(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) { cards() }
+        } else Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())) {
+            Column(Modifier.readableWidth()) { headerHero() }
+            Column(Modifier.readableWidth().padding(horizontal = 20.dp).padding(bottom = layout.bottomBar + 42.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                moods()
+                cards()
+            }
+        }
+        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = layout.bottomBar + 24.dp))
     }
 }
 

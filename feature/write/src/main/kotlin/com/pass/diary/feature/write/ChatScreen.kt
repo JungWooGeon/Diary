@@ -56,6 +56,7 @@ import com.pass.diary.core.data.db.ChatMessageEntity
 import com.pass.diary.core.designsystem.ButtonKind
 import com.pass.diary.core.designsystem.IconBtn
 import com.pass.diary.core.designsystem.Od
+import com.pass.diary.core.designsystem.readableWidth
 import com.pass.diary.core.designsystem.OdButton
 import com.pass.diary.core.designsystem.OdChip
 import com.pass.diary.core.designsystem.OdIcon
@@ -224,10 +225,10 @@ fun ChatScreen(onBack: () -> Unit, onComposed: (String) -> Unit, onWake: () -> U
                 title = "온이와 대화로 쓰기", subtitle = "온이(AI) · 이 폰 안에서만 대화해요",
                 left = { IconBtn(OdIcon.Back, back, "뒤로") },
             )
-            Row(Modifier.padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(Modifier.readableWidth(ChatWidth).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 repeat(max) { i -> Box(Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(if (i < asked) glow else c.line)) }
             }
-            LazyColumn(Modifier.weight(1f), state = list, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
+            LazyColumn(Modifier.weight(1f).readableWidth(ChatWidth), state = list, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
                 item {
                     Text(
                         "질문 ${asked.coerceAtLeast(1)} / $max · 언제든 일기로 만들 수 있어요", style = OdType.caption2, color = c.ink2,
@@ -262,9 +263,9 @@ fun ChatScreen(onBack: () -> Unit, onComposed: (String) -> Unit, onWake: () -> U
             }
             Column(Modifier.fillMaxWidth().background(c.bg)) {
                 com.pass.diary.core.designsystem.Divider()
-                if (s.crisis) Column(Modifier.navigationBarsPadding().padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 12.dp)) {
+                if (s.crisis) Column(Modifier.navigationBarsPadding().readableWidth(ChatWidth).padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 12.dp)) {
                     OdButton("괜찮아요, 나갈게요", onBack, Modifier.fillMaxWidth(), kind = ButtonKind.Ghost)
-                } else Column(Modifier.navigationBarsPadding().padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 12.dp)) {
+                } else Column(Modifier.navigationBarsPadding().readableWidth(ChatWidth).padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 12.dp)) {
                     OdButton(
                         "여기까지로 일기 만들기", { vm.compose(onComposed) }, Modifier.fillMaxWidth(), kind = ButtonKind.Secondary, small = true,
                         icon = OdIcon.Doc, height = 42.dp, enabled = s.turns.any { !it.fromOni },
@@ -336,3 +337,6 @@ private fun MyBubble(text: String, glow: androidx.compose.ui.graphics.Color) {
         ) { Text(text, style = OdType.body2) }
     }
 }
+
+/** A conversation stays a column on tablets: bubbles don't drift to the far edges. */
+private val ChatWidth = 720.dp

@@ -57,6 +57,13 @@ import com.pass.diary.core.designsystem.Dot
 import com.pass.diary.core.designsystem.IconBtn
 import com.pass.diary.core.designsystem.LitChip
 import com.pass.diary.core.designsystem.Od
+import com.pass.diary.core.designsystem.OniExpression
+import com.pass.diary.core.designsystem.OniFigure
+import com.pass.diary.core.designsystem.PaneDivider
+import com.pass.diary.core.designsystem.layout
+import com.pass.diary.core.designsystem.readableWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.pass.diary.core.designsystem.OdChip
 import com.pass.diary.core.designsystem.OdColors
 import com.pass.diary.core.designsystem.OdIcon
@@ -85,7 +92,7 @@ data class SearchFilter(val group: EmotionGroup? = null, val tag: String? = null
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
-class SearchViewModel @Inject constructor(repository: EntryRepository, savedStateHandle: androidx.lifecycle.SavedStateHandle) : ViewModel() {
+class SearchViewModel @Inject constructor(repository: EntryRepository, savedStateHandle: androidx.lifecycle.SavedStateHandle, replyDao: com.pass.diary.core.data.db.ReplyDao) : ViewModel() {
     val query = MutableStateFlow(runCatching { savedStateHandle.toRoute<SearchRoute>().q }.getOrNull().orEmpty())
     val filter = MutableStateFlow(SearchFilter())
 
@@ -102,6 +109,10 @@ class SearchViewModel @Inject constructor(repository: EntryRepository, savedStat
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun update(f: (SearchFilter) -> SearchFilter) { filter.value = f(filter.value) }
+
+    /** entryId → reply text, for the tablet detail pane. */
+    val replies = replyDao.observeAll().map { l -> l.associate { it.entryId to it.text } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 }
 
 @Composable
@@ -113,7 +124,12 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: SearchViewMod
     val tags by vm.tags.collectAsStateWithLifecycle()
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
-    Column(Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
+    val pane = Od.layout.twoPane
+    // Tablets / landscape: results on the left, the chosen one read in full on the right (first result to start with).
+    var picked by rememberSaveable { mutableStateOf<String?>(null) }
+    val shown = results.firstOrNull { it.id == picked } ?: results.firstOrNull()
+    Row(Modifier.fillMaxSize()) {
+    Column(Modifier.weight(1f).fillMaxHeight().then(if (pane) Modifier else Modifier.readableWidth(720.dp)).statusBarsPadding().imePadding()) {
         Row(Modifier.fillMaxWidth().height(52.dp).padding(start = 8.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             IconBtn(OdIcon.Back, onBack, "뒤로")
             Row(
@@ -168,9 +184,20 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: SearchViewMod
             }
         }
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp)) {
-            items(results, key = { it.id }) { ResultRow(it, q.trim()) { onOpen(it.id) } }
+            items(results, key = { it.id }) { e -> ResultRow(e, q.trim(), pane && e.id == shown?.id) { if (pane) picked = e.id else onOpen(e.id) } }
             item { Box(Modifier.navigationBarsPadding()) }
         }
+    }
+    if (pane) {
+        val replies by vm.replies.collectAsStateWithLifecycle()
+        PaneDivider()
+        Box(Modifier.weight(1f).fillMaxHeight().statusBarsPadding()) {
+            if (shown == null) Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                OniFigure(null, OniExpression.THINK, 140.dp)
+                Text(if (q.isBlank()) "단어나 태그를 넣으면 여기에서 바로 읽을 수 있어요" else "찾은 일기가 없어요", style = OdType.body2, color = c.ink2, modifier = Modifier.padding(top = 12.dp))
+            } else DayDetail(LocalDate.parse(shown.date), listOf(shown), replies, onOpen, onWriteOn = {}, single = true)
+        }
+    }
     }
 }
 
@@ -190,9 +217,14 @@ private fun searchDate(d: LocalDate): String =
     else "${d.monthValue}월 ${d.dayOfMonth}일"
 
 @Composable
-private fun ResultRow(e: Entry, query: String, onClick: () -> Unit) {
+private fun ResultRow(e: Entry, query: String, selected: Boolean, onClick: () -> Unit) {
     val c = Od.c
-    Column(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+    Column(
+        Modifier.fillMaxWidth()
+            // Selected (detail pane): a soft pill reaching into the list's side padding.
+            .then(if (selected) Modifier.drawBehind { val o = 12.dp.toPx(); drawRoundRect(c.surface2, Offset(-o, 4.dp.toPx()), Size(size.width + 2 * o, size.height - 9.dp.toPx()), androidx.compose.ui.geometry.CornerRadius(14.dp.toPx())) } else Modifier)
+            .clickable(onClick = onClick),
+    ) {
         Column(Modifier.padding(vertical = 14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(searchDate(LocalDate.parse(e.date)), style = OdType.caption2.copy(fontWeight = FontWeight.Bold), color = c.ink2, modifier = Modifier.weight(1f))

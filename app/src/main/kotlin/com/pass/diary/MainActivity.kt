@@ -38,6 +38,9 @@ import com.pass.diary.core.data.EntryRepository
 import com.pass.diary.core.data.SettingsRepository
 import com.pass.diary.core.designsystem.OdLook
 import com.pass.diary.core.designsystem.OdTheme
+import com.pass.diary.core.designsystem.LocalWindowLayout
+import com.pass.diary.core.designsystem.WindowLayout
+import com.pass.diary.core.designsystem.currentWindowLayout
 import com.pass.diary.core.light.Palette
 import com.pass.diary.core.model.Gating
 import kotlinx.coroutines.flow.combine
@@ -139,7 +142,9 @@ class MainActivity : FragmentActivity() {
             val lockOn by lock.enabled.collectAsStateWithLifecycle()
             LaunchedEffect(look.palette, look.themeMode, settings.hideWidgetContent, lockOn) { runCatching { updateWidgets(applicationContext) } }
             val density = LocalDensity.current
-            val scaled = Density(density.density, density.fontScale * Settings.TEXT_SCALES[look.textSize])
+            // Tablets / unfolded foldables: rail + panes (LocalWindowLayout) and type one step bigger.
+            val window = currentWindowLayout()
+            val scaled = Density(density.density, density.fontScale * Settings.TEXT_SCALES[look.textSize] * if (window.large) WindowLayout.LARGE_FONT_SCALE else 1f)
             DisposableEffect(dark) {
                 val style = if (dark) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
                 enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
@@ -147,7 +152,7 @@ class MainActivity : FragmentActivity() {
             }
             LaunchedEffect(settings.secureScreen, lockOn) { applySecure(secureWindow(settings.secureScreen, lockOn, Build.VERSION.SDK_INT)) }
             OdTheme(darkTheme = dark, premium = premium, paper = settings.themeMode == ThemeMode.PAPER) {
-              CompositionLocalProvider(LocalDensity provides scaled, LocalAdManager provides ads) {
+              CompositionLocalProvider(LocalDensity provides scaled, LocalAdManager provides ads, LocalWindowLayout provides window) {
                 val locked by lock.locked.collectAsStateWithLifecycle()
                 val bio by lock.biometricEnabled.collectAsStateWithLifecycle()
                 // The lock is an overlay: the app below stays composed (NavController, back stack, a chat or draft in

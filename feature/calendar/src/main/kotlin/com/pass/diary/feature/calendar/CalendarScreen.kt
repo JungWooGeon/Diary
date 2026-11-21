@@ -68,6 +68,11 @@ import com.pass.diary.core.designsystem.DayMark
 import com.pass.diary.core.designsystem.Dot
 import com.pass.diary.core.designsystem.IconBtn
 import com.pass.diary.core.designsystem.Od
+import com.pass.diary.core.designsystem.PaneDivider
+import com.pass.diary.core.designsystem.layout
+import com.pass.diary.core.designsystem.readableWidth
+import androidx.compose.foundation.border
+import androidx.compose.runtime.LaunchedEffect
 import com.pass.diary.core.designsystem.OdButton
 import com.pass.diary.core.designsystem.OdColors
 import com.pass.diary.core.designsystem.OdIcon
@@ -139,17 +144,32 @@ fun CalendarScreen(onOpen: (String) -> Unit, onWriteOn: (String) -> Unit, onSear
     var tab by rememberSaveable { mutableIntStateOf(0) }
     val month by vm.month.collectAsStateWithLifecycle()
     val entries by vm.monthEntries.collectAsStateWithLifecycle()
-    Box(Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().statusBarsPadding()) {
-            MonthHeader(month, vm::setMonth, onSearch)
-            SegTabs(listOf("캘린더", "타임라인", "사진"), tab, { tab = it }, Modifier.padding(horizontal = 20.dp))
-            when (tab) {
-                0 -> MonthTab(vm, entries, onOpen, onWriteOn)
-                1 -> TimelineTab(vm, entries, onOpen)
-                else -> PhotosTab(entries, onOpen)
+    val layout = Od.layout
+    // Tablets / landscape: the month (or timeline) on the left, the chosen day read in full on the right.
+    val pane = layout.twoPane && tab != 2
+    Row(Modifier.fillMaxSize()) {
+        Box(Modifier.weight(1f).fillMaxHeight()) {
+            Column(Modifier.fillMaxSize().statusBarsPadding()) {
+                MonthHeader(month, vm::setMonth, onSearch)
+                SegTabs(listOf("캘린더", "타임라인", "사진"), tab, { tab = it }, Modifier.readableWidth().padding(horizontal = 20.dp))
+                when (tab) {
+                    0 -> MonthTab(vm, entries, onOpen, onWriteOn, pane)
+                    1 -> TimelineTab(vm, entries, onOpen, pane)
+                    else -> PhotosTab(entries, onOpen)
+                }
             }
+            // Landscape phones: the banner follows the month (inline in MonthTab) instead of covering its last weeks.
+            if (tab == 0 && !layout.short) AdBanner(Modifier.align(Alignment.BottomCenter).navigationBarsPadding().readableWidth().padding(start = 16.dp, end = 16.dp, bottom = layout.bottomBar + 16.dp))
         }
-        if (tab == 0) AdBanner(Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = 84.dp))
+        if (pane) {
+            val selected by vm.selected.collectAsStateWithLifecycle()
+            val replies by vm.replies.collectAsStateWithLifecycle()
+            PaneDivider()
+            DayDetail(
+                selected, entries.filter { it.date == selected.toString() }.sortedBy { it.time }, replies, onOpen, onWriteOn,
+                Modifier.weight(1f).statusBarsPadding(),
+            )
+        }
     }
 }
 
@@ -178,15 +198,15 @@ private fun MonthHeader(month: YearMonth, setMonth: (YearMonth) -> Unit, onSearc
 }
 
 @Composable
-private fun MonthTab(vm: CalendarViewModel, entries: List<Entry>, onOpen: (String) -> Unit, onWriteOn: (String) -> Unit) {
+private fun MonthTab(vm: CalendarViewModel, entries: List<Entry>, onOpen: (String) -> Unit, onWriteOn: (String) -> Unit, pane: Boolean) {
     val month by vm.month.collectAsStateWithLifecycle()
     val selected by vm.selected.collectAsStateWithLifecycle()
     val c = Od.c
     val byDate = entries.groupBy { it.date }
     val today = LocalDate.now()
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)
-            .padding(top = 16.dp, bottom = 180.dp).navigationBarsPadding(),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).readableWidth().padding(horizontal = 20.dp)
+            .padding(top = 16.dp, bottom = if (Od.layout.short) 16.dp else Od.layout.bottomBar + 112.dp).navigationBarsPadding(),
     ) {
         Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             "일월화수목금토".forEachIndexed { i, w ->
@@ -203,7 +223,7 @@ private fun MonthTab(vm: CalendarViewModel, entries: List<Entry>, onOpen: (Strin
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     week.forEach { day ->
                         Box(Modifier.weight(1f)) {
-                            if (day != null) DayCell(day, byDate[day.toString()].orEmpty(), day == selected, day.isAfter(today)) { vm.selected.value = day }
+                            if (day != null) DayCell(day, byDate[day.toString()].orEmpty(), day == selected, day.isAfter(today), if (Od.layout.large) 60.dp else 44.dp) { vm.selected.value = day }
                         }
                     }
                     repeat(7 - week.size) { Spacer(Modifier.weight(1f)) }
@@ -218,13 +238,14 @@ private fun MonthTab(vm: CalendarViewModel, entries: List<Entry>, onOpen: (Strin
                 }
             }
         }
-        DayCard(selected, byDate[selected.toString()].orEmpty().sortedBy { it.time }, selected.isAfter(today), onOpen, onWriteOn)
+        if (!pane) DayCard(selected, byDate[selected.toString()].orEmpty().sortedBy { it.time }, selected.isAfter(today), onOpen, onWriteOn)
+        if (Od.layout.short) AdBanner(Modifier.padding(top = 16.dp))
     }
 }
 
 /** A day lit by its light; several entries = 160° linear gradient in time order (README §2). */
 @Composable
-private fun DayCell(day: LocalDate, entries: List<Entry>, selected: Boolean, future: Boolean, onClick: () -> Unit) {
+private fun DayCell(day: LocalDate, entries: List<Entry>, selected: Boolean, future: Boolean, height: Dp, onClick: () -> Unit) {
     val c = Od.c
     val lights = entries.sortedBy { it.time }.map { cellColor(LightMixer.mix(it.emotions)) }
     val bg = when {
@@ -239,7 +260,7 @@ private fun DayCell(day: LocalDate, entries: List<Entry>, selected: Boolean, fut
     }
     val r = 14.dp
     Box(
-        Modifier.fillMaxWidth().height(44.dp)
+        Modifier.fillMaxWidth().height(height)
             .drawBehind {
                 if (selected) {
                     val o = 3.5.dp.toPx(); val g = 2.dp.toPx()
@@ -311,33 +332,42 @@ internal fun PhotoThumb(photo: Photo?, seed: Int, size: Dp, radius: Dp, modifier
 }
 
 @Composable
-private fun TimelineTab(vm: CalendarViewModel, entries: List<Entry>, onOpen: (String) -> Unit) {
+private fun TimelineTab(vm: CalendarViewModel, entries: List<Entry>, onOpen: (String) -> Unit, pane: Boolean) {
     val replies by vm.replies.collectAsStateWithLifecycle()
+    val selected by vm.selected.collectAsStateWithLifecycle()
     val days = entries.groupBy { it.date }.toList().sortedByDescending { it.first }
     val c = Od.c
+    // With the detail pane, a card selects its day there (the newest day to start with) instead of opening the editor.
+    if (pane) LaunchedEffect(days.map { it.first }) {
+        if (days.isNotEmpty() && days.none { it.first == vm.selected.value.toString() }) vm.selected.value = LocalDate.parse(days.first().first)
+    }
     LazyColumn(
-        Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 130.dp),
+        Modifier.fillMaxSize().readableWidth(),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = Od.layout.bottomBar + 62.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         if (days.isEmpty()) item { Text("이 달엔 아직 기록이 없어요", style = OdType.body2, color = c.ink2, modifier = Modifier.padding(top = 24.dp)) }
         days.forEachIndexed { i, (date, list) ->
             if (i == 2) item(key = "ad") { AdNative() }
-            item(key = date) { DayTimelineCard(LocalDate.parse(date), list.sortedBy { it.time }, replies, onOpen) }
+            item(key = date) {
+                val d = LocalDate.parse(date)
+                DayTimelineCard(d, list.sortedBy { it.time }, replies, if (pane) { _ -> vm.selected.value = d } else onOpen, pane && d == selected)
+            }
         }
         if (days.size == 2) item(key = "ad") { AdNative() }
     }
 }
 
 @Composable
-private fun DayTimelineCard(day: LocalDate, entries: List<Entry>, replies: Map<String, String>, onOpen: (String) -> Unit) {
+private fun DayTimelineCard(day: LocalDate, entries: List<Entry>, replies: Map<String, String>, onOpen: (String) -> Unit, selected: Boolean = false) {
     val c = Od.c
     val main = entries.firstOrNull { it.title.isNotBlank() } ?: entries.firstOrNull { it.body.isNotBlank() } ?: entries.last()
     val keys = entries.flatMap { e -> e.emotions.map { it.key } }.distinct()
     val glows = dayGlows(entries).let { if (it.size == 1) it + it else it }
     val replied = entries.lastOrNull { replies[it.id] != null }
     Row(
-        Modifier.fillMaxWidth().odCard().clickable { onOpen(main.id) }.height(IntrinsicSize.Min)
+        Modifier.fillMaxWidth().odCard().then(if (selected) Modifier.border(2.dp, c.ink, RoundedCornerShape(20.dp)) else Modifier)
+            .clickable { onOpen(main.id) }.height(IntrinsicSize.Min)
             .padding(start = 14.dp, end = 16.dp, top = 16.dp, bottom = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -389,8 +419,8 @@ private fun PhotosTab(entries: List<Entry>, onOpen: (String) -> Unit) {
         return
     }
     LazyVerticalGrid(
-        GridCells.Fixed(3), Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 130.dp),
+        if (Od.layout.rail) GridCells.Adaptive(150.dp) else GridCells.Fixed(3), Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = Od.layout.bottomBar + 62.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         items(photos, key = { it.first.id }) { (p, id) ->

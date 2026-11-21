@@ -77,6 +77,9 @@ import com.pass.diary.core.designsystem.EmotionChip
 import com.pass.diary.core.designsystem.IconBtn
 import com.pass.diary.core.designsystem.LightOrb
 import com.pass.diary.core.designsystem.Od
+import com.pass.diary.core.designsystem.PaneDivider
+import com.pass.diary.core.designsystem.layout
+import com.pass.diary.core.designsystem.readableWidth
 import com.pass.diary.core.designsystem.OdButton
 import com.pass.diary.core.designsystem.OdCard
 import com.pass.diary.core.designsystem.OdChip
@@ -106,8 +109,27 @@ fun WriteScreen(onDone: () -> Unit, onSaved: (String) -> Unit, onChat: (String) 
     val state by vm.state.collectAsStateWithLifecycle()
     val entry = state.entry ?: return
     val leave = { vm.flush(onDone) }
-    BackHandler { if (state.step == WriteStep.EDIT && !state.persisted && entry.body.isBlank()) vm.goTo(WriteStep.PICK) else leave() }
-    AnimatedContent(state.step, transitionSpec = { fadeIn(tween(240)) togetherWith fadeOut(tween(160)) }, label = "step") { step ->
+    val layout = Od.layout
+    BackHandler { if (!layout.twoPane && state.step == WriteStep.EDIT && !state.persisted && entry.body.isBlank()) vm.goTo(WriteStep.PICK) else leave() }
+    if (layout.twoPane) {
+        // Tablets / landscape: feelings on the left, the page on the right — both at once, no step in between.
+        Row(Modifier.fillMaxSize().background(Od.c.bg)) {
+            Box(Modifier.weight(0.9f)) {
+                EmotionPicker(
+                    entry, state.focus, vm::toggleEmotion, vm::setIntensity, vm::setDate, vm::setTime,
+                    onClose = leave, onMoodOnly = { vm.flush(onDone) }, onContinue = {}, embedded = true,
+                )
+            }
+            PaneDivider()
+            Box(Modifier.weight(1.1f)) {
+                Editor(state, vm, onBack = leave, onSave = { vm.finish(onSaved) }, onChat = { vm.flush { onChat(entry.id) } }, onDeleted = onDone, embedded = true)
+            }
+        }
+        return
+    }
+    // Medium (tablet portrait, unfolded foldable): the phone flow in one centered column.
+    Box(Modifier.fillMaxSize().background(Od.c.bg)) {
+    AnimatedContent(state.step, Modifier.readableWidth(720.dp), transitionSpec = { fadeIn(tween(240)) togetherWith fadeOut(tween(160)) }, label = "step") { step ->
         when (step) {
             WriteStep.PICK -> EmotionPicker(
                 entry, state.focus, vm::toggleEmotion, vm::setIntensity, vm::setDate, vm::setTime,
@@ -115,6 +137,7 @@ fun WriteScreen(onDone: () -> Unit, onSaved: (String) -> Unit, onChat: (String) 
             )
             WriteStep.EDIT -> Editor(state, vm, onBack = leave, onSave = { vm.finish(onSaved) }, onChat = { vm.flush { onChat(entry.id) } }, onDeleted = onDone)
         }
+    }
     }
 }
 
@@ -131,6 +154,8 @@ private fun EmotionPicker(
     onClose: () -> Unit,
     onMoodOnly: () -> Unit,
     onContinue: () -> Unit,
+    /** Beside the editor (two panes): no close button and no bottom buttons; the editor has them. */
+    embedded: Boolean = false,
 ) {
     val c = Od.c
     val lit = entry.emotions.filter { it.key != EmotionKey.UNSURE }
@@ -142,9 +167,9 @@ private fun EmotionPicker(
     }
     val context = LocalContext.current
     Box(Modifier.fillMaxSize().background(c.bg).ambient(light?.let { rgb(it.glow) } ?: OdColors.BrandGlow, 1f, 150.dp + 32.dp, 380.dp)) {
-        Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 110.dp)) {
+        Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = if (embedded) 24.dp else 110.dp).then(if (embedded) Modifier.navigationBarsPadding() else Modifier)) {
             Box(Modifier.fillMaxWidth().height(52.dp)) {
-                OdTopBar(left = { IconBtn(OdIcon.Close, onClose, "닫기") })
+                if (!embedded) OdTopBar(left = { IconBtn(OdIcon.Close, onClose, "닫기") })
                 DateTimeLabel(entry, Modifier.align(Alignment.Center), onDate = {
                     val d = LocalDate.parse(entry.date)
                     DatePickerDialog(context, { _, y, m, day -> setDate(LocalDate.of(y, m + 1, day).format(EntryRepository.DATE)) }, d.year, d.monthValue - 1, d.dayOfMonth)
@@ -189,7 +214,7 @@ private fun EmotionPicker(
                 if (f != null) IntensityCard(f.key, f.intensity) { setIntensity(f.key, it) }
             }
         }
-        Row(
+        if (!embedded) Row(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(c.bg.copy(alpha = 0f)).navigationBarsPadding()
                 .padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -257,7 +282,7 @@ private fun hasBatchim(word: String): Boolean {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Editor(state: WriteState, vm: WriteViewModel, onBack: () -> Unit, onSave: () -> Unit, onChat: () -> Unit, onDeleted: () -> Unit) {
+private fun Editor(state: WriteState, vm: WriteViewModel, onBack: () -> Unit, onSave: () -> Unit, onChat: () -> Unit, onDeleted: () -> Unit, embedded: Boolean = false) {
     val c = Od.c
     val entry = state.entry ?: return
     val context = LocalContext.current
@@ -285,8 +310,8 @@ private fun Editor(state: WriteState, vm: WriteViewModel, onBack: () -> Unit, on
             right = { OdButton("저장", onSave, Modifier.padding(end = 4.dp), small = true, height = 36.dp) },
         )
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
-            // 감정 요약 줄 → back to the picker
-            Row(
+            // 감정 요약 줄 → back to the picker (beside it on tablets: not needed)
+            if (!embedded) Row(
                 Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(12.dp)).background(glow.copy(alpha = if (c.dark) 0.2f else 0.16f))
                     .clickable { vm.goTo(WriteStep.PICK) }.padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),

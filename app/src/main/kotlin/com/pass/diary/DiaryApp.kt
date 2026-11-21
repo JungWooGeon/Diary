@@ -22,6 +22,27 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
+import com.pass.diary.core.designsystem.LocalSelectedRow
+import com.pass.diary.core.designsystem.OniExpression
+import com.pass.diary.core.designsystem.OniFigure
+import com.pass.diary.core.designsystem.PaneDivider
+import com.pass.diary.core.designsystem.layout
+import com.pass.diary.core.designsystem.readableWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -112,7 +133,21 @@ fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavContro
     val back by nav.currentBackStackEntryAsState()
     val dest = back?.destination
     val onTab = tabs.any { t -> dest?.hasRoute(t.type) == true }
+    val layout = Od.layout
+    // Tablets, unfolded foldables and landscape phones: the tabs and 쓰기 move into a rail on the left.
+    val rail = onTab && layout.rail
+    val goTab: (Any) -> Unit = { route ->
+        nav.navigate(route) {
+            popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
     Box(Modifier.fillMaxSize().background(Od.c.bg)) {
+      Row(Modifier.fillMaxSize()) {
+        if (rail) SideRail(dest, onTab = goTab, onWrite = { nav.navigate(WriteRoute()) })
+        // Side insets (landscape cutout / 3-button nav bar) are kept clear here; the rail takes the start side itself.
+        Box(Modifier.weight(1f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(if (rail) WindowInsetsSides.End else WindowInsetsSides.Horizontal))) {
       CompositionLocalProvider(LocalAdsAllowed provides (adsAllowed && AdAllowlist.allows(dest?.route))) {
         NavHost(
             nav, startDestination = start, modifier = Modifier.fillMaxSize(),
@@ -141,23 +176,24 @@ fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavContro
             composable<ReportRoute>(enterTransition = { EnterTransition.None }, exitTransition = { ExitTransition.None }) {
                 ReportScreen(onLetters = { nav.navigate(LettersRoute) }, onYear = { nav.navigate(YearLightRoute) })
             }
-            composable<YearLightRoute> { YearLightScreen(onBack = { nav.popBackStack() }, onPremium = { nav.navigate(PremiumRoute) }) }
-            composable<LettersRoute> { LettersScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(WriteRoute(entryId = it)) }) }
+            composable<YearLightRoute> { Readable { YearLightScreen(onBack = { nav.popBackStack() }, onPremium = { nav.navigate(PremiumRoute) }) } }
+            composable<LettersRoute> { Readable { LettersScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(WriteRoute(entryId = it)) }) } }
             composable<MyRoute>(enterTransition = { EnterTransition.None }, exitTransition = { ExitTransition.None }) {
-                MyScreen(
+                if (layout.twoPane) MyTwoPane(nav)
+                else MyScreen(
                     onPremium = { nav.navigate(PremiumRoute) }, onWake = { nav.navigate(WakeRoute) },
                     onLock = { nav.navigate(LockSettingsRoute) }, onDecorate = { nav.navigate(DecorateRoute) },
                     onLicenses = { nav.navigate(LicensesRoute) }, onAi = { nav.navigate(AiSettingsRoute) },
                     onReminder = { nav.navigate(ReminderSettingsRoute) },
                 )
             }
-            composable<PremiumRoute> { PremiumScreen(onClose = { nav.popBackStack() }) }
-            composable<WakeRoute> { WakeScreen(onBack = { nav.popBackStack() }) }
-            composable<LockSettingsRoute> { LockSettingsScreen(onBack = { nav.popBackStack() }) }
-            composable<DecorateRoute> { DecorateScreen(onBack = { nav.popBackStack() }, onPremium = { nav.navigate(PremiumRoute) }) }
-            composable<LicensesRoute> { LicensesScreen(onBack = { nav.popBackStack() }) }
-            composable<ReminderSettingsRoute> { ReminderSettingsScreen(onBack = { nav.popBackStack() }) }
-            composable<AiSettingsRoute> { AiSettingsScreen(onBack = { nav.popBackStack() }, onWake = { nav.navigate(WakeRoute) }) }
+            composable<PremiumRoute> { Readable { PremiumScreen(onClose = { nav.popBackStack() }) } }
+            composable<WakeRoute> { Readable { WakeScreen(onBack = { nav.popBackStack() }) } }
+            composable<LockSettingsRoute> { Readable { LockSettingsScreen(onBack = { nav.popBackStack() }) } }
+            composable<DecorateRoute> { Readable { DecorateScreen(onBack = { nav.popBackStack() }, onPremium = { nav.navigate(PremiumRoute) }) } }
+            composable<LicensesRoute> { Readable { LicensesScreen(onBack = { nav.popBackStack() }) } }
+            composable<ReminderSettingsRoute> { Readable { ReminderSettingsScreen(onBack = { nav.popBackStack() }) } }
+            composable<AiSettingsRoute> { Readable { AiSettingsScreen(onBack = { nav.popBackStack() }, onWake = { nav.navigate(WakeRoute) }) } }
             composable<WriteRoute> {
                 WriteScreen(
                     onDone = { nav.popBackStack() },
@@ -186,15 +222,97 @@ fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavContro
             }
         }
       }
+        }
+      }
         // Status-bar scrim: scrolled content never runs under the clock/icons.
-        Box(Modifier.fillMaxWidth().windowInsetsTopHeight(androidx.compose.foundation.layout.WindowInsets.statusBars).background(Od.c.bg.copy(alpha = 0.94f)))
-        if (onTab) BottomBar(dest, Modifier.align(Alignment.BottomCenter), onTab = { route ->
-            nav.navigate(route) {
-                popUpTo(nav.graph.findStartDestination().id) { saveState = true }
-                launchSingleTop = true
-                restoreState = true
+        Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).background(Od.c.bg.copy(alpha = 0.94f)))
+        if (onTab && !layout.rail) BottomBar(dest, Modifier.align(Alignment.BottomCenter), onTab = goTab, onWrite = { nav.navigate(WriteRoute()) })
+    }
+}
+
+/** Secondary full-screen pages on a big screen: one centered column instead of lines across the whole tablet. */
+@Composable
+private fun Readable(content: @Composable () -> Unit) {
+    if (!Od.layout.rail) return content()
+    Box(Modifier.fillMaxSize().background(Od.c.bg)) { Box(Modifier.readableWidth(720.dp).fillMaxHeight()) { content() } }
+}
+
+private val myRows = mapOf("wake" to "온이 깨우기", "lock" to "잠금", "decorate" to "꾸미기", "ai" to "AI 기능", "reminder" to "알림", "licenses" to "오픈소스 라이선스")
+
+/** 마이 on a wide screen: settings list on the left, the chosen page on the right (its row highlighted). */
+@Composable
+private fun MyTwoPane(nav: NavHostController) {
+    var sel by rememberSaveable { mutableStateOf<String?>("wake") }
+    Row(Modifier.fillMaxSize()) {
+        Box(Modifier.weight(0.42f)) {
+            CompositionLocalProvider(LocalSelectedRow provides myRows[sel]) {
+                MyScreen(
+                    onPremium = { nav.navigate(PremiumRoute) }, onWake = { sel = "wake" }, onLock = { sel = "lock" },
+                    onDecorate = { sel = "decorate" }, onLicenses = { sel = "licenses" }, onAi = { sel = "ai" }, onReminder = { sel = "reminder" },
+                )
             }
-        }, onWrite = { nav.navigate(WriteRoute()) })
+        }
+        PaneDivider()
+        Box(Modifier.weight(0.58f)) {
+            val close = { sel = null }
+            when (sel) {
+                "wake" -> WakeScreen(onBack = close)
+                "lock" -> LockSettingsScreen(onBack = close)
+                "decorate" -> DecorateScreen(onBack = close, onPremium = { nav.navigate(PremiumRoute) })
+                "ai" -> AiSettingsScreen(onBack = close, onWake = { sel = "wake" })
+                "licenses" -> LicensesScreen(onBack = close)
+                "reminder" -> ReminderSettingsScreen(onBack = close)
+                else -> PaneEmpty("왼쪽에서 살펴볼 설정을 골라 주세요")
+            }
+        }
+    }
+}
+
+/** Empty detail pane: Oni dozing and one line. */
+@Composable
+internal fun PaneEmpty(text: String) {
+    Column(Modifier.fillMaxSize().background(Od.c.bg), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        OniFigure(null, OniExpression.SLEEP, 140.dp)
+        Text(text, style = OdType.body2, color = Od.c.ink2, modifier = Modifier.padding(top = 12.dp))
+    }
+}
+
+/** Tablet / landscape navigation: 쓰기 on top (the raised button's place on phones), then the 4 tabs. */
+@Composable
+private fun SideRail(dest: NavDestination?, onTab: (Any) -> Unit, onWrite: () -> Unit) {
+    val c = Od.c
+    val short = Od.layout.short // landscape phone: tighter, so all four tabs fit
+    Row(Modifier.fillMaxHeight().background(c.navBg)) {
+        Column(
+            Modifier.fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start))
+                .width(88.dp).verticalScroll(rememberScrollState()).padding(top = if (short) 8.dp else 20.dp, bottom = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Column(
+                Modifier.clip(RoundedCornerShape(16.dp)).clickable(remember { MutableInteractionSource() }, null, onClick = onWrite).padding(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(Modifier.size(if (short) 48.dp else 56.dp).clip(RoundedCornerShape(if (short) 16.dp else 18.dp)).background(c.primary), contentAlignment = Alignment.Center) {
+                    OdIcon(OdIcon.Pen, size = 24.dp, stroke = 2f, tint = c.onPrimary, contentDescription = "쓰기")
+                }
+                Text("쓰기", style = OdType.tab, color = c.ink, modifier = Modifier.padding(top = 6.dp))
+            }
+            Spacer(Modifier.height(if (short) 6.dp else 28.dp))
+            tabs.forEach { t ->
+                val on = dest?.hasRoute(t.type) == true
+                val color = if (on) c.ink else c.ink3
+                Column(
+                    Modifier.padding(vertical = if (short) 2.dp else 6.dp).clickable(remember { MutableInteractionSource() }, null) { onTab(t.route) },
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(if (short) 2.dp else 4.dp),
+                ) {
+                    Box(Modifier.size(56.dp, 32.dp).clip(RoundedCornerShape(16.dp)).background(if (on) c.surface2 else Color.Transparent), contentAlignment = Alignment.Center) {
+                        if (t.icon != null) Icon(t.icon, t.label, Modifier.size(24.dp), tint = color) else OdIcon(t.odIcon!!, size = 24.dp, tint = color)
+                    }
+                    Text(t.label, style = OdType.tab, color = color)
+                }
+            }
+        }
+        Box(Modifier.fillMaxHeight().width(1.dp).background(c.line))
     }
 }
 

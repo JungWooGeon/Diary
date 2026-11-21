@@ -71,6 +71,8 @@ import com.pass.diary.core.designsystem.Dot
 import com.pass.diary.core.designsystem.IconBtn
 import com.pass.diary.core.designsystem.LightOrb
 import com.pass.diary.core.designsystem.Od
+import com.pass.diary.core.designsystem.layout
+import com.pass.diary.core.designsystem.readableWidth
 import com.pass.diary.core.designsystem.OdCard
 import com.pass.diary.core.designsystem.OdColors
 import com.pass.diary.core.designsystem.OdIcon
@@ -176,23 +178,30 @@ fun ReportScreen(onLetters: () -> Unit, onYear: () -> Unit, vm: ReportViewModel 
             .verticalScroll(rememberScrollState()).statusBarsPadding(),
     ) {
         TabHeader("리포트") { IconBtn(OdIcon.Mail, onLetters, "온이 편지함") }
-        Column(Modifier.padding(horizontal = 20.dp)) {
-            SegTabs(listOf("주간", "월간", "올해의 빛"), tab, { if (it == 2) onYear() else vm.setTab(it) })
+        val wide = Od.layout.rail
+        Column(Modifier.readableWidth(1040.dp).padding(horizontal = 20.dp)) {
+            SegTabs(listOf("주간", "월간", "올해의 빛"), tab, { if (it == 2) onYear() else vm.setTab(it) }, Modifier.readableWidth(480.dp))
             val u = ui ?: return@Column
-            Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.readableWidth(480.dp).padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconBtn(OdIcon.ChevL, { vm.shift(-1) }, "이전", size = 20.dp)
                 Text(u.label, style = OdType.title3, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 IconBtn(OdIcon.ChevR, { if (u.canNext) vm.shift(1) }, "다음", size = 20.dp, tint = c.ink2, modifier = Modifier.alpha(if (u.canNext) 1f else 0.35f))
             }
             val r = u.report
-            Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.readableWidth(560.dp).padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OniFigure(if (r.entries == 0) LightMixer.OFF else u.light, if (r.entries == 0) OniExpression.SLEEP else OniExpression.forGroup(dom ?: EmotionGroup.CALM), 96.dp)
                 Column(Modifier.weight(1f).odCard(RoundedCornerShape(18.dp)).padding(horizontal = 15.dp, vertical = 12.dp)) {
                     Text(if (r.entries == 0) "이 기간엔 아직 켜진 빛이 없어. 오늘 하나 켜 볼까?" else u.retro, style = OdType.say.copy(fontSize = 15.sp, lineHeight = 23.sp))
                     Text("온이(AI) 한마디", style = OdType.caption2, color = c.ink2, modifier = Modifier.padding(top = 6.dp))
                 }
             }
-            if (r.entries > 0) {
+            if (r.entries > 0 && wide) {
+                // Tablets: the cards in two columns (charts left, patterns right).
+                Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) { Distribution(r); Top3(r); Streak(u.streak) }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) { Relations(u.relations); Pattern(u.grid, u.summary) }
+                }
+            } else if (r.entries > 0) {
                 Spacer(Modifier.height(14.dp))
                 Distribution(r)
                 Spacer(Modifier.height(12.dp))
@@ -202,11 +211,13 @@ fun ReportScreen(onLetters: () -> Unit, onYear: () -> Unit, vm: ReportViewModel 
                 Spacer(Modifier.height(12.dp))
                 Pattern(u.grid, u.summary)
             }
-            Spacer(Modifier.height(12.dp))
-            Streak(u.streak)
+            if (!wide || r.entries == 0) {
+                Spacer(Modifier.height(12.dp))
+                Streak(u.streak)
+            }
             AdBanner(Modifier.padding(top = 14.dp))
         }
-        Spacer(Modifier.height(110.dp))
+        Spacer(Modifier.height(Od.layout.bottomBar + 42.dp))
         Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
     }
 }

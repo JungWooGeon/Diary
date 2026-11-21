@@ -332,12 +332,16 @@ fun OdToggle(checked: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier =
 @Composable
 fun ListRow(icon: OdIcon?, label: String, value: String? = null, onClick: (() -> Unit)? = null, height: Dp = 56.dp, trailing: (@Composable () -> Unit)? = null) {
     val c = Od.c
+    val on = LocalSelectedRow.current == label
     Row(
-        Modifier.fillMaxWidth().height(height).let { if (onClick != null) it.clickable(onClick = onClick) else it },
+        Modifier.fillMaxWidth().height(height)
+            // Selected (tablet 마이: shown in the detail pane): a soft pill reaching into the card's padding, no layout shift.
+            .let { if (on) it.drawBehind { val o = 10.dp.toPx(); val v = 5.dp.toPx(); drawRoundRect(c.surface2, Offset(-o, v), Size(size.width + 2 * o, size.height - 2 * v), CornerRadius(12.dp.toPx())) } else it }
+            .let { if (onClick != null) it.clickable(onClick = onClick) else it },
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         if (icon != null) OdIcon(icon, size = 22.dp)
-        Text(label, style = OdType.body1.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
+        Text(label, style = OdType.body1.copy(fontWeight = if (on) FontWeight.Bold else FontWeight.Medium), modifier = Modifier.weight(1f))
         if (value != null) Text(value, style = OdType.caption1, color = c.ink2)
         if (trailing != null) trailing() else if (onClick != null) OdIcon(OdIcon.ChevR, size = 18.dp, tint = c.ink2)
     }

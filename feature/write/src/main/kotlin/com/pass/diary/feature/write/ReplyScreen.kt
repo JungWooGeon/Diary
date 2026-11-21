@@ -77,6 +77,8 @@ import com.pass.diary.core.designsystem.Divider
 import com.pass.diary.core.designsystem.Dot
 import com.pass.diary.core.designsystem.IconBtn
 import com.pass.diary.core.designsystem.Od
+import com.pass.diary.core.designsystem.readableWidth
+import com.pass.diary.core.designsystem.layout
 import com.pass.diary.core.designsystem.OdButton
 import com.pass.diary.core.designsystem.OdCard
 import com.pass.diary.core.designsystem.OdColors
@@ -209,11 +211,23 @@ fun ReplyScreen(onClose: () -> Unit, onOpenEntry: (String) -> Unit, onLetters: (
         is ReplyUi.Arrived -> OniExpression.forState(entry?.emotions.orEmpty(), justSaved = true).let { if (it == OniExpression.SLEEP) OniExpression.CHEER else it }
     }
     val glow = light?.let { rgb(it.glow) } ?: OdColors.BrandGlow
+    // Landscape phones: the buttons follow the letter instead of floating over it.
+    val short = Od.layout.short
+    val buttons: @Composable () -> Unit = {
+            when (ui) {
+                is ReplyUi.Writing -> OdButton("답장은 나중에 볼게요", onClose, Modifier.fillMaxWidth(), kind = ButtonKind.Ghost)
+                ReplyUi.Crisis -> OdButton("괜찮아요, 일기로 돌아갈게요", { entry?.let { onOpenEntry(it.id) } ?: onClose() }, Modifier.fillMaxWidth(), kind = ButtonKind.Ghost)
+                is ReplyUi.Arrived, ReplyUi.Saved -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OdButton("일기 보기", { entry?.let { onOpenEntry(it.id) } }, Modifier.weight(1f), kind = ButtonKind.Secondary)
+                    OdButton("확인", onClose, Modifier.weight(1f))
+                }
+            }
+    }
     Box(Modifier.fillMaxSize().background(c.bg).ambient(glow, if (crisis) 0.9f else 1.5f, 230.dp + 32.dp, 520.dp)) {
-        Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 110.dp)) {
+        Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = if (short) 0.dp else 110.dp)) {
             OdTopBar(left = { IconBtn(OdIcon.Close, onClose, "닫기") })
-            OniFigure(light, expression, if (crisis) 200.dp else 236.dp, Modifier.align(Alignment.CenterHorizontally).padding(top = if (crisis) 6.dp else 20.dp))
-            Column(Modifier.padding(horizontal = 20.dp).padding(top = if (crisis) 4.dp else 10.dp)) {
+            OniFigure(light, expression, if (Od.layout.short) 120.dp else if (crisis) 200.dp else 236.dp, Modifier.align(Alignment.CenterHorizontally).padding(top = if (crisis) 6.dp else 20.dp))
+            Column(Modifier.readableWidth(560.dp).padding(horizontal = 20.dp).padding(top = if (crisis) 4.dp else 10.dp)) {
                 when (ui) {
                     is ReplyUi.Writing, ReplyUi.Saved -> Text("일기를 저장했어요", style = OdType.caption1.copy(fontWeight = FontWeight.SemiBold), color = c.ink2, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     ReplyUi.Crisis -> Text("이번엔 답장 대신 이 얘기를 꼭 하고 싶었어", style = OdType.caption1.copy(fontWeight = FontWeight.SemiBold), color = c.ink2, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
@@ -234,17 +248,9 @@ fun ReplyScreen(onClose: () -> Unit, onOpenEntry: (String) -> Unit, onLetters: (
                     }
                 }
             }
+            if (short) Box(Modifier.readableWidth(560.dp).navigationBarsPadding().padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 12.dp)) { buttons() }
         }
-        Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().padding(start = 20.dp, end = 20.dp, bottom = 12.dp)) {
-            when (ui) {
-                is ReplyUi.Writing -> OdButton("답장은 나중에 볼게요", onClose, Modifier.fillMaxWidth(), kind = ButtonKind.Ghost)
-                ReplyUi.Crisis -> OdButton("괜찮아요, 일기로 돌아갈게요", { entry?.let { onOpenEntry(it.id) } ?: onClose() }, Modifier.fillMaxWidth(), kind = ButtonKind.Ghost)
-                is ReplyUi.Arrived, ReplyUi.Saved -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OdButton("일기 보기", { entry?.let { onOpenEntry(it.id) } }, Modifier.weight(1f), kind = ButtonKind.Secondary)
-                    OdButton("확인", onClose, Modifier.weight(1f))
-                }
-            }
-        }
+        if (!short) Box(Modifier.align(Alignment.BottomCenter).navigationBarsPadding().readableWidth(560.dp).padding(start = 20.dp, end = 20.dp, bottom = 12.dp)) { buttons() }
     }
 }
 

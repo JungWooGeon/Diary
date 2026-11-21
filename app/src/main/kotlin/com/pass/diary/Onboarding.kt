@@ -1,5 +1,13 @@
 package com.pass.diary
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.systemBarsPadding
+import com.pass.diary.core.designsystem.layout
+import com.pass.diary.core.designsystem.odCard
 import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -92,12 +100,30 @@ class AppPrefs(private val context: Context) {
 fun Onboarding(onDone: (reminder: Boolean, ai: Boolean) -> Unit) {
     var page by rememberSaveable { mutableIntStateOf(0) }
     BackHandler(enabled = page > 0) { page-- }
+    OnboardingFrame {
     AnimatedContent(page, transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(200)) }, label = "onb") { p ->
         when (p) {
             0 -> Intro(onSkip = { page = 2 }, onNext = { page = 1 })
             1 -> MoodIsLight(onBack = { page = 0 }, onSkip = { page = 2 }, onNext = { page = 2 })
             else -> Consent(onBack = { page = 1 }, onDone = onDone)
         }
+    }
+    }
+}
+
+/**
+ * Tablets / unfolded foldables: the phone-sized pages as one centered card (360dp: 기분은 빛's orbs are placed on a
+ * 340dp row) over the brand glow. Phones: the pages as they are.
+ */
+@Composable
+private fun OnboardingFrame(content: @Composable () -> Unit) {
+    if (!Od.layout.large) return content()
+    Box(Modifier.fillMaxSize().background(Od.c.bg).ambient(OdColors.BrandGlow, 1.6f, 360.dp, 900.dp).systemBarsPadding(), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.padding(vertical = 24.dp).width(360.dp).heightIn(max = 820.dp).fillMaxHeight()
+                .odCard(RoundedCornerShape(32.dp), Od.c.bg)
+                .consumeWindowInsets(WindowInsets.systemBars), // the card sits clear of the bars: pages inside skip their insets
+        ) { content() }
     }
 }
 
@@ -124,10 +150,12 @@ private fun SkipText(onSkip: () -> Unit) =
 @Composable
 private fun Intro(onSkip: () -> Unit, onNext: () -> Unit) {
     val c = Od.c
-    Box(Modifier.fillMaxSize().background(c.bg).ambient(OdColors.BrandGlow, 1.3f, 300.dp + 32.dp, 480.dp)) {
-        Column(Modifier.fillMaxSize().statusBarsPadding(), horizontalAlignment = Alignment.CenterHorizontally) {
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().background(c.bg).ambient(OdColors.BrandGlow, 1.3f, 300.dp + 32.dp, 480.dp)) {
+        val tight = maxHeight < 780.dp // tablet card in landscape: a smaller Oni keeps the text clear of the button
+        // Scrolls only where the page doesn't fit (landscape, short windows); the CTA stays on top at the bottom.
+        Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 130.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             OdTopBar(right = { SkipText(onSkip) })
-            OniFigure(null, OniExpression.DEFAULT, 290.dp, Modifier.padding(top = 56.dp))
+            OniFigure(null, OniExpression.DEFAULT, if (tight) 230.dp else 290.dp, Modifier.padding(top = if (tight) 20.dp else 56.dp))
             Text("안녕, 나는 온이야", style = OdType.caption1.copy(fontWeight = FontWeight.SemiBold), color = c.ink2, modifier = Modifier.padding(top = 34.dp))
             Text("하루 끝에 불을 켜 주는\n작은 무드등, 온이예요", style = OdType.display, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 10.dp))
             Text("기분을 남기면 온이가 그 색으로 켜지고,\n오늘 이야기를 들어 줘요.", style = OdType.body1, color = c.ink2, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 14.dp))
@@ -141,7 +169,7 @@ private fun MoodIsLight(onBack: () -> Unit, onSkip: () -> Unit, onNext: () -> Un
     val c = Od.c
     val today = LightMixer.mix(listOf(EntryEmotion(EmotionKey.TIRED, 2), EntryEmotion(EmotionKey.COMFY, 3), EntryEmotion(EmotionKey.PROUD, 4), EntryEmotion(EmotionKey.GRATEFUL, 3)))
     Box(Modifier.fillMaxSize().background(c.bg).ambient(rgb(today.glow), 1.2f, 260.dp + 32.dp, 460.dp)) {
-        Column(Modifier.fillMaxSize().statusBarsPadding(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 130.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             OdTopBar(left = { IconBtn(OdIcon.Back, onBack, "뒤로") }, right = { SkipText(onSkip) })
             Box(Modifier.fillMaxWidth().height(370.dp).padding(horizontal = 10.dp)) {
                 OniFigure(today, OniExpression.HAPPY, 230.dp, Modifier.align(Alignment.TopCenter).padding(top = 112.dp))

@@ -6,4 +6,6 @@ dependencies {
     api(platform(libs.androidx.compose.bom))
     api(libs.androidx.compose.material3)
     api(libs.androidx.compose.material.icons)
+    api(libs.androidx.compose.material3.adaptive) // currentWindowAdaptiveInfo: rail / two panes on tablets
+    testImplementation(libs.junit)
 }
