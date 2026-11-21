@@ -11,28 +11,26 @@
 - [ ] **v1 업로드 키(.jks) 찾기**
   - 같은 패키지(`com.pass.diary`)로 업데이트하려면 Play Console → 앱 무결성 → **업로드 키 인증서**와 SHA-1이 같은 키로 서명해야 해요.
   - 키를 잃어버렸다면 같은 화면에서 **업로드 키 재설정**을 요청하세요. 며칠 걸리니 가장 먼저 하세요.
-- [ ] **Play 앱 서명 사용 여부 확인**
-  - 앱 무결성 → 앱 서명에서 확인하세요.
-  - 켜져 있으면 그 화면의 **앱 서명 키 SHA-1**을 3절(OAuth)에서 써요.
+- [x] **Play 앱 서명: 사용 중** (2026-11-21 확인). 업로드 키를 잃어버려도 앱 서명 화면의 "재설정 요청"으로 바꿀 수 있어요.
+  - 앱 서명 키 SHA-1 `CF:0F:B5:85:96:00:18:0C:4A:E5:17:28:1F:18:80:78:F5:93:FC:83`
+  - 업로드 키 SHA-1 `3C:29:10:DF:75:2A:77:FE:FF:32:27:C8:93:F1:47:6F:32:61:35:C3`
+- [x] **정책 문제 2개**(대상 API 35·36 미달)는 v2(targetSdk 36)를 올리면 해결돼요.
 - [ ] **versionCode**: v1은 2예요. v2는 200이라 문제없어요. Play에 2보다 높은 빌드가 올라간 적이 있는지만 확인하세요.
 - [ ] **게시 개요 → 관리형 게시 켜기**
   - 켜 두면 아래 변경(등록정보·그래픽·데이터 보안)이 심사를 통과해도 바로 공개되지 않아요.
   - 출시할 때 한 번에 나가요.
 
-## 1. 개인정보처리방침 URL
+## 1. 개인정보처리방침·이용약관 URL
 
-- [ ] **`store/privacy_policy.html`을 웹에 올리기**
-  - 지금 등록된 옛 주소 `https://ai-diary-privacy-policy.co.kr/`는 v1(서버 AI) 기준이에요.
-  - 그 사이트 내용을 이 파일로 바꾸거나, 새 주소에 올리고 Play Console 주소를 바꾸세요.
-  - 3절의 OAuth 동의 화면 인증 때문에, 직접 소유를 인증할 수 있는 도메인이 편해요(예: `tintycolor.com/onii/privacy.html`).
-  - 옛 도메인이 만료 예정이라면 새 주소로 옮기는 편이 안전해요.
-- [ ] **빈칸 채우기**: `privacy_policy.md`의 `[이름]`, `[문의 이메일]`, `[시행일]`. 고친 뒤 HTML도 다시 만드세요(md 고치고 pandoc, 또는 html에서 같은 곳 직접 수정).
-- [ ] ⚠️ **앱 안에서 방침 열기**: 온보딩의 '개인정보 처리방침 동의' 화살표와 마이 화면에서 이 URL이 열리게 연결하세요. 지금은 링크가 없어요.
+- [ ] 웹 버전과 함께 GitHub Pages에 올려요 (진행 중): `https://jungwoogeon.github.io/Diary/legal/privacy.html`, `…/legal/terms.html`
+  - 앱은 이 주소를 앱 안 브라우저(Custom Tabs)로 열어요 → 방침이 바뀌어도 앱 업데이트·서버가 필요 없어요.
+  - Play Console → 앱 콘텐츠 → 개인정보처리방침에 위 주소를 넣으세요(옛 주소 `ai-diary-privacy-policy.co.kr`은 열리지 않아요).
+- [ ] 방침의 연락 이메일·책임자 이름·시행일 빈칸 채우기
 
 ## 2. 수익: 인앱 상품 + AdMob
 
 ### 인앱 상품
-- [ ] 수익 창출 → 인앱 상품 → 만들기
+- [ ] 수익 창출 → 일회성 제품 → 만들기 — ⚠️ Play는 **결제 기능이 들어간 빌드를 한 번 올린 뒤에만** 상품을 만들게 해요(2026-11-21 확인: "새 APK 업로드" 안내). v2 AAB를 내부 테스트에 처음 올린 직후 만드세요.
   - 상품 ID **`premium`** (`Billing.PRODUCT_ID`)
   - 이름 "프리미엄"
   - 가격 **₩3,300**
@@ -60,29 +58,24 @@
   - 메시지가 없으면 EEA 사용자에게 광고가 나가지 않아요(앱은 정상 동작).
 - [x] 마이 화면의 '광고 개인정보 옵션'(UMP 재선택) 연결 완료 (QA 커밋 50f6fb1).
 
-## 3. Google Cloud: 드라이브 백업 로그인
+## 3. Google Cloud: 드라이브 백업 로그인 — 완료 (2026-11-21)
 
-- [ ] Cloud Console에서 프로젝트를 고르거나 새로 만들고, **Google Drive API 사용 설정**을 하세요.
-- [ ] **OAuth 동의 화면(브랜딩)**
-  - 외부 사용자
-  - 앱 이름 "온이 일기", 로고
-  - 지원 이메일
-  - 홈페이지와 **개인정보처리방침 URL**(1절). 둘 다 **승인된 도메인**이어야 해요.
-  - 범위는 `.../auth/drive.appdata` 하나예요. 비민감 범위라 보안 평가는 필요 없을 거예요. 콘솔에서 '민감'으로 뜨면 그때 인증 신청을 하세요.
-- [ ] **게시 상태를 '프로덕션'으로**
-  - '테스트'로 두면 등록한 테스트 사용자만 로그인돼요.
-  - 테스트 상태에서는 7일마다 토큰이 만료돼요.
-- [ ] **OAuth 클라이언트 만들기**
+프로젝트 `aidiary-407208`(v1 때 만든 AiDiary 프로젝트)를 그대로 써요.
+- [x] Google Drive API 사용 설정돼 있음
+- [x] OAuth 동의 화면: 외부 · **프로덕션** 게시 상태
+- [x] 데이터 액세스에 `.../auth/drive.appdata` 추가 (비민감 범위 → 별도 심사 없음)
+- [x] OAuth 클라이언트
 
-  | 종류 | 패키지 | SHA-1 |
-  |---|---|---|
-  | Android | `com.pass.diary` | **Play 앱 서명 키** |
-  | Android | `com.pass.diary` | **업로드 키** (내부 테스트용 직접 설치 대비) |
-  | Android | `com.pass.diary` | **디버그 키** (개발용) |
-  | 웹 애플리케이션 | — | — |
+  | 종류 | 이름 | 패키지 / 원본 | SHA-1 |
+  |---|---|---|---|
+  | 웹 | 온이 일기 웹 | `https://jungwoogeon.github.io`, `http://localhost:5173` | — |
+  | Android | 온이 일기 Android Play 서명 | `com.pass.diary` | Play 앱 서명 키 `CF:0F:…:FC:83` |
+  | Android | 온이 일기 Android debug | `com.pass.diary` | 디버그 키 `1F:6C:…:E4:63` |
+  | Android | 온이 일기 Android debug (.llm 테스트) | `com.pass.diary.llm` | 디버그 키 |
 
-  - 웹 클라이언트 ID는 Credential Manager의 `serverClientId`예요.
-- [ ] ⚠️ 웹 클라이언트 ID를 `feature/my/src/main/res/values/strings.xml`의 `google_web_client_id`에 넣으세요. **지금은 비어 있어서 백업 로그인이 동작하지 않아요.**
+  - 웹 클라이언트 ID `171755888259-reqokhq030o547v33a0o8cmd9nrpgntk.apps.googleusercontent.com` → 앱 `google_web_client_id`(Credential Manager serverClientId)와 웹 앱(GitHub 변수 `VITE_GOOGLE_CLIENT_ID`)에 넣었어요.
+- [ ] 동의 화면 **브랜딩**(앱 이름 "온이 일기", 로고, 홈페이지·방침 URL)을 1절 주소가 올라간 뒤 갱신하기. v1 때 이름으로 남아 있을 수 있어요.
+- [ ] 업로드 키로 직접 서명한 빌드를 폰에 설치해 시험할 경우: 업로드 키 SHA-1(`3C:29:…:35:C3`)로 Android 클라이언트 하나 더 추가
 
 ## 4. 앱 콘텐츠 (정책)
 
