@@ -108,12 +108,17 @@ class MainActivity : FragmentActivity() {
     @Inject lateinit var syncStore: SyncLocalStore
     private val vm: MainViewModel by viewModels()
     private val forcedUpdate = ForcedUpdate(this)
+    /** 기록 알림 tap target (Reminders.EXTRA_OPEN) or debug `--es nav`, cleared once DiaryApp has navigated. */
+    private val openNav = MutableStateFlow<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen().setKeepOnScreenCondition { !vm.ready.value || vm.settings.value == null || vm.onboarded.value == null }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         if (savedInstanceState == null) forcedUpdate.check()
+        if (savedInstanceState == null) {
+            openNav.value = intent.getStringExtra(com.pass.diary.core.reminder.Reminders.EXTRA_OPEN) ?: if (BuildConfig.DEBUG) intent.getStringExtra("nav") else null
+        }
         ads.gatherConsent(this) // also restores the premium purchase (ARCHITECTURE §7: every app open)
         setContent {
             val ready by vm.ready.collectAsStateWithLifecycle()
@@ -149,7 +154,11 @@ class MainActivity : FragmentActivity() {
                 // progress survive a relock) but is hidden from touch and accessibility while locked.
                 Box(Modifier.fillMaxSize().then(if (locked) Modifier.clearAndSetSemantics {} else Modifier)) {
                     if (onboarded == false) Onboarding(onDone = vm::finishOnboarding)
-                    else DiaryApp(debugNav = if (BuildConfig.DEBUG) intent.getStringExtra("nav") else null, adsAllowed = !locked) // no ad under the lock
+                    else {
+                        val open by openNav.collectAsStateWithLifecycle()
+                        DiaryApp(debugNav = open, adsAllowed = !locked) // no ad under the lock
+                        LaunchedEffect(open) { openNav.value = null }
+                    }
                 }
                 if (locked) {
                     val title = stringResource(com.pass.diary.core.security.R.string.lock_biometric_title)
@@ -186,6 +195,11 @@ class MainActivity : FragmentActivity() {
         if (w.flagSecure) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         if (Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(w.recentsScreenshot)
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        intent.getStringExtra(com.pass.diary.core.reminder.Reminders.EXTRA_OPEN)?.let { openNav.value = it }
     }
 
     override fun onStart() {

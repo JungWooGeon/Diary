@@ -64,6 +64,8 @@ import com.pass.diary.feature.my.MyRoute
 import com.pass.diary.feature.my.MyScreen
 import com.pass.diary.feature.my.PremiumRoute
 import com.pass.diary.feature.my.PremiumScreen
+import com.pass.diary.feature.my.ReminderSettingsRoute
+import com.pass.diary.feature.my.ReminderSettingsScreen
 import com.pass.diary.feature.my.WakeRoute
 import com.pass.diary.feature.my.WakeScreen
 import com.pass.diary.feature.report.LettersRoute
@@ -94,17 +96,18 @@ private val tabs = listOf(
 /** App shell: 4 tabs + the raised 쓰기 button (시안 nav); every other screen is full screen above them. */
 @Composable
 fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavController(), debugNav: String? = null, adsAllowed: Boolean = true) {
-    // Debug builds only (MainActivity passes it): `adb shell am start -n com.pass.diary/.MainActivity --es nav reply:<id>`.
+    // Debug builds: `adb shell am start -n com.pass.diary/.MainActivity --es nav reply:<id>`. Any build: 기록 알림 taps
+    // (Reminders.EXTRA_OPEN: "write", "write:<id>", "today").
     androidx.compose.runtime.LaunchedEffect(debugNav) {
         val (r, arg) = (debugNav ?: return@LaunchedEffect).split(":", limit = 2).let { it[0] to it.getOrNull(1) }
         nav.navigate(
             when (r) {
                 "calendar" -> CalendarRoute; "search" -> SearchRoute(arg); "report" -> ReportRoute; "year" -> YearLightRoute; "letters" -> LettersRoute
-                "my" -> MyRoute; "premium" -> PremiumRoute; "wake" -> WakeRoute; "lock" -> LockSettingsRoute; "decorate" -> DecorateRoute; "licenses" -> LicensesRoute; "ai" -> AiSettingsRoute
+                "my" -> MyRoute; "premium" -> PremiumRoute; "wake" -> WakeRoute; "lock" -> LockSettingsRoute; "decorate" -> DecorateRoute; "licenses" -> LicensesRoute; "ai" -> AiSettingsRoute; "reminder" -> ReminderSettingsRoute
                 "write" -> WriteRoute(entryId = arg); "question" -> WriteRoute(question = arg); "chat" -> ChatRoute(arg); "reply" -> ReplyRoute(arg!!)
                 else -> TodayRoute
             },
-        )
+        ) { if (r == "today") { popUpTo(nav.graph.findStartDestination().id); launchSingleTop = true } }
     }
     val back by nav.currentBackStackEntryAsState()
     val dest = back?.destination
@@ -145,6 +148,7 @@ fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavContro
                     onPremium = { nav.navigate(PremiumRoute) }, onWake = { nav.navigate(WakeRoute) },
                     onLock = { nav.navigate(LockSettingsRoute) }, onDecorate = { nav.navigate(DecorateRoute) },
                     onLicenses = { nav.navigate(LicensesRoute) }, onAi = { nav.navigate(AiSettingsRoute) },
+                    onReminder = { nav.navigate(ReminderSettingsRoute) },
                 )
             }
             composable<PremiumRoute> { PremiumScreen(onClose = { nav.popBackStack() }) }
@@ -152,6 +156,7 @@ fun DiaryApp(start: Any = TodayRoute, nav: NavHostController = rememberNavContro
             composable<LockSettingsRoute> { LockSettingsScreen(onBack = { nav.popBackStack() }) }
             composable<DecorateRoute> { DecorateScreen(onBack = { nav.popBackStack() }, onPremium = { nav.navigate(PremiumRoute) }) }
             composable<LicensesRoute> { LicensesScreen(onBack = { nav.popBackStack() }) }
+            composable<ReminderSettingsRoute> { ReminderSettingsScreen(onBack = { nav.popBackStack() }) }
             composable<AiSettingsRoute> { AiSettingsScreen(onBack = { nav.popBackStack() }, onWake = { nav.navigate(WakeRoute) }) }
             composable<WriteRoute> {
                 WriteScreen(

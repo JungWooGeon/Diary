@@ -77,12 +77,14 @@ import kotlinx.coroutines.flow.map
 
 private val Context.appPrefs by preferencesDataStore("app_prefs")
 private val ONBOARDED = booleanPreferencesKey("onboarded")
-private val REMINDER = booleanPreferencesKey("night_reminder")
 
 /** App-level flags (onboarding consent). Lives in :app; settings that features need stay in core:data. */
 class AppPrefs(private val context: Context) {
     val onboarded: Flow<Boolean> = context.appPrefs.data.map { it[ONBOARDED] ?: false }
-    suspend fun finishOnboarding(reminder: Boolean) = context.appPrefs.edit { it[ONBOARDED] = true; it[REMINDER] = reminder }
+    suspend fun finishOnboarding(reminder: Boolean) {
+        if (reminder) com.pass.diary.core.reminder.Reminders.update(context) { it.copy(enabled = true) }
+        context.appPrefs.edit { it[ONBOARDED] = true }
+    }
 }
 
 /** 온보딩 3장 (시안 01): 온이 소개 → 기분은 빛 → 만 14세·약관·AI 안내 동의. */
@@ -168,7 +170,10 @@ private fun Consent(onBack: () -> Unit, onDone: (reminder: Boolean, ai: Boolean)
     var age by rememberSaveable { mutableStateOf(false) }
     var terms by rememberSaveable { mutableStateOf(false) }
     var privacy by rememberSaveable { mutableStateOf(false) }
-    val reminder = false
+    var reminder by rememberSaveable { mutableStateOf(false) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    // 기록 알림 asks for POST_NOTIFICATIONS (13+) when checked; a "no" just leaves it unchecked.
+    val askNotify = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { reminder = it }
     var ai by rememberSaveable { mutableStateOf(true) }
     Box(Modifier.fillMaxSize().background(c.bg)) {
         Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 140.dp)) {
@@ -184,11 +189,13 @@ private fun Consent(onBack: () -> Unit, onDone: (reminder: Boolean, ai: Boolean)
                     Divider()
                     // ponytail: no separate 이용약관 document exists yet; add onLink here once it is hosted.
                     CheckRow("이용약관 동의", "필수", terms, link = false) { terms = it }
-                    val ctx = androidx.compose.ui.platform.LocalContext.current
                     CheckRow("개인정보 처리방침 동의", "필수", privacy, onLink = {
                         com.pass.diary.feature.my.openUrl(ctx, ctx.getString(com.pass.diary.core.designsystem.R.string.privacy_policy_url))
                     }) { privacy = it }
-                    // ponytail: 밤 리마인더 isn't built yet (nothing schedules it); the row returns with the feature.
+                    Divider()
+                    CheckRow("밤 10시 기록 알림 받기", "선택", reminder, link = false) { on ->
+                        if (on && com.pass.diary.core.reminder.Reminders.needsPermission(ctx)) askNotify.launch(android.Manifest.permission.POST_NOTIFICATIONS) else reminder = on
+                    }
                 }
                 OdCard(Modifier.padding(top = 12.dp), flat = true, padding = PaddingValues(horizontal = 18.dp, vertical = 16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -246,7 +246,7 @@ class MyViewModel @Inject constructor(
 
 @Composable
 fun MyScreen(
-    onPremium: () -> Unit, onWake: () -> Unit, onLock: () -> Unit, onDecorate: () -> Unit, onLicenses: () -> Unit, onAi: () -> Unit,
+    onPremium: () -> Unit, onWake: () -> Unit, onLock: () -> Unit, onDecorate: () -> Unit, onLicenses: () -> Unit, onAi: () -> Unit, onReminder: () -> Unit = {},
     vm: MyViewModel = hiltViewModel(),
 ) {
     val c = Od.c
@@ -267,7 +267,8 @@ fun MyScreen(
                 ListRow(OdIcon.Sparkle, "온이 깨우기", wakeValue(models), onWake)
                 ListRow(OdIcon.Lock, "잠금", if (!lockOn) "꺼짐" else if (bio) "PIN · 지문" else "PIN", onLock)
                 ListRow(OdIcon.Palette, "꾸미기", themeName(settings.themeMode), onDecorate)
-                // ponytail: 알림(밤 리마인더)·감정 이름·색 편집 aren't built yet; their rows (and the bell icons) come back with them.
+                ListRow(OdIcon.Bell, "알림", reminderValue(), onReminder)
+                // ponytail: 감정 이름·색 편집 aren't built yet; their rows come back with them.
                 // PDF 일기책 is premium and ships in v2.1 (PLAN §6): locked state only for now.
                 ListRow(OdIcon.Doc, "PDF 일기책", if (premium) "v2.1에서 열려요" else "프리미엄", {
                     if (premium) Toast.makeText(ctx, "PDF 일기책은 다음 업데이트에서 열려요", Toast.LENGTH_SHORT).show() else onPremium()

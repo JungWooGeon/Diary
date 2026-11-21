@@ -71,6 +71,7 @@ class Startup @Inject constructor(
             val now = System.currentTimeMillis()
             runCatching { entries.purgeDeleted(now - THIRTY_DAYS); conflicts.purge(now) }
             if (syncStore.meta(DriveAuth.META_ACCOUNT) != null) SyncScheduler.onAppOpen(context)
+            runCatching { com.pass.diary.core.reminder.Reminders.reschedule(context) } // force-stop / restore drop alarms
             backUpAfterSaves()
         }
         result?.takeIf { it.migrated > 0 }

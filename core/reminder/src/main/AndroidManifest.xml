@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Alarms are dropped on reboot; re-arm them. No SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM (see Reminders.schedule). -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <application>
+        <receiver android:name=".ReminderReceiver" android:exported="false" />
+        <!-- Exported for system broadcasts only; it just re-arms the alarm, so a spoofed one is harmless. -->
+        <receiver android:name=".RescheduleReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
