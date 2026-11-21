@@ -249,7 +249,7 @@ function Today({ entries, names, openWrite, openReply, onQuick }: Ctx & { onQuic
             <button className="link" onClick={() => openWrite({ title: q.text })}>이 질문으로 쓰기 ›</button></section>}
           {yearAgo && <section className="card" onClick={() => openWrite({ doc: yearAgo })}><p className="hint">1년 전 오늘</p><p>{yearAgo.title || yearAgo.body.slice(0, 80)}</p></section>}
           {lastReply && <section className="card">
-            <div className="row"><h3>최근 답장</h3><span className="ai-badge">온이(AI)가 쓴 답장</span></div>
+            <div className="row"><h3>최근 답장</h3><span className="ai-badge">온이의 한마디</span></div>
             <button className="reply-mini" onClick={() => openReply({ id: lastReply.id, crisis: false })}>
               <Oni light={mix(lastReply.emotions)} emotions={lastReply.emotions} className="tiny" /><span>{lastReply.reply!.text}</span>
             </button>
@@ -407,11 +407,11 @@ function ReplyView({ ctx, id, crisis, onClose }: { ctx: Ctx; id: string; crisis:
         </> : e.reply && !e.reply.reported ? <>
           <p className="center hint strong">오늘 빛이 바뀌었어요</p>
           <div className="card letter">
-            <div className="row"><span className="ai-badge">온이(AI)가 쓴 답장</span><span className="hint">{new Date(e.reply.createdAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' })}</span></div>
+            <div className="row"><span className="ai-badge">온이의 한마디</span><span className="hint">{new Date(e.reply.createdAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' })}</span></div>
             <p className="say">{e.reply.text}</p>
             <p className="hint right">— 온이가</p>
             <div className="row">
-              <span className="hint small">{e.reply.source === 'llm' ? '앱의 대화형 AI가 쓴 답장이에요.' : '웹에서는 문구 라이브러리 답장이 와요. 대화형 AI 답장은 앱에서만 돼요.'}</span>
+              <span className="hint small">온이가 준비해 둔 말 중에서 골랐어요.</span>
               <button className="link" onClick={() => { if (confirm('이 답장을 신고할까요? 신고한 답장은 숨겨요.')) { ctx.persist({ ...e, reply: { ...e.reply!, reported: true } }); onClose() } }}>신고</button>
             </div>
           </div>
@@ -484,7 +484,7 @@ function Calendar(ctx: Ctx) {
               {e.title && <h3>{e.title}</h3>}
               {e.body && <p className="clamp">{e.body}</p>}
               {e.tags.length > 0 && <div className="tags">{e.tags.map(t => <span key={t.value} className="tag">{t.value}</span>)}</div>}
-              {e.reply && !e.reply.reported && <p className="tl-reply"><span className="ai-badge">온이(AI)</span> {e.reply.text}</p>}
+              {e.reply && !e.reply.reported && <p className="tl-reply"><span className="ai-badge">온이</span> {e.reply.text}</p>}
             </li>))}</ul>
         </section>
       )}
@@ -592,8 +592,8 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
         </div>
         <div className="stack">
           <section className="card">
-            <h3>온이(AI)</h3>
-            <p className="hint">웹에서는 위기 감지와 문구 라이브러리 답장만 동작해요. 모두 이 브라우저 안에서 처리돼요. 대화형 AI(답장·대화로 쓰기)는 지금은 Android 앱에서만 쓸 수 있어요.</p>
+            <h3>온이 답장</h3>
+            <p className="hint">온이 답장은 준비해 둔 문장 중에서 골라요. 위기 감지와 함께 모두 이 브라우저 안에서 처리돼요.</p>
             <p className="hint">온이는 의료·상담 서비스가 아니에요. 힘든 마음이 계속되면 109(자살예방 상담) 또는 1577-0199(정신건강 위기상담)에 연락해 주세요.</p>
           </section>
           <section className="card">

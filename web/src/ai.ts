@@ -1,5 +1,4 @@
 // Basic AI on the web: crisis detection (port of core/ai CrisisDetector.kt) + library replies (TemplateReplyEngine.kt).
-// No LLM here: 대화형 AI is app-only for now.
 import crisis from '../../shared/ai/crisis.json'
 import replies from '../../shared/library/replies.json'
 import questions from '../../shared/library/questions.json'

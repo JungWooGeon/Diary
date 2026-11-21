@@ -27,7 +27,7 @@ code{font-size:13px;background:var(--line);padding:1px 5px;border-radius:4px}
 저장됩니다.</li>
 <li>운영자는 일기를 보관하는 서버를 운영하지 않으며, 이용자의 일기를 볼
 수 없습니다.</li>
-<li>온이(AI)는 <strong>기기 안에서만</strong> 동작합니다. 일기 내용을 AI
+<li>온이의 AI 기능(감정 추천)은 <strong>기기 안에서만</strong> 동작합니다. 일기 내용을 AI
 서버로 보내지 않습니다.</li>
 <li>무료 이용자에게 보이는 광고를 위해 Google AdMob이 광고 식별자 등을
 수집합니다.</li>
@@ -38,7 +38,7 @@ code{font-size:13px;background:var(--line);padding:1px 5px;border-radius:4px}
 알리고 필요한 경우 동의를 받습니다.</p>
 <ol type="1">
 <li><strong>일기 서비스 제공</strong>: 일기 작성·보관, 감정 통계와
-리포트, 온이(AI) 답장, 잠금</li>
+리포트, 온이 답장, 잠금</li>
 <li><strong>백업과 기기 이전</strong>: 이용자 본인 Google 드라이브로의
 자동 백업과 새 기기 복원</li>
 <li><strong>날씨 기록</strong>(선택): 일기에 그날의 날씨 표시</li>
@@ -63,7 +63,7 @@ code{font-size:13px;background:var(--line);padding:1px 5px;border-radius:4px}
 <tbody>
 <tr>
 <td>일기</td>
-<td>본문, 제목, 감정과 강도, 태그, 날씨, 작성 시각, 온이(AI) 답장</td>
+<td>본문, 제목, 감정과 강도, 태그, 날씨, 작성 시각, 온이 답장</td>
 </tr>
 <tr>
 <td>첨부 사진</td>
@@ -125,12 +125,6 @@ id="2-이용자-본인-google-드라이브에-저장되는-정보-자동-백업�
 <td>Google Play</td>
 <td>프리미엄을 구매하거나 구매를 확인할 때</td>
 </tr>
-<tr>
-<td>모델 다운로드(선택)</td>
-<td>접속 IP 등 통신에 필요한 정보. 일기 내용은 포함되지 않습니다.</td>
-<td>Hugging Face</td>
-<td>이용자가 "온이 깨우기"로 대화형 AI를 내려받을 때</td>
-</tr>
 </tbody>
 </table>
 <h3 id="4-요청하는-권한">4. 요청하는 권한</h3>
@@ -155,12 +149,12 @@ id="2-이용자-본인-google-드라이브에-저장되는-정보-자동-백업�
 </tr>
 <tr>
 <td>알림</td>
-<td>리마인더, 모델 다운로드 진행 표시</td>
+<td>리마인더</td>
 <td>선택</td>
 </tr>
 <tr>
 <td>인터넷</td>
-<td>백업, 광고, 날씨, 모델 다운로드</td>
+<td>백업, 광고, 날씨</td>
 <td>필수</td>
 </tr>
 </tbody>
@@ -209,8 +203,7 @@ id="2-이용자-본인-google-드라이브에-저장되는-정보-자동-백업�
 <ul>
 <li>날씨 조회(Open-Meteo)는 개인을 식별할 수 없는 대략적 좌표만 보내는
 공개 날씨 서비스 이용입니다.</li>
-<li>모델 다운로드(Hugging Face)는 공개 파일을 내려받는 것입니다.</li>
-<li>위 두 곳에는 운영자가 개인정보 처리를 맡기지 않습니다.</li>
+<li>이곳에는 운영자가 개인정보 처리를 맡기지 않습니다.</li>
 </ul>
 <h2 id="제6조-개인정보의-국외-이전">제6조 (개인정보의 국외 이전)</h2>
 <p>광고 제공을 위해 아래와 같이 개인정보가 국외로 이전됩니다. 이용자는
@@ -308,27 +301,26 @@ href="https://policies.google.com/privacy">https://policies.google.com/privacy</
 권한(<code>drive.appdata</code>)만 사용합니다.</li>
 <li><strong>잠금</strong>: PIN과 지문·얼굴 잠금, 최근 앱 화면 가리기,
 위젯과 알림의 내용 숨기기를 제공합니다.</li>
-<li><strong>백업 제외</strong>: 잠금 PIN과 AI 모델 파일은 백업에서
-제외합니다.</li>
+<li><strong>백업 제외</strong>: 잠금 PIN은 백업에서 제외합니다.</li>
 </ol>
 <h2 id="제10조-ai-기능-안내">제10조 (AI 기능 안내)</h2>
 <ol type="1">
-<li><strong>온디바이스 처리</strong>: 온이(AI)는 기기 안에서만
+<li><strong>온디바이스 처리</strong>: AI 기능은 기기 안에서만
 동작합니다.
 <ul>
-<li>대상 기능: 감정 추천, 태그 제안, 답장, 제목, 질문, 회고, 대화로
-쓰기, 말로 쓰기 정리</li>
+<li>대상 기능: 감정 추천(기기 안 감정 분류 모델)</li>
 <li>일기 내용을 AI 서버나 운영자에게 보내지 않으며, AI 학습에 쓰지
 않습니다.</li>
 </ul></li>
 <li><strong>모델</strong>
 <ul>
-<li>기본 AI는 앱에 포함되어 있습니다.</li>
-<li>대화형 AI(Gemma 4 기반)는 이용자가 원할 때만 내려받습니다.</li>
+<li>감정 분류 모델은 앱에 포함되어 있습니다. 따로 내려받는 AI 모델은
+없습니다.</li>
 </ul></li>
-<li><strong>AI 생성 표시</strong>
+<li><strong>답장 안내</strong>
 <ul>
-<li>온이가 쓴 글에는 "온이(AI)"라고 표시합니다.</li>
+<li>온이 답장과 대화로 쓰기 질문은 미리 준비해 둔 문장 중에서 일기
+내용에 맞춰 자동으로 고릅니다.</li>
 <li>부적절한 답장은 앱 안에서 신고할 수 있습니다. 신고한 답장은
 숨겨지고, 신고 내용은 기기에만 남습니다.</li>
 </ul></li>
@@ -336,7 +328,7 @@ href="https://policies.google.com/privacy">https://policies.google.com/privacy</
 있습니다.</li>
 <li><strong>위기 안내</strong>
 <ul>
-<li>자해·자살과 관련된 표현이 감지되면 AI 답장 대신 도움받을 수 있는
+<li>자해·자살과 관련된 표현이 감지되면 답장 대신 도움받을 수 있는
 곳을 안내합니다(자살예방상담전화 109, 정신건강위기상담 1577-0199).</li>
 <li>이 감지도 기기 안에서만 이루어지며, 감지 사실을 어디에도 전송하지
 않습니다.</li>
@@ -344,7 +336,7 @@ href="https://policies.google.com/privacy">https://policies.google.com/privacy</
 <li><strong>고지</strong>
 <ul>
 <li>온이는 의료·상담 서비스가 아닙니다.</li>
-<li>AI 답장은 정확하지 않을 수 있습니다.</li>
+<li>자동으로 고른 답장과 감정 추천은 상황에 맞지 않을 수 있습니다.</li>
 </ul></li>
 <li><strong>음성 인식</strong>
 <ul>
