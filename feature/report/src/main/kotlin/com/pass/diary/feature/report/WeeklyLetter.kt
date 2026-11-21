@@ -41,6 +41,7 @@ import com.pass.diary.core.billing.CardTheme
 import com.pass.diary.core.billing.StoryShareDialog
 import com.pass.diary.core.data.EntryRepository
 import com.pass.diary.core.data.Insights
+import com.pass.diary.core.designsystem.CrisisCard
 import com.pass.diary.core.designsystem.AiBadge
 import com.pass.diary.core.designsystem.IconBtn
 import com.pass.diary.core.designsystem.LightOrb
@@ -89,6 +90,8 @@ data class WeeklyLetter(
     val cheer: String,
     /** 이번 주의 한 줄 (E7 over the week): picked by the embedding model. Never on the share card. */
     val line: String? = null,
+    /** An entry this week hit the crisis rules: the help card comes first, no share card. */
+    val crisis: Boolean = false,
 )
 
 internal val EmotionGroup.colorName get() = when (this) {
@@ -160,7 +163,8 @@ class WeeklyLetterViewModel @Inject constructor(saved: SavedStateHandle, reposit
         val start = weekStart(LocalDate.now()).plusWeeks(offset.toLong())
         fun range(from: LocalDate) = all.filter { LocalDate.parse(it.date).let { d -> !d.isBefore(from) && !d.isAfter(start.plusDays(6)) } }
         val week = range(start)
-        val base = weeklyLetter(start, week, range(start.minusWeeks(3)))
+        val crisis = week.any { runCatching { ai.isCrisis(it.title + "\n" + it.body) }.getOrDefault(false) }
+        val base = weeklyLetter(start, week, range(start.minusWeeks(3))).copy(crisis = crisis)
         emit(base)
         if (week.isNotEmpty()) emit(base.copy(line = memo.get(week) { runCatching { ai.centralSentence(week.map { it.body }) }.getOrNull() }))
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -177,6 +181,7 @@ fun WeeklyLetterScreen(onBack: () -> Unit, onPremium: () -> Unit, vm: WeeklyLett
             OdTopBar(title = "주간 온이 편지", subtitle = l?.label, left = { IconBtn(OdIcon.Back, onBack, "뒤로") })
             if (l == null) return@Column
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                if (l.crisis) CrisisCard(Modifier.fillMaxWidth().padding(bottom = 12.dp), `when` = "요즘")
                 OniFigure(if (l.days == 0) LightMixer.OFF else l.light, if (l.days == 0) OniExpression.SLEEP else OniExpression.LETTER, 130.dp)
                 OdCard(Modifier.fillMaxWidth().padding(top = 4.dp), padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 22.dp, vertical = 22.dp)) {
                     Text("이번 주의 빛", style = OdType.caption2.copy(fontWeight = FontWeight.Bold), color = c.ink2)
@@ -197,7 +202,7 @@ fun WeeklyLetterScreen(onBack: () -> Unit, onPremium: () -> Unit, vm: WeeklyLett
                 }
                 Spacer(Modifier.height(16.dp))
             }
-            if (l.days > 0) OdButton("카드로 공유하기", { sharing = true }, Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 16.dp).navigationBarsPadding(), icon = OdIcon.Share)
+            if (l.days > 0 && !l.crisis) OdButton("카드로 공유하기", { sharing = true }, Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 16.dp).navigationBarsPadding(), icon = OdIcon.Share)
         }
     }
     if (sharing && l != null) StoryShareDialog("주간 온이 편지", "onee_week_${l.start}", glow, { sharing = false }, onPremium, "이번 주 빛을 한 장에 담았어요") { theme -> LetterCard(l, theme) }

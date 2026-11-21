@@ -11,6 +11,9 @@ interface ReportAi {
      */
     suspend fun centralSentence(bodies: List<String>): String?
 
+    /** The crisis rules (PLAN §3.2): a week with such an entry puts the help card before the letter. */
+    suspend fun isCrisis(text: String): Boolean
+
     /** E13: people · places · activities the tag dictionary finds in [body] (on top of the tags the user saved). */
     suspend fun tags(body: String): List<Tag>
 }

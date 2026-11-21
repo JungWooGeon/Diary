@@ -53,6 +53,7 @@ import androidx.navigation.toRoute
 import com.pass.diary.core.data.EntryRepository
 import com.pass.diary.core.data.db.ChatMessageDao
 import com.pass.diary.core.data.db.ChatMessageEntity
+import com.pass.diary.core.designsystem.CrisisCard
 import com.pass.diary.core.designsystem.ButtonKind
 import com.pass.diary.core.designsystem.IconBtn
 import com.pass.diary.core.designsystem.Od

@@ -54,6 +54,7 @@ class EmbeddingStore @Inject constructor(
     private val settings: SettingsRepository,
     private val classifier: Lazy<EmotionClassifier>,
     private val crisis: Lazy<CrisisDetector>,
+    private val sentenceEmbedder: Lazy<SentenceEmbedder>,
 ) : DiaryInsights {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val file get() = File(context.filesDir, "ai/embeddings.bin")
@@ -61,7 +62,7 @@ class EmbeddingStore @Inject constructor(
     private val index = kotlinx.coroutines.flow.MutableStateFlow<EmbeddingIndex?>(null)
     private suspend fun loadedIndex() = withTimeoutOrNull(LOAD_WAIT_MS) { index.filterNotNull().first() }
     @Volatile private var texts: Map<String, EntryText> = emptyMap()
-    private val embedder by lazy { SentenceEmbedder.of(classifier.get()) }
+    private val embedder by lazy { sentenceEmbedder.get() }
     private val marks = LruCache<Int, List<SentenceMark>>(48)
 
     /**
@@ -140,8 +141,11 @@ class EmbeddingStore @Inject constructor(
             .filter { it.second >= Insights.SEARCH_MIN_SCORE }.map { it.first }
     }
 
-    /** E6: sentence vectors are cached by text, so a pause in typing only embeds the sentences that changed. */
-    private val sentenceVectors = LruCache<String, FloatArray>(96)
+    /**
+     * E6 제목 · E7 이번 달/주의 한 줄: sentence vectors cached by text, so a pause in typing only embeds the sentences that
+     * changed and the report doesn't embed the month again (≤ 80 sentences, see AiReport).
+     */
+    private val sentenceVectors = LruCache<String, FloatArray>(256)
     fun embedSentence(s: String): FloatArray? = sentenceVectors.get(s) ?: embedder.embed(s)?.also { sentenceVectors.put(s, it) }
     val canEmbed get() = embedder.available
 

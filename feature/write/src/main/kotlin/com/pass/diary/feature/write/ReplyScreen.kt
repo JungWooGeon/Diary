@@ -74,6 +74,7 @@ import com.pass.diary.core.data.db.ReplyDao
 import com.pass.diary.core.data.db.ReplyEntity
 import com.pass.diary.core.designsystem.AiBadge
 import com.pass.diary.core.designsystem.ButtonKind
+import com.pass.diary.core.designsystem.CrisisCard
 import com.pass.diary.core.designsystem.Divider
 import com.pass.diary.core.designsystem.Dot
 import com.pass.diary.core.designsystem.IconBtn
@@ -371,35 +372,6 @@ private fun Action(icon: OdIcon, label: String, color: Color, bold: Boolean = fa
     ) {
         OdIcon(icon, size = 17.dp, tint = color)
         Text(label, style = OdType.caption1.copy(fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal), color = color)
-    }
-}
-
-/** 위기 안내 (PLAN §3.2): 109 · 1577-0199, no ads, no share, no warning colors. */
-@Composable
-fun CrisisCard(modifier: Modifier = Modifier) {
-    val c = Od.c
-    val context = LocalContext.current
-    fun dial(n: String) = runCatching { context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$n"))) }
-    OdCard(modifier, padding = PaddingValues(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 14.dp)) {
-        Text("오늘 정말 많이 무거웠구나. 혼자 다 견디지 않아도 돼. 지금 이 마음을 같이 들어 줄 사람이 있어.", style = OdType.reply)
-        Text("— 온이가", style = OdType.caption1, color = c.ink2, modifier = Modifier.padding(top = 10.dp))
-        Divider(Modifier.padding(top = 16.dp, bottom = 6.dp))
-        CallRow("109", "자살예방 상담 · 24시간") { dial("109") }
-        CallRow("1577-0199", "정신건강 위기상담 · 24시간") { dial("15770199") }
-        Text("문자·카카오톡 상담도 109 누리집에서 할 수 있어요.", style = OdType.caption2, color = c.ink2, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp))
-    }
-}
-
-@Composable
-private fun CallRow(number: String, desc: String, onCall: () -> Unit) {
-    val c = Od.c
-    Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        Box(Modifier.size(44.dp).clip(CircleShape).background(Color(0xFF7F9FD1).copy(alpha = 0.2f)), contentAlignment = Alignment.Center) { OdIcon(OdIcon.Phone, size = 20.dp) }
-        Column(Modifier.weight(1f)) {
-            Text(number, style = OdType.title3.copy(fontSize = 16.sp))
-            Text(desc, style = OdType.caption2, color = c.ink2)
-        }
-        OdButton("전화", onCall, small = true, height = 36.dp, modifier = Modifier.width(64.dp))
     }
 }
 

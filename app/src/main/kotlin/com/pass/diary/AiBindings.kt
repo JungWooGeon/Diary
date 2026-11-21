@@ -144,24 +144,25 @@ internal fun List<ChatTurn>.toPairs(): List<Pair<String, String>> = buildList {
 private suspend fun SettingsRepository.aiOff() = settings.first().let { !it.aiReply && !it.aiSuggest }
 
 class AiReport @Inject constructor(
-    private val embedder: Lazy<SentenceEmbedder>,
+    private val embeddings: EmbeddingStore,
     private val crisis: Lazy<CrisisDetector>,
     private val tags: Lazy<TagExtractor>,
     private val settings: SettingsRepository,
 ) : ReportAi {
     override suspend fun centralSentence(bodies: List<String>): String? = withContext(Dispatchers.Default) {
         if (settings.aiOff()) return@withContext null
-        val e = embedder.get()
-        if (!e.available) return@withContext null
+        if (!embeddings.canEmbed) return@withContext null
         // A diary with crisis wording gives no sentence at all: it must never come back as "the month's line".
         val sentences = bodies.filter { !crisis.get().detect(it).crisis }
             .flatMap { SentenceEmbedder.splitSentences(it) }.filter { it.length in 8..80 }.distinct()
         if (sentences.size < 3) return@withContext null
         // ponytail: at most MAX_SENTENCES embeddings (~1 s on a mid phone), sampled evenly; the mean barely moves past that.
         val pool = if (sentences.size <= MAX_SENTENCES) sentences else List(MAX_SENTENCES) { sentences[it * sentences.size / MAX_SENTENCES] }
-        val vecs = pool.mapNotNull { s -> e.embed(s)?.let { s to it } }
+        val vecs = pool.mapNotNull { s -> embeddings.embedSentence(s)?.let { s to it } }
         vecs.getOrNull(EmbeddingIndex.centralIndex(vecs.map { it.second }))?.first
     }
+
+    override suspend fun isCrisis(text: String) = withContext(Dispatchers.Default) { crisis.get().detect(text).crisis }
 
     override suspend fun tags(body: String): List<Tag> = withContext(Dispatchers.Default) {
         if (body.isBlank() || settings.aiOff()) emptyList() else tags.get().extract(body)

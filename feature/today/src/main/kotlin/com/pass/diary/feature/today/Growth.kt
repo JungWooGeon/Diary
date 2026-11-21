@@ -1,8 +1,6 @@
 package com.pass.diary.feature.today
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,10 +8,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -23,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,7 +32,7 @@ import com.pass.diary.core.data.EntryRepository
 import com.pass.diary.core.data.Insights
 import com.pass.diary.core.data.SettingsRepository
 import com.pass.diary.core.designsystem.ButtonKind
-import com.pass.diary.core.designsystem.Divider
+import com.pass.diary.core.designsystem.CrisisCard
 import com.pass.diary.core.designsystem.LightOrb
 import com.pass.diary.core.designsystem.Od
 import com.pass.diary.core.designsystem.OdButton
@@ -155,7 +150,7 @@ internal fun ForecastCard(f: Insights.Forecast) {
 /** E11 마음 체크인: a gentle "how are you", never a diagnosis or advice. With crisis wording, the help card instead. */
 @Composable
 internal fun CheckInCard(crisis: Boolean, onTalk: () -> Unit, onDismiss: () -> Unit) {
-    if (crisis) return CrisisCard()
+    if (crisis) return CrisisCard(Modifier.fillMaxWidth(), `when` = "요즘")
     val c = Od.c
     OdCard(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -169,38 +164,6 @@ internal fun CheckInCard(crisis: Boolean, onTalk: () -> Unit, onDismiss: () -> U
             OdButton("얘기하러 가기", onTalk, Modifier.weight(1f), small = true, height = 40.dp)
             OdButton("괜찮아, 고마워", onDismiss, Modifier.weight(1f), kind = ButtonKind.Secondary, small = true, height = 40.dp)
         }
-    }
-}
-
-/**
- * 위기 안내 (PLAN §3.2): 109 · 1577-0199, same wording as feature/write's CrisisCard.
- * ponytail: a copy so the write screens (another work stream) stay untouched; merge into core:designsystem with that one.
- */
-@Composable
-private fun CrisisCard() {
-    val c = Od.c
-    val context = LocalContext.current
-    fun dial(n: String) = runCatching { context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$n"))) }
-    OdCard(Modifier.fillMaxWidth(), padding = PaddingValues(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 14.dp)) {
-        Text("요즘 정말 많이 무거웠구나. 혼자 다 견디지 않아도 돼. 지금 이 마음을 같이 들어 줄 사람이 있어.", style = OdType.reply)
-        Text("— 온이가", style = OdType.caption1, color = c.ink2, modifier = Modifier.padding(top = 10.dp))
-        Divider(Modifier.padding(top = 16.dp, bottom = 6.dp))
-        CallRow("109", "자살예방 상담 · 24시간") { dial("109") }
-        CallRow("1577-0199", "정신건강 위기상담 · 24시간") { dial("15770199") }
-        Text("문자·카카오톡 상담도 109 누리집에서 할 수 있어요.", style = OdType.caption2, color = c.ink2, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp))
-    }
-}
-
-@Composable
-private fun CallRow(number: String, desc: String, onCall: () -> Unit) {
-    val c = Od.c
-    Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        Box(Modifier.size(44.dp).clip(CircleShape).background(Color(0xFF7F9FD1).copy(alpha = 0.2f)), contentAlignment = Alignment.Center) { OdIcon(OdIcon.Phone, size = 20.dp) }
-        Column(Modifier.weight(1f)) {
-            Text(number, style = OdType.title3.copy(fontSize = 16.sp))
-            Text(desc, style = OdType.caption2, color = c.ink2)
-        }
-        OdButton("전화", onCall, small = true, height = 36.dp, modifier = Modifier.width(64.dp))
     }
 }
 
