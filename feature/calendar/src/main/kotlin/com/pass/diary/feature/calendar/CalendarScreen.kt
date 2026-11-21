@@ -301,12 +301,12 @@ private fun DayCard(day: LocalDate, entries: List<Entry>, future: Boolean, onOpe
         when {
             entries.isNotEmpty() -> {
                 DayLightStrip(entries.map { DayMark(it.time, it.emotions) }, Modifier.padding(top = 12.dp), height = 10.dp, labels = false)
-                val e = entries.firstOrNull { it.title.isNotBlank() || it.body.isNotBlank() } ?: entries.first()
+                val (e, photo) = dayCover(entries)
                 Row(
                     Modifier.padding(top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable { onOpen(e.id) },
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    PhotoThumb(entries.flatMap { it.photos }.firstOrNull(), e.id.hashCode(), 44.dp, 10.dp)
+                    PhotoThumb(photo, e.id.hashCode(), 44.dp, 10.dp)
                     Column(Modifier.weight(1f)) {
                         Text(e.title.ifBlank { e.emotions.joinToString(" · ") { it.key.label }.ifBlank { "기록" } }, style = OdType.body2.copy(fontWeight = FontWeight.Bold), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         if (e.body.isNotBlank()) Text(e.body.lines().first(), style = OdType.caption2, color = c.ink2, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -320,6 +320,15 @@ private fun DayCard(day: LocalDate, entries: List<Entry>, future: Boolean, onOpe
             }
         }
     }
+}
+
+/**
+ * The one record a day card shows (title first, then body, then the first). Its photo must come from this same record,
+ * never from the day's other records — a day-level `photos.first()` paired one entry's text with another's photo.
+ */
+internal fun dayCover(entries: List<Entry>): Pair<Entry, Photo?> {
+    val e = entries.firstOrNull { it.title.isNotBlank() } ?: entries.firstOrNull { it.body.isNotBlank() } ?: entries.first()
+    return e to e.photos.firstOrNull()
 }
 
 /** Photo with a film-tone placeholder underneath (shows if the file is missing). */
@@ -361,7 +370,7 @@ private fun TimelineTab(vm: CalendarViewModel, entries: List<Entry>, onOpen: (St
 @Composable
 private fun DayTimelineCard(day: LocalDate, entries: List<Entry>, replies: Map<String, String>, onOpen: (String) -> Unit, selected: Boolean = false) {
     val c = Od.c
-    val main = entries.firstOrNull { it.title.isNotBlank() } ?: entries.firstOrNull { it.body.isNotBlank() } ?: entries.last()
+    val (main, cover) = dayCover(entries)
     val keys = entries.flatMap { e -> e.emotions.map { it.key } }.distinct()
     val glows = dayGlows(entries).let { if (it.size == 1) it + it else it }
     val replied = entries.lastOrNull { replies[it.id] != null }
@@ -387,7 +396,7 @@ private fun DayTimelineCard(day: LocalDate, entries: List<Entry>, replies: Map<S
                         modifier = Modifier.padding(top = 3.dp),
                     )
                 }
-                entries.flatMap { it.photos }.firstOrNull()?.let { PhotoThumb(it, 0, 56.dp, 10.dp) }
+                cover?.let { PhotoThumb(it, 0, 56.dp, 10.dp) }
             }
             if (replied != null) {
                 Row(
