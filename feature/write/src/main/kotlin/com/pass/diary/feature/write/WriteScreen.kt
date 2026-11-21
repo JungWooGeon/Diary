@@ -309,6 +309,9 @@ private fun Editor(state: WriteState, vm: WriteViewModel, onBack: () -> Unit, on
     // 말로 쓰기 (core:device, on-device recognizer) -> transcript, inserted as-is.
     val dictate = com.pass.diary.core.device.rememberDictation { vm.dictated(it) }
     val weather = com.pass.diary.core.device.rememberWeatherAction(entry.date, vm::setWeather)
+    // 온이가 찾은 태그 = body tags + photo labels (VisionTools.kt), minus what the entry already has.
+    val photoTags = photoTagSuggestions(entry.photos)
+    val tagSuggestions = (state.suggestedTags + photoTags).distinctBy { it.value }.filter { t -> entry.tags.none { it.value == t.value } }
 
     Box(Modifier.fillMaxSize().background(c.bg)) {
     Column(Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
@@ -421,13 +424,13 @@ private fun Editor(state: WriteState, vm: WriteViewModel, onBack: () -> Unit, on
                     entry.tags.forEach { t -> OdChip("#${t.value}", height = 30.dp, style = OdType.chip.copy(fontSize = 13.sp)) { vm.removeTag(t) } }
                     if (addingTag) TagInput { vm.addTag(it); addingTag = false }
                 }
-                if (state.suggestedTags.isNotEmpty()) {
+                if (tagSuggestions.isNotEmpty()) {
                     Row(Modifier.padding(top = 12.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         OdIcon(OdIcon.Sparkle, size = 13.dp, stroke = 2f, tint = c.ink2)
                         Text("온이가 찾은 태그 · 눌러서 추가", style = OdType.caption2.copy(fontWeight = FontWeight.SemiBold), color = c.ink2)
                     }
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        state.suggestedTags.forEach { t ->
+                        tagSuggestions.forEach { t ->
                             Box(
                                 Modifier.height(30.dp).dashedBorder(glow, 15.dp).clip(RoundedCornerShape(15.dp)).clickable { vm.addTag(t.value, t.kind, auto = true) }.padding(horizontal = 13.dp),
                                 contentAlignment = Alignment.Center,
@@ -451,6 +454,7 @@ private fun Editor(state: WriteState, vm: WriteViewModel, onBack: () -> Unit, on
                 ToolItem(OdIcon.Image, "사진", pickPhotos)
                 ToolItem(OdIcon.Tag, "태그") { addingTag = true }
                 ToolItem(OdIcon.Sun, com.pass.diary.core.device.weatherLabel(entry.weather) ?: "날씨", weather)
+                VisionTools(entry.photos.size, onText = { vm.appendBody(it) }, onSticker = { vm.addPhotos(listOf(it)) })
                 Spacer(Modifier.weight(1f))
                 OdButton("대화로", onChat, kind = ButtonKind.Secondary, small = true, icon = OdIcon.Chat, height = 44.dp)
                 OdButton("말로 쓰기", dictate, small = true, icon = OdIcon.Mic, height = 44.dp)
@@ -492,7 +496,7 @@ private fun TagInput(onAdd: (String) -> Unit) {
 }
 
 @Composable
-private fun ToolItem(icon: OdIcon, label: String, onClick: () -> Unit) {
+internal fun ToolItem(icon: OdIcon, label: String, onClick: () -> Unit) {
     val c = Od.c
     Column(Modifier.width(44.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         OdIcon(icon, size = 22.dp, tint = c.ink2)

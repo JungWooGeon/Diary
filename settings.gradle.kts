@@ -20,5 +20,6 @@ include(":app")
 include(
     ":core:model", ":core:data", ":core:light", ":core:designsystem", ":core:security",
     ":core:legacy", ":core:sync", ":core:ai", ":core:billing-ads", ":core:device", ":core:reminder",
+    ":core:vision",
 )
 include(":feature:today", ":feature:write", ":feature:calendar", ":feature:report", ":feature:my")

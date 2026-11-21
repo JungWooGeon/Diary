@@ -17,7 +17,7 @@ import javax.inject.Singleton
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-/** Copies picked photos into app storage (filesDir/photos), long side ≤ 1600px, JPEG q80 (ARCHITECTURE §2.2). */
+/** Copies picked photos into app storage (filesDir/photos), long side ≤ 1600px, JPEG q80 (ARCHITECTURE §2.2); stickers PNG. */
 @Singleton
 class PhotoStore @Inject constructor(@ApplicationContext private val context: Context) {
     private val dir get() = File(context.filesDir, "photos").apply { mkdirs() }
@@ -40,13 +40,22 @@ class PhotoStore @Inject constructor(@ApplicationContext private val context: Co
             val out = Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, m, true)
             val id = UUID.randomUUID().toString()
             val file = File(dir, "$id.jpg")
-            file.outputStream().use { out.compress(Bitmap.CompressFormat.JPEG, QUALITY, it) }
+            // 사진 스티커 (transparent cut-out) stays PNG so the background stays see-through. Same "<id>.jpg" name as every
+            // photo, so sync, 내보내기 and the web need no second format: Android, Coil and browsers decode by content.
+            // ponytail: name/Drive mime still say jpeg; rename to .png in sync+archive if a viewer ever trusts the extension.
+            val format = if (out.hasAlpha() && hasTransparency(out)) Bitmap.CompressFormat.PNG else Bitmap.CompressFormat.JPEG
+            file.outputStream().use { out.compress(format, QUALITY, it) }
             Photo(id = id, entryId = entryId, localPath = file.absolutePath, w = out.width, h = out.height)
         }.getOrNull()
     }
 
     fun delete(photo: Photo) {
         File(photo.localPath).takeIf { it.parentFile == dir }?.delete()
+    }
+
+    private fun hasTransparency(b: Bitmap): Boolean {
+        val row = IntArray(b.width)
+        return (0 until b.height).any { y -> b.getPixels(row, 0, b.width, 0, y, b.width, 1); row.any { it ushr 24 != 0xFF } }
     }
 
     companion object {

@@ -1,0 +1,19 @@
+Google ML Kit
+
+이 앱은 Google ML Kit의 다음 기능을 사용해요. 모든 처리는 기기 안에서 이루어지고, 사진·글·손글씨는 기기 밖으로 보내지 않아요.
+
+- Image Labeling (Google Play 서비스)
+- Text Recognition v2, 한국어 (Google Play 서비스)
+- Document Scanner (Google Play 서비스)
+- Subject Segmentation (Google Play 서비스)
+- Digital Ink Recognition, 한국어 모델 (사용자가 켤 때 내려받음)
+
+ML Kit 사용은 아래 약관을 따라요.
+
+ML Kit Terms of Service
+https://developers.google.com/ml-kit/terms
+
+Google APIs Terms of Service
+https://developers.google.com/terms
+
+ML Kit에 포함된 서드파티 오픈소스 라이선스는 Google Play 서비스가 함께 제공해요.

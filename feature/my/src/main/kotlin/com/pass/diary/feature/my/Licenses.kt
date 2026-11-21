@@ -47,6 +47,10 @@ internal val ossNotices = listOf(
         "Apache-2.0", "Copyright 2020 Jangwon Park (monologg)", "Apache-2.0.txt",
     ),
     OssNotice("LiteRT (TensorFlow Lite)", "기기 안 감정 분류 실행", "Apache-2.0", "Copyright The TensorFlow Authors", "Apache-2.0.txt"),
+    OssNotice(
+        "Google ML Kit", "사진 태그·종이 일기 글자 인식·사진 스티커·손글씨 인식 (모두 기기 안에서 처리)",
+        "ML Kit 이용약관", "Copyright Google LLC", "MLKit-Terms.txt",
+    ),
     OssNotice("Open-Meteo", "날씨 기록 데이터", "CC BY 4.0", "Weather data by Open-Meteo.com", "CC-BY-4.0.txt"),
     OssNotice("AndroidX · Jetpack Compose · Glance · WorkManager · Room · DataStore", "앱 화면과 저장", "Apache-2.0", "Copyright The Android Open Source Project", "Apache-2.0.txt"),
     OssNotice("Kotlin · kotlinx.coroutines · kotlinx.serialization", "앱 코드", "Apache-2.0", "Copyright JetBrains s.r.o. and Kotlin Programming Language contributors", "Apache-2.0.txt"),
