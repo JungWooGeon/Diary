@@ -54,7 +54,7 @@ android {
 
 dependencies {
     listOf(
-        ":core:model", ":core:data", ":core:light", ":core:designsystem", ":core:security", ":core:legacy", ":core:sync", ":core:billing-ads", ":core:ai", ":core:reminder",
+        ":core:model", ":core:data", ":core:light", ":core:designsystem", ":core:security", ":core:legacy", ":core:sync", ":core:billing-ads", ":core:ai", ":core:reminder", ":core:vision",
         ":feature:today", ":feature:write", ":feature:calendar", ":feature:report", ":feature:my",
     ).forEach { implementation(project(it)) }
 
