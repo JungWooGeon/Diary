@@ -31,7 +31,13 @@ import kotlinx.serialization.json.jsonPrimitive
  *
  *   # model in place (debug import, no download):
  *   adb shell run-as com.pass.diary mkdir -p files/models
- *   adb exec-in run-as com.pass.diary sh -c 'cat > files/models/gemma-4-E2B-it.litertlm' < gemma-4-E2B-it.litertlm
+ *   # (piping a 2.6GB file through `adb exec-in` truncated at ~1.4GB on a Note20 — push to /data/local/tmp, then copy)
+ *   adb push gemma-4-E2B-it.litertlm /data/local/tmp/
+ *   adb shell run-as com.pass.diary cp /data/local/tmp/gemma-4-E2B-it.litertlm files/models/
+ *   adb shell rm /data/local/tmp/gemma-4-E2B-it.litertlm   # then verify size/sha256 against shared/ai/llm/models.json
+ *
+ *   # measured 2026-11-21, Galaxy Note20 (SD865, 8GB), E2B: GPU init 14s, TTFT p50 1.9s, reply p50 5.0s / p90 5.5s,
+ *   #   17 tok/s, peak RSS 2.1GB, no thermal throttling over 30 replies. CPU: TTFT ~8.3s, reply ~12.5s, 13 tok/s, 2.6GB.
  *   adb shell am start -n com.pass.diary/.LlmBenchActivity --es model e2b --ei n 30 [--es backend cpu]
  *   adb logcat -s LlmBench          # results also in files/bench-<model>.json
  */
