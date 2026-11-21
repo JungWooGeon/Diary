@@ -10,7 +10,7 @@ android {
     namespace = "com.pass.diary"
     defaultConfig {
         applicationId = "com.pass.diary"
-        versionCode = 203
+        versionCode = 204
         versionName = "2.0.0"
         // LiteRT (classifier) natives: 64-bit only.
         // x86_64 keeps Intel emulators working.

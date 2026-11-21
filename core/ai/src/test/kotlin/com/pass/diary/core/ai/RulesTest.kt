@@ -105,6 +105,14 @@ class RulesTest {
         assertTrue(food.toString(), "민준" in food)
     }
 
+    @Test fun everydayVerbsAreNotActivityAliases() {
+        // "보고"(보다) tagged 회의 and "중간에" tagged 시험 on ordinary sentences.
+        val t = TagExtractor(TestAssets.json("ai/tags.json")!!.obj)
+        val v = t.extract("민지랑 전시 보고 카페 갔다. 중간에 잠깐 쉬었다", max = 10).map { it.value }
+        assertFalse(v.toString(), "회의" in v || "시험" in v)
+        assertTrue(t.extract("보고서 쓰느라 바빴다").any { it.value == "회의" })
+    }
+
     private val replies = Json.parseToJsonElement(TestAssets.resource("fixtures/replies.json")).jsonArray
 
     @Test fun templateFillsSlotsWithJosa() {
