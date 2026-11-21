@@ -39,7 +39,8 @@ class TagExtractor(dict: JsonObject, userTags: List<Tag> = emptyList()) {
         // given names said with the 이 suffix ("민준이랑", "서현이가") that the dictionary doesn't know
         for (m in NAME.findAll(text)) {
             val name = m.groupValues[1]
-            if (name !in NAME_STOP && terms.none { it.surface == name || it.surface == name + "이" })
+            // given-name syllables only: "떡볶이를", "고양이가" end in 이 too
+            if (name !in NAME_STOP && name.all { it in NAME_SYLLABLES } && terms.none { it.surface == name || it.surface == name + "이" })
                 found.putIfAbsent("person$name", Tag(TagKind.PERSON, name, auto = true))
         }
         // "민지랑", "수진하고", "준혁과": no 이, so only names made of given-name syllables (커피랑, 치킨이랑 are not people)

@@ -176,6 +176,8 @@ class LlmReplyEngine(
     companion object {
         const val FALLBACK = "오늘 이야기 들려줘서 고마워. 나 여기 불 켜 두고 있을게."
         private val TRAILERS = Regex("<end_of_turn>|<eos>|<\\|im_end\\|>")
-        internal fun clean(s: String) = s.replace(TRAILERS, "").trim().removeSurrounding("\"").trim()
+        /** The chat prompt is a "온이: …/나: …" transcript, so the model sometimes echoes the speaker label: drop it. */
+        private val SPEAKER = Regex("^(온이|Oni)\\s*[:：]\\s*")
+        internal fun clean(s: String) = s.replace(TRAILERS, "").trim().removeSurrounding("\"").trim().replace(SPEAKER, "").trim()
     }
 }

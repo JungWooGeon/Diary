@@ -19,6 +19,12 @@ import org.junit.Test
 
 /** Rule components against the shared/ specs and their own test cases. */
 class RulesTest {
+    @Test fun cleanDropsEchoedSpeakerLabel() {
+        assertEquals("영화 보러 가기로 했구나!", LlmReplyEngine.clean("온이: 영화 보러 가기로 했구나!<end_of_turn>"))
+        assertEquals("영화 보러 가기로 했구나!", LlmReplyEngine.clean("\"온이 : 영화 보러 가기로 했구나!\""))
+        assertEquals("온이는 내 친구야", LlmReplyEngine.clean("온이는 내 친구야"))
+    }
+
     @Test fun filtersSpecTestCases() {
         val spec = TestAssets.json("ai/llm/filters.json")!!.obj
         val f = OutputFilter(spec, people) // the app's wiring (AiModule): entities cases assume the tags.json people
@@ -126,6 +132,17 @@ class RulesTest {
         // food / common nouns with 랑·와 are not people
         val food = of("우유랑 커피랑 고기와 치킨하고 먹었다. 어제와 같은 하루")
         assertTrue(food.toString(), food.none { it.first == TagKind.PERSON })
+    }
+
+    @Test fun commonWordsAreNotPeopleAliases() {
+        // "같이"·"사람"·"타는" were split-off pieces of multi-word aliases and tagged 알바생/썸남 on everyday sentences.
+        val t = TagExtractor(TestAssets.json("ai/tags.json")!!.obj)
+        val v = t.extract("동생이랑 같이 영화 보러 가기로 했다. 사람이 많았다. 버스 타는 곳에서 만났다", max = 10).map { it.value }
+        assertFalse(v.toString(), "알바생" in v || "썸남" in v)
+        assertTrue(t.extract("썸 타는 사람이랑 밥 먹었다").any { it.value == "썸남" })
+        val food = t.extract("친구랑 떡볶이를 먹고 민준이랑 통화했다", max = 10).map { it.value }
+        assertFalse(food.toString(), "떡볶" in food)
+        assertTrue(food.toString(), "민준" in food)
     }
 
     private val replies = Json.parseToJsonElement(TestAssets.resource("fixtures/replies.json")).jsonArray
