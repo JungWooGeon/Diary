@@ -66,7 +66,8 @@
       "required": ["text", "source", "createdAt"],
       "properties": {
         "text": { "type": "string" },
-        "source": { "enum": ["template", "llm"] },
+        "source": { "enum": ["template", "llm"], "description": "template = 온이의 한마디 (shared/library, not AI). llm = written by a language model (shown as 온이(AI))." },
+        "engine": { "type": ["string", "null"], "description": "Optional, which model wrote an llm reply. \"chrome-builtin\" = web, Chrome's built-in on-device model (Prompt API). Readers that don't know it ignore it." },
         "templateId": { "type": ["string", "null"] },
         "createdAt": { "type": "integer" },
         "reported": { "type": "boolean", "default": false }
