@@ -61,7 +61,24 @@ interface EntryDao {
     }
 
     @Query("UPDATE entry SET deleted = 1, updatedAt = :now WHERE id = :id")
-    suspend fun softDelete(id: String, now: Long)
+    suspend fun markDeleted(id: String, now: Long)
+
+    @Query("SELECT photo.localPath FROM photo JOIN entry ON entry.id = photo.entryId WHERE entry.deleted = 1")
+    suspend fun deletedPhotoPaths(): List<String>
+
+    /**
+     * Tombstones keep only what sync needs (id, date, time, createdAt, updatedAt, deleted): the diary text, feelings,
+     * tags, photos, reply and chat are wiped. Covers every tombstone, so ones written before this rule get cleaned too.
+     */
+    @Query(SCRUB_ENTRY) suspend fun scrubEntries()
+    @Query(SCRUB_EMOTIONS) suspend fun scrubEmotions()
+    @Query(SCRUB_TAGS) suspend fun scrubTags()
+    @Query(SCRUB_PHOTOS) suspend fun scrubPhotos()
+    @Query(SCRUB_REPLIES) suspend fun scrubReplies()
+    @Query(SCRUB_CHAT) suspend fun scrubChat()
+
+    @Transaction
+    suspend fun scrubDeleted() { scrubEntries(); scrubEmotions(); scrubTags(); scrubPhotos(); scrubReplies(); scrubChat() }
 
     /** Hard delete of tombstones older than [before] that Drive already has (§2.1: 30 days after sync). */
     @Query("DELETE FROM entry WHERE deleted = 1 AND updatedAt < :before AND id IN (SELECT entityId FROM sync_state WHERE remoteVersion = entry.updatedAt)")
@@ -124,3 +141,14 @@ interface EntryConflictDao {
     @Insert suspend fun insert(row: EntryConflictEntity)
     @Query("DELETE FROM entry_conflict WHERE keepUntil <= :now") suspend fun purge(now: Long)
 }
+
+// See [EntryDao.scrubDeleted]. DatabaseModule also runs these on open, for tombstones from older builds.
+private const val OF_DELETED = "entryId IN (SELECT id FROM entry WHERE deleted = 1)"
+internal const val SCRUB_ENTRY = "UPDATE entry SET title = '', body = '', weather = NULL, lightColor = NULL " +
+    "WHERE deleted = 1 AND (title != '' OR body != '' OR weather IS NOT NULL OR lightColor IS NOT NULL)"
+internal const val SCRUB_EMOTIONS = "DELETE FROM entry_emotion WHERE $OF_DELETED"
+internal const val SCRUB_TAGS = "DELETE FROM entry_tag WHERE $OF_DELETED"
+internal const val SCRUB_PHOTOS = "DELETE FROM photo WHERE $OF_DELETED"
+internal const val SCRUB_REPLIES = "DELETE FROM reply WHERE $OF_DELETED"
+internal const val SCRUB_CHAT = "DELETE FROM chat_message WHERE $OF_DELETED"
+internal val SCRUB_DELETED = listOf(SCRUB_ENTRY, SCRUB_EMOTIONS, SCRUB_TAGS, SCRUB_PHOTOS, SCRUB_REPLIES, SCRUB_CHAT)

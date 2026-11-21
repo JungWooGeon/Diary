@@ -122,6 +122,17 @@ class SyncEngineTest {
         assertTrue(DriveJson.decodeFromString<EntryDoc>(drive.text("entries/2026/11/a.json")).deleted) // file kept
     }
 
+    @Test fun scrubbedTombstoneRoundTrips() {
+        // What EntryRepository.delete leaves behind: no text/feelings/tags/photos, only the sync fields.
+        val t = com.pass.diary.core.model.Entry(id = "a", date = "2026-11-03", time = "21:00", createdAt = 1, updatedAt = 9, deleted = true)
+        val json = DriveJson.encodeToString(EntryDoc.serializer(), t.toDoc())
+        val back = DriveJson.decodeFromString<EntryDoc>(json)
+        assertTrue(back.deleted)
+        assertEquals("entries/2026/11/a.json", back.path)
+        assertEquals(listOf(9L, 1L), listOf(back.updatedAt, back.createdAt))
+        assertEquals(t, back.toEntry { it })
+    }
+
     @Test fun verificationFailureIsReportedThenRetrySucceeds() = runTest {
         val (store, engine) = device()
         store.save(doc("a", 10))

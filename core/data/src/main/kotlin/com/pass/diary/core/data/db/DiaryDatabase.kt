@@ -39,7 +39,11 @@ abstract class DiaryDatabase : RoomDatabase() {
 object DatabaseModule {
     @Provides @Singleton
     fun database(@ApplicationContext context: Context): DiaryDatabase =
-        Room.databaseBuilder(context, DiaryDatabase::class.java, DiaryDatabase.NAME).build()
+        Room.databaseBuilder(context, DiaryDatabase::class.java, DiaryDatabase.NAME)
+            .addCallback(object : RoomDatabase.Callback() {
+                override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) = SCRUB_DELETED.forEach(db::execSQL)
+            })
+            .build()
 
     @Provides fun entryDao(db: DiaryDatabase) = db.entryDao()
     @Provides fun replyDao(db: DiaryDatabase) = db.replyDao()

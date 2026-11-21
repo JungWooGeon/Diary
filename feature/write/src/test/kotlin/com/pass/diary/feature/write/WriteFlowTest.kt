@@ -183,8 +183,41 @@ class WriteFlowTest {
         vm.setBody("")
         vm.flushNow()
         assertTrue(stored(vm)?.deleted ?: true)
+        assertEquals("", stored(vm)?.body.orEmpty()) // the "hello" must not linger in the tombstone
         assertTrue(runBlocking { repo.observeDay(EntryRepository.today()).first() }.isEmpty())
     }
+
+    @Test fun deleteKeepsOnlyTheTombstone() {
+        val photo = java.io.File(ctx.filesDir, "p1.jpg").apply { writeText("x") }
+        val e = runBlocking {
+            repo.save(EntryRepository.newEntry().copy(
+                title = "비밀", body = "아무도 몰랐으면", weather = "맑음 4°", emotions = listOf(com.pass.diary.core.model.EntryEmotion(EmotionKey.SAD, 4)),
+                tags = listOf(com.pass.diary.core.model.Tag(com.pass.diary.core.model.TagKind.PERSON, "민지")),
+                photos = listOf(com.pass.diary.core.model.Photo("p1", "", photo.absolutePath, 10, 10)),
+            ))
+        }
+        reply(e.id)
+        runBlocking { db.chatMessageDao().insert(com.pass.diary.core.data.db.ChatMessageEntity(entryId = e.id, role = "user", text = "비밀 얘기", at = 1)) }
+        runBlocking { repo.delete(e.id, now = e.updatedAt + 5) }
+
+        val t = stored(e.id)!!
+        assertTrue(t.deleted)
+        assertEquals(listOf(e.id, e.date, e.time, e.createdAt, e.updatedAt + 5), listOf(t.id, t.date, t.time, t.createdAt, t.updatedAt))
+        assertEquals(listOf("", ""), listOf(t.title, t.body))
+        assertNull(t.weather)
+        assertTrue(t.emotions.isEmpty() && t.tags.isEmpty() && t.photos.isEmpty())
+        assertNull(runBlocking { db.replyDao().get(e.id) })
+        assertTrue(runBlocking { db.chatMessageDao().get(e.id) }.isEmpty())
+        assertTrue(!photo.exists())
+        assertTrue("tombstone still goes to Drive", runBlocking { db.entryDao().unsynced() }.any { it.entry.id == e.id })
+    }
+
+    @Test fun tombstoneFromAnotherPhoneIsScrubbedToo() {
+        val e = entry("다른 폰에서 지운 글")
+        runBlocking { repo.saveExternal(listOf(e.copy(deleted = true, updatedAt = e.updatedAt + 1))) }
+        assertEquals("", stored(e.id)!!.body)
+    }
+    private fun stored(id: String) = runBlocking { repo.get(id) }
 
     @Test fun unpickedMoodLeavesNoEntry() {
         val vm = newVm()

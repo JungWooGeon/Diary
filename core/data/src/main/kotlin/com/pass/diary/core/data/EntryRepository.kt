@@ -19,6 +19,7 @@ import com.pass.diary.core.model.TagKind
 import com.pass.diary.core.model.Template
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -51,7 +52,10 @@ class EntryRepository @Inject constructor(private val db: DiaryDatabase, private
      * Writes entries that come from elsewhere (v1 migration, Drive) as they are: updatedAt is kept so they don't
      * look like local edits. One transaction.
      */
-    suspend fun saveExternal(entries: List<Entry>) = db.withTransaction { entries.forEach { write(it) } }
+    suspend fun saveExternal(entries: List<Entry>) = db.withTransaction {
+        entries.forEach { write(it) }
+        if (entries.any { it.deleted }) dao.scrubDeleted() // a tombstone from an older client may still carry text
+    }
 
     private suspend fun write(entry: Entry): Entry {
         val stored = entry.copy(lightColor = LightMixer.mix(entry.emotions).lightHex)
@@ -68,7 +72,11 @@ class EntryRepository @Inject constructor(private val db: DiaryDatabase, private
     suspend fun quickMood(key: EmotionKey, now: Long = System.currentTimeMillis()): Entry =
         save(newEntry(now = now).copy(emotions = listOf(EntryEmotion(key))), now)
 
-    suspend fun delete(id: String, now: Long = System.currentTimeMillis()) = dao.softDelete(id, now)
+    /** Soft delete: a tombstone for sync, with the content wiped (see [EntryDao.scrubDeleted]) and its photo files removed. */
+    suspend fun delete(id: String, now: Long = System.currentTimeMillis()) {
+        val photos = db.withTransaction { dao.markDeleted(id, now); dao.deletedPhotoPaths().also { dao.scrubDeleted() } }
+        photos.forEach { File(it).delete() }
+    }
 
     companion object {
         val DATE: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
