@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.res.ResourcesCompat
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
@@ -119,20 +121,35 @@ internal fun oniWidgetText(today: List<Entry>, hidden: Boolean): Pair<String, St
 
 /** Refreshes all three after any save (called from Startup). */
 suspend fun updateWidgets(context: Context) {
+    refreshes.value++
     MoodWidget().updateAll(context)
     OniWidget().updateAll(context)
     MonthWidget().updateAll(context)
+}
+
+/**
+ * Glance keeps a widget's session open for a while after a tap and then only recomposes on update(), so data read
+ * before provideContent would stay stale (the 1탭 widget kept saying "오늘 6번째"). Widgets reload through this instead.
+ */
+private val refreshes = kotlinx.coroutines.flow.MutableStateFlow(0)
+
+@androidx.compose.runtime.Composable
+private fun <T> reloading(first: T, load: suspend () -> T): T {
+    val n by refreshes.collectAsState()
+    return androidx.compose.runtime.produceState(first, n) { if (n > 0) value = load() }.value
 }
 
 // ------------------------------------------------------------------ ① 1탭 기분 4×1
 
 class MoodWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val today = deps(context).repository().observeDay(EntryRepository.today()).first()
+        suspend fun load() = deps(context).repository().observeDay(EntryRepository.today()).first()
+        val first = load()
         val night = isNight(context)
         val density = context.resources.displayMetrics.density
         val orbs = EmotionKey.QUICK.associateWith { WidgetArt.orb(it.group!!, (34 * density).toInt(), (10 * density).toInt()) }
         provideContent {
+            val today = reloading(first, ::load)
             Column(
                 GlanceModifier.fillMaxSize().cornerRadius(26.dp).background(if (night) NightW else PaperW).padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
@@ -172,18 +189,20 @@ class MoodWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWid
 
 class OniWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val d = deps(context)
-        isNight(context) // always a night card; this loads the 빛 팔레트
-        val today = d.repository().observeDay(EntryRepository.today()).first()
-        val hide = hidden(context)
-        val all = today.flatMap { it.emotions }
-        val light = if (today.isEmpty()) LightMixer.OFF else if (hide) NeutralLight else LightMixer.mixDay(today.map { it.emotions })
-        val expr = if (hide && today.isNotEmpty()) OniExpression.DEFAULT else OniExpression.forState(all)
         val density = context.resources.displayMetrics.density
-        val oni = WidgetArt.oni(context, light.takeUnless { today.isEmpty() }, expr, (112 * density).toInt())
+        suspend fun load(): Triple<Bitmap, String, String> {
+            isNight(context) // always a night card; this loads the 빛 팔레트
+            val today = deps(context).repository().observeDay(EntryRepository.today()).first()
+            val hide = hidden(context)
+            val light = if (today.isEmpty()) LightMixer.OFF else if (hide) NeutralLight else LightMixer.mixDay(today.map { it.emotions })
+            val expr = if (hide && today.isNotEmpty()) OniExpression.DEFAULT else OniExpression.forState(today.flatMap { it.emotions })
+            val (title, sub) = oniWidgetText(today, hide)
+            return Triple(WidgetArt.oni(context, light.takeUnless { today.isEmpty() }, expr, (112 * density).toInt()), title, sub)
+        }
+        val first = load()
         val bg = WidgetArt.nightCard((160 * density).toInt(), (160 * density).toInt(), 26 * density)
-        val (title, sub) = oniWidgetText(today, hide)
         provideContent {
+            val (oni, title, sub) = reloading(first, ::load)
             Box(GlanceModifier.fillMaxSize().cornerRadius(26.dp).background(ImageProvider(bg)).clickable(actionStartActivity<MainActivity>())) {
                 Box(GlanceModifier.fillMaxWidth().padding(top = 2.dp), contentAlignment = Alignment.TopCenter) {
                     Image(ImageProvider(oni), contentDescription = "오늘의 온이", modifier = GlanceModifier.size(104.dp), contentScale = ContentScale.Fit)
@@ -204,12 +223,16 @@ class OniWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWidg
 class MonthWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val m = YearMonth.now()
-        val entries = deps(context).repository().observeRange(m.atDay(1).toString(), m.atEndOfMonth().toString()).first()
         val night = isNight(context)
         val density = context.resources.displayMetrics.density
-        val grid = WidgetArt.month(context, m, entries.groupBy { it.date }, night, (300 * density).toInt(), density, hidden(context))
-        val days = entries.map { it.date }.distinct().size
+        suspend fun load(): Pair<Bitmap, Int> {
+            val entries = deps(context).repository().observeRange(m.atDay(1).toString(), m.atEndOfMonth().toString()).first()
+            return WidgetArt.month(context, m, entries.groupBy { it.date }, night, (300 * density).toInt(), density, hidden(context)) to
+                entries.map { it.date }.distinct().size
+        }
+        val first = load()
         provideContent {
+            val (grid, days) = reloading(first, ::load)
             Column(
                 GlanceModifier.fillMaxSize().cornerRadius(26.dp).background(if (night) NightW else PaperW).padding(horizontal = 14.dp, vertical = 12.dp)
                     .clickable(actionStartActivity<MainActivity>()),
