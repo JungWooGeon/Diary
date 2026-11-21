@@ -1,0 +1,14 @@
+[
+  {"id": "e2b", "name": "Gemma 4 E2B", "license": "Apache-2.0",
+   "url": "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm",
+   "fileName": "gemma-4-E2B-it.litertlm",
+   "sha256": "181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c",
+   "sizeBytes": 2588147712, "minRamGb": 8, "premium": false,
+   "checkedAt": "2026-11-21", "note": "HF main 기준. main이 바뀌면 sha256 불일치 → Remote Config로 URL/sha256 갱신하거나 커밋 해시로 고정"},
+  {"id": "e4b", "name": "Gemma 4 E4B", "license": "Apache-2.0",
+   "url": "https://huggingface.co/litert-community/gemma-4-E4B-it-litert-lm/resolve/main/gemma-4-E4B-it.litertlm",
+   "fileName": "gemma-4-E4B-it.litertlm",
+   "sha256": "0b2a8980ce155fd97673d8e820b4d29d9c7d99b8fa6806f425d969b145bd52e0",
+   "sizeBytes": 3659530240, "minRamGb": 12, "premium": true,
+   "checkedAt": "2026-11-21", "note": "-gpu.litertlm 변형은 웹용이라 쓰지 않음"}
+]

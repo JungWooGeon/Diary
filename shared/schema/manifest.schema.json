@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pass.diary/schema/manifest.schema.json",
+  "title": "Drive appDataFolder manifest.json",
+  "description": "Storage layout (schema 1): appDataFolder is FLAT. Each file's Drive `name` is its logical path (e.g. \"entries/2026/11/<id>.json\", \"photos/<id>.jpg\", \"settings.json\") - no Drive folders, so two devices can never create duplicate folders. Every file carries appProperties {entityId, kind} (kind = entry|photo|settings|entitlement|manifest); look files up by appProperties entityId, not by name (an entry's name changes when its date changes). Readers seeing a higher schema than they know must not write.",
+  "type": "object",
+  "required": ["schema", "deviceIds", "updatedAt"],
+  "properties": {
+    "schema": { "const": 1 },
+    "deviceIds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true, "description": "Random per-install ids that have written here" },
+    "updatedAt": { "type": "integer", "minimum": 0, "description": "epoch millis" }
+  }
+}

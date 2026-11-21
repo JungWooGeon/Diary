@@ -1,0 +1,6 @@
+{
+ "name": "gemma4-e4b",
+ "gguf_bytes": 4977171584,
+ "max_rss": 4656971776,
+ "peak_footprint": 587780776
+}

@@ -1,0 +1,330 @@
+{"id": "v001", "text": "오늘 드디어 운전면허 합격!!! 도로주행 두 번 떨어지고 세 번째에 붙었다 ㅠㅠ 감독관님이 수고하셨어요 하는데 진짜 소리지를뻔", "labels": ["joy", "proud"], "intensity": {"joy": 5, "proud": 3}, "group": "bright", "style": ["chat"]}
+{"id": "v002", "text": "엄마가 끓여준 김치찌개 먹고 동생이랑 예능 보면서 배 잡고 웃음. 별거 없는데 그냥 좋은 날", "labels": ["joy", "comfy"], "intensity": {"joy": 3, "comfy": 2}, "group": "bright", "style": ["mixed"]}
+{"id": "v003", "text": "개좋아", "labels": ["joy"], "intensity": {"joy": 4}, "group": "bright", "style": ["slang", "short"]}
+{"id": "v004", "text": "퇴근길에 붕어빵 아저씨 다시 오셨다. 작년 겨울 이후 처음이라 반가워서 슈크림 다섯 개 삼", "labels": ["joy"], "intensity": {"joy": 3}, "group": "bright", "style": []}
+{"id": "v005", "text": "과제 조원들이 다 제때 자기 몫 해옴. 이게 실화냐 ㅋㅋㅋ 대학 와서 처음이야", "labels": ["joy", "relieved"], "intensity": {"joy": 3, "relieved": 2}, "group": "bright", "style": ["chat", "slang", "mixed"]}
+{"id": "v006", "text": "우리 콩이가 처음으로 손 줬다!! 간식 앞에서 한 달 동안 연습한 보람이 있다", "labels": ["joy", "proud"], "intensity": {"joy": 4, "proud": 3}, "group": "bright", "style": []}
+{"id": "v007", "text": "오랫만에 고등학교 친구들 다 모였다. 다들 그대로여서 웃겻다", "labels": ["joy"], "intensity": {"joy": 4}, "group": "bright", "style": ["typo"]}
+{"id": "v008", "text": "친구 결혼식 축가 무사히 끝냈고 신부가 울면서 안아줌. 나도 울고 하객들도 울고 엉망진창인데 너무 행복했다", "labels": ["joy", "love"], "intensity": {"joy": 4, "love": 2}, "group": "bright", "style": ["mixed"]}
+{"id": "v009", "text": "첫눈 왔다!!", "labels": ["joy"], "intensity": {"joy": 3}, "group": "bright", "style": ["short"]}
+{"id": "v010", "text": "망했다 ㅋㅋㅋ 장학금 받아버림 엄마한테 뭐라 자랑하지", "labels": ["joy", "proud"], "intensity": {"joy": 5, "proud": 3}, "group": "bright", "style": ["sarcasm", "chat"]}
+{"id": "v011", "text": "회사 회식이 갑자기 취소됨. 집 가서 치킨 시킴. 인생 최고의 금요일", "labels": ["joy", "light"], "intensity": {"joy": 3, "light": 3}, "group": "bright", "style": ["mixed"]}
+{"id": "v012", "text": "오늘은 그냥 날씨가 너무 좋아서 점심 먹고 회사 앞 공원을 한 바퀴 돌았다. 은행나무가 노랗게 다 물들어서 사진을 스무 장 넘게 찍었다. 팀장님 잔소리도 오늘은 하나도 안 들렸다. 이런 날만 있으면 좋겠다.", "labels": ["joy", "serene"], "intensity": {"joy": 3, "serene": 2}, "group": "bright", "style": ["long", "formal-ish", "mixed"]}
+{"id": "v013", "text": "알바 사장님이 시급 올려주신대 ㅠㅠㅠ 사장님 만수무강하세요", "labels": ["joy", "grateful"], "intensity": {"joy": 4, "grateful": 3}, "group": "bright", "style": ["chat"]}
+{"id": "v014", "text": "오늘로 헬스 100일째. 하루도 안 빠졌다. 거울 보는데 어깨 라인이 진짜 달라졌다", "labels": ["proud", "joy"], "intensity": {"proud": 5, "joy": 2}, "group": "bright", "style": []}
+{"id": "v015", "text": "혼자 이케아 책장 조립 성공. 나사 두 개 남았지만 흔들리지 않으니 된거다", "labels": ["proud"], "intensity": {"proud": 3}, "group": "bright", "style": ["typo"]}
+{"id": "v016", "text": "내가 해냄", "labels": ["proud"], "intensity": {"proud": 4}, "group": "bright", "style": ["short"]}
+{"id": "v017", "text": "발표 끝나고 교수님이 오늘 발표가 제일 깔끔했다고 하심. 3일 밤샌 거 보상받는 기분", "labels": ["proud", "joy"], "intensity": {"proud": 4, "joy": 3}, "group": "bright", "style": []}
+{"id": "v018", "text": "처음으로 내 월급으로 부모님 용돈 드렸다. 엄마가 봉투 보고 한참 말 없다가 웃으셨다", "labels": ["proud", "love"], "intensity": {"proud": 4, "love": 3}, "group": "bright", "style": ["formal-ish", "mixed"]}
+{"id": "v019", "text": "토익 850 찍엇다 ㅠㅠ 작년에 600이엿는데 나 좀 치는듯", "labels": ["proud", "joy"], "intensity": {"proud": 4, "joy": 3}, "group": "bright", "style": ["typo", "chat"]}
+{"id": "v020", "text": "진상 손님한테 웃으면서 끝까지 응대했다. 속은 부글부글했지만 그래도 오늘 나 프로였다", "labels": ["proud", "annoyed"], "intensity": {"proud": 3, "annoyed": 3}, "group": "bright", "style": ["mixed"]}
+{"id": "v021", "text": "금연 한 달. 편의점 갈 때마다 고비였는데 버텼다", "labels": ["proud"], "intensity": {"proud": 4}, "group": "bright", "style": []}
+{"id": "v022", "text": "자취 1년 만에 처음으로 반찬 세 가지 만들어서 한 상 차렸다. 사진 찍어서 엄마한테 보냄", "labels": ["proud", "joy"], "intensity": {"proud": 3, "joy": 2}, "group": "bright", "style": []}
+{"id": "v023", "text": "10km 완주!! 기록은 1시간 8분 ㅋㅋ 꼴찌에 가까웠지만 한 번도 안 걸었음", "labels": ["proud"], "intensity": {"proud": 4}, "group": "bright", "style": ["chat"]}
+{"id": "v024", "text": "코딩테스트 처음으로 다 풀었다. 이번 공채 해볼 만할지도", "labels": ["proud", "hope"], "intensity": {"proud": 4, "hope": 2}, "group": "bright", "style": ["mixed"]}
+{"id": "v025", "text": "우리 딸 오늘 학예회에서 대사 하나도 안 틀리고 해냈다. 무대 뒤에서 덜덜 떨던 애가. 내가 다 뿌듯해서 집에 오는 길에 케이크를 사왔다.", "labels": ["proud", "love"], "intensity": {"proud": 5, "love": 4}, "group": "bright", "style": ["long", "formal-ish", "mixed"]}
+{"id": "v026", "text": "미루던 치과 드디어 감. 이제 진짜 어른이 됐다", "labels": ["proud", "relieved"], "intensity": {"proud": 2, "relieved": 2}, "group": "bright", "style": ["mixed"]}
+{"id": "v027", "text": "논문 투고 완료. 지도교수님한테 처음으로 \"괜찮네\"라는 말 들었다. 그 한마디가 왜 이렇게 좋지", "labels": ["proud", "joy"], "intensity": {"proud": 4, "joy": 3}, "group": "bright", "style": []}
+{"id": "v028", "text": "콘서트 티켓팅 성공!!!! 플로어 2열!!!! 미쳤다 미쳤어", "labels": ["excited", "joy"], "intensity": {"excited": 5, "joy": 4}, "group": "bright", "style": ["chat", "slang"]}
+{"id": "v029", "text": "내일 제주도 간다 캐리어 싸는데 벌써 신나서 잠이 않온다", "labels": ["excited", "hope"], "intensity": {"excited": 4, "hope": 3}, "group": "bright", "style": ["typo", "mixed"]}
+{"id": "v030", "text": "개신남 ㅋㅋㅋ", "labels": ["excited"], "intensity": {"excited": 4}, "group": "bright", "style": ["slang", "chat", "short"]}
+{"id": "v031", "text": "금요일 퇴근 10분 전 이 기분 아무도 몰라", "labels": ["excited"], "intensity": {"excited": 3}, "group": "bright", "style": []}
+{"id": "v032", "text": "동기들이랑 방탈출 갔는데 제한시간 1분 남기고 탈출함 ㅋㅋㅋ 소리지르고 난리남", "labels": ["excited", "joy"], "intensity": {"excited": 4, "joy": 3}, "group": "bright", "style": ["chat"]}
+{"id": "v033", "text": "새 키보드 택배 왔다 타건감 미쳤음 밤새 아무거나 칠 듯", "labels": ["excited"], "intensity": {"excited": 4}, "group": "bright", "style": ["slang"]}
+{"id": "v034", "text": "눈 오면 강아지 산책 데리고 나가야지 하고 있었는데 진짜 펑펑 온다. 콩이가 나보다 더 날뜀", "labels": ["excited", "joy"], "intensity": {"excited": 4, "joy": 3}, "group": "bright", "style": []}
+{"id": "v035", "text": "월드컵 극장골 ㅁㅊ 새벽 세시에 아파트 전체가 소리지름", "labels": ["excited"], "intensity": {"excited": 5}, "group": "bright", "style": ["slang", "chat"]}
+{"id": "v036", "text": "내일부터 휴가다", "labels": ["excited", "light"], "intensity": {"excited": 3, "light": 3}, "group": "bright", "style": ["mixed", "short"]}
+{"id": "v037", "text": "친구가 갑자기 놀이공원 가자고 해서 수업 째고 감. 자이로드롭 세 번 탐", "labels": ["excited", "joy"], "intensity": {"excited": 4, "joy": 3}, "group": "bright", "style": ["slang"]}
+{"id": "v038", "text": "덕질 7년 만에 첫 팬싸 당첨됨 무슨 말 하지 머리가 하얘", "labels": ["excited", "flutter"], "intensity": {"excited": 5, "flutter": 4}, "group": "bright", "style": ["slang", "mixed"]}
+{"id": "v039", "text": "생일이라고 팀원들이 몰래 케이크 준비함. 불 끄고 노래 나오는데 심장 터지는 줄", "labels": ["excited", "grateful"], "intensity": {"excited": 4, "grateful": 4}, "group": "bright", "style": []}
+{"id": "v040", "text": "오늘 처음으로 서핑 보드 위에 일어섰다. 3초였지만 파도 타는 그 느낌은 잊을 수 없을 것 같다", "labels": ["excited", "proud"], "intensity": {"excited": 4, "proud": 3}, "group": "bright", "style": ["formal-ish"]}
+{"id": "v041", "text": "택배 언제와 언제와 언제와", "labels": ["excited", "hope"], "intensity": {"excited": 3, "hope": 2}, "group": "bright", "style": ["chat", "mixed", "short"]}
+{"id": "v042", "text": "지하철에서 지갑 떨어뜨렸는데 어떤 학생이 뛰어와서 주워줬다. 고맙다는 말 밖에 못해서 아쉽다 담에 만나면 음료수라도 사줄께", "labels": ["grateful"], "intensity": {"grateful": 4}, "group": "bright", "style": ["typo"]}
+{"id": "v043", "text": "아프다고 했더니 룸메가 죽이랑 이온음료 사다 놓고 출근함. 포스트잇에 \"먹고 자\" 써있음 ㅠ", "labels": ["grateful", "love"], "intensity": {"grateful": 5, "love": 2}, "group": "bright", "style": ["chat", "mixed"]}
+{"id": "v044", "text": "고마워요 다들", "labels": ["grateful"], "intensity": {"grateful": 3}, "group": "bright", "style": ["short"]}
+{"id": "v045", "text": "팀장님이 내 실수 대신 위에 보고하면서 막아주셨다. 그동안 뒤에서 욕해서 죄송합니다", "labels": ["grateful", "relieved"], "intensity": {"grateful": 4, "relieved": 3}, "group": "bright", "style": ["mixed"]}
+{"id": "v046", "text": "엄마가 김장해서 자취방까지 택배로 보내줌. 김치통 열자마자 집 냄새 나서 좀 울컥함", "labels": ["grateful", "miss"], "intensity": {"grateful": 4, "miss": 3}, "group": "bright", "style": ["mixed"]}
+{"id": "v047", "text": "면접 떨어졌다고 했더니 친구가 말없이 곱창 사줌. 위로 같은 말은 한마디도 안 했다. 그냥 내 잔에 소주 따라주고 자기 회사 욕만 실컷 하더라. 그게 더 고마웠다.", "labels": ["grateful", "sad"], "intensity": {"grateful": 4, "sad": 2}, "group": "bright", "style": ["long", "mixed"]}
+{"id": "v048", "text": "오늘 수술 잘 끝났다. 간호사 선생님들이 밤새 챙겨주셔서 감사했다", "labels": ["grateful", "relieved"], "intensity": {"grateful": 4, "relieved": 4}, "group": "bright", "style": ["formal-ish", "mixed"]}
+{"id": "v049", "text": "버스기사님이 뛰어오는 나 보고 기다려주심 ㅠㅠ 아침부터 감동 기사님 복 받으실꺼에요", "labels": ["grateful", "joy"], "intensity": {"grateful": 3, "joy": 2}, "group": "bright", "style": ["chat", "typo"]}
+{"id": "v050", "text": "선배가 자기 취준할 때 쓰던 자소서 파일 통째로 넘겨줌. 이런 사람이 있다니", "labels": ["grateful"], "intensity": {"grateful": 4}, "group": "bright", "style": []}
+{"id": "v051", "text": "고양이 병원비 걱정했는데 동생이 반 보태줬다. 평소엔 맨날 싸우는데", "labels": ["grateful", "relieved"], "intensity": {"grateful": 4, "relieved": 3}, "group": "bright", "style": ["mixed"]}
+{"id": "v052", "text": "알바 마지막 날 단골 할머니가 귤 한 봉지 주시면서 그동안 고마웠다고 하셨다. 내가 더 고마워요", "labels": ["grateful", "sad"], "intensity": {"grateful": 4, "sad": 2}, "group": "bright", "style": ["mixed"]}
+{"id": "v053", "text": "생일 축하 카톡이 50개 넘게 옴. 나 생각보다 잘 살았나봐", "labels": ["grateful", "joy"], "intensity": {"grateful": 3, "joy": 3}, "group": "bright", "style": []}
+{"id": "v054", "text": "남자친구가 시험기간이라고 매일 도서관 앞에 커피 두고 간다. 고마운 마음을 일기에 적어둔다", "labels": ["grateful", "love"], "intensity": {"grateful": 4, "love": 4}, "group": "bright", "style": ["formal-ish", "mixed"]}
+{"id": "v055", "text": "전기장판 켜고 귤 까먹으면서 넷플릭스. 이게 행복이지", "labels": ["comfy", "joy"], "intensity": {"comfy": 4, "joy": 2}, "group": "calm", "style": ["mixed"]}
+{"id": "v056", "text": "주말 내내 잠옷 입고 안 나감 최고. 몇일 더 이러고 싶다", "labels": ["comfy"], "intensity": {"comfy": 4}, "group": "calm", "style": ["typo"]}
+{"id": "v057", "text": "이불 속 최고", "labels": ["comfy"], "intensity": {"comfy": 3}, "group": "calm", "style": ["short"]}
+{"id": "v058", "text": "반신욕하고 나와서 바디로션 바르고 누우니까 몸이 녹는다", "labels": ["comfy"], "intensity": {"comfy": 4}, "group": "calm", "style": []}
+{"id": "v059", "text": "본가 내려옴. 엄마가 해준 갈비찜 먹고 내 방 침대에 누웠다. 고등학생 때 붙여놓은 포스터가 아직 그대로다. 그냥 다 괜찮아지는 기분.", "labels": ["comfy", "love"], "intensity": {"comfy": 5, "love": 2}, "group": "calm", "style": ["long", "mixed"]}
+{"id": "v060", "text": "오랜 친구랑은 아무 말 안 해도 어색하지 않아서 좋다. 카페에서 각자 폰 보다 헤어짐 ㅋㅋ", "labels": ["comfy"], "intensity": {"comfy": 4}, "group": "calm", "style": ["chat"]}
+{"id": "v061", "text": "비 오는 날 창문 조금 열어놓고 낮잠 잤다. 빗소리 들으면서 자는 게 제일 좋다", "labels": ["comfy", "serene"], "intensity": {"comfy": 4, "serene": 3}, "group": "calm", "style": ["formal-ish"]}
+{"id": "v062", "text": "새로 산 매트리스 진짜 구름 위에서 자는 느낌. 허리 아픈 것도 금새 나은 듯", "labels": ["comfy"], "intensity": {"comfy": 4}, "group": "calm", "style": ["typo"]}
+{"id": "v063", "text": "오늘은 약속도 없고 알람도 없음. 아무것도 안 해도 되는 날", "labels": ["comfy", "light"], "intensity": {"comfy": 4, "light": 2}, "group": "calm", "style": []}
+{"id": "v064", "text": "고양이가 배 위에 올라와서 골골송 부르는 중. 움직일 수 없음", "labels": ["comfy", "love"], "intensity": {"comfy": 4, "love": 3}, "group": "calm", "style": ["mixed"]}
+{"id": "v065", "text": "따뜻한 국밥 한 그릇에 몸이 확 풀렸다. 추운 날엔 역시 이거다", "labels": ["comfy"], "intensity": {"comfy": 3}, "group": "calm", "style": ["formal-ish"]}
+{"id": "v066", "text": "편한 츄리닝 입고 동네 산책", "labels": ["comfy"], "intensity": {"comfy": 3}, "group": "calm", "style": ["short"]}
+{"id": "v067", "text": "남편이랑 소파에 나란히 누워서 각자 책 읽었다. 가끔 발로 툭툭 치는 게 다인데 이게 편하다", "labels": ["comfy", "love"], "intensity": {"comfy": 4, "love": 3}, "group": "calm", "style": ["mixed"]}
+{"id": "v068", "text": "수족냉증인데 수면양말 신으니 살거같다", "labels": ["comfy"], "intensity": {"comfy": 3}, "group": "calm", "style": ["typo"]}
+{"id": "v069", "text": "새벽 다섯 시에 깨서 창밖 보는데 아무 소리도 안 났다. 커피 내리는 소리만 들렸다", "labels": ["serene"], "intensity": {"serene": 4}, "group": "calm", "style": ["formal-ish"]}
+{"id": "v070", "text": "요가 끝나고 사바아사나 할 때 머릿속이 텅 비었다", "labels": ["serene", "comfy"], "intensity": {"serene": 4, "comfy": 2}, "group": "calm", "style": []}
+{"id": "v071", "text": "고요한 밤", "labels": ["serene"], "intensity": {"serene": 3}, "group": "calm", "style": ["short"]}
+{"id": "v072", "text": "혼자 한강 벤치에 앉아서 물 흐르는 거 30분 동안 봤다. 생각이 정리되는 느낌", "labels": ["serene"], "intensity": {"serene": 4}, "group": "calm", "style": []}
+{"id": "v073", "text": "시험 전날인데 이상하게 마음이 차분하다. 할 만큼 했으니까", "labels": ["serene", "hope"], "intensity": {"serene": 3, "hope": 2}, "group": "calm", "style": ["mixed"]}
+{"id": "v074", "text": "템플스테이 둘째 날. 새벽 예불 소리 듣고 마당을 쓸었다. 휴대폰 없이도 시간이 잘 간다.", "labels": ["serene"], "intensity": {"serene": 5}, "group": "calm", "style": ["long", "formal-ish"]}
+{"id": "v075", "text": "비 그친 뒤 공기 냄새", "labels": ["serene"], "intensity": {"serene": 3}, "group": "calm", "style": ["short"]}
+{"id": "v076", "text": "퇴근하고 불 다 끄고 향초 하나 켜놓고 음악 들었다. 오늘 하루를 천천히 되짚어 봤다. 나쁘지 않았다", "labels": ["serene", "comfy"], "intensity": {"serene": 4, "comfy": 2}, "group": "calm", "style": ["formal-ish"]}
+{"id": "v077", "text": "이별하고 석 달. 이제는 그 사람 생각해도 마음이 잔잔하다. 울지도 않고 화나지도 않는다", "labels": ["serene", "light"], "intensity": {"serene": 3, "light": 2}, "group": "calm", "style": []}
+{"id": "v078", "text": "도서관 창가 자리에서 햇빛 받으면서 소설 읽음", "labels": ["serene", "comfy"], "intensity": {"serene": 3, "comfy": 3}, "group": "calm", "style": []}
+{"id": "v079", "text": "바다 보러 혼자 강릉 갔다. 겨울 바다는 사람도 없고 파도 소리만 있다. 한참 앉아 있다 왔더니 머리가 맑아졌다. 다음 달에도 또 가야지.", "labels": ["serene", "hope"], "intensity": {"serene": 5, "hope": 2}, "group": "calm", "style": ["long", "formal-ish", "mixed"]}
+{"id": "v080", "text": "할머니 산소 다녀옴. 슬프기보다 그냥 조용히 인사하고 왔다", "labels": ["serene", "miss"], "intensity": {"serene": 3, "miss": 3}, "group": "calm", "style": ["mixed"]}
+{"id": "v081", "text": "뜨개질하다 보면 시간 가는 줄 모르겠다. 손만 움직이고 머리는 쉬는 느낌", "labels": ["serene"], "intensity": {"serene": 4}, "group": "calm", "style": []}
+{"id": "v082", "text": "아침 일찍 출근해서 아무도 없는 사무실에서 커피 마시는 십 분. 하루 중 제일 조용한 시간", "labels": ["serene"], "intensity": {"serene": 4}, "group": "calm", "style": []}
+{"id": "v083", "text": "건강검진 결과 나옴. 혹 양성이래 ㅠㅠ 일주일 동안 잠 못 잤는데", "labels": ["relieved"], "intensity": {"relieved": 5}, "group": "calm", "style": ["chat"]}
+{"id": "v084", "text": "휴 살았다", "labels": ["relieved"], "intensity": {"relieved": 4}, "group": "calm", "style": ["short"]}
+{"id": "v085", "text": "지갑 잃어버린 줄 알았는데 패딩 안주머니에 있었다 심장 떨어질뻔", "labels": ["relieved"], "intensity": {"relieved": 4}, "group": "calm", "style": []}
+{"id": "v086", "text": "성적 정정 신청한 거 받아들여져서 B+에서 A0 됬다. 장학금 커트라인 겨우 넘김", "labels": ["relieved", "joy"], "intensity": {"relieved": 4, "joy": 3}, "group": "calm", "style": ["typo", "mixed"]}
+{"id": "v087", "text": "엄마 수술 잘 끝났대. 대기실에서 네 시간 동안 아무것도 못 먹었다. 의사 선생님이 나와서 잘 됐다고 하는 순간 다리에 힘이 풀려서 주저앉았다. 이제야 배고픈 게 느껴진다.", "labels": ["relieved", "grateful"], "intensity": {"relieved": 5, "grateful": 3}, "group": "calm", "style": ["long", "mixed"]}
+{"id": "v088", "text": "콩이가 초콜릿 먹은 줄 알고 응급실 갔는데 포장지만 뜯은 거였다. 다행이 아무것도 안 먹었대", "labels": ["relieved"], "intensity": {"relieved": 5}, "group": "calm", "style": ["typo"]}
+{"id": "v089", "text": "마감 30분 전에 파일 제출 완료. 서버 터질 줄 알았는데", "labels": ["relieved", "tired"], "intensity": {"relieved": 4, "tired": 3}, "group": "calm", "style": ["mixed"]}
+{"id": "v090", "text": "싸운 친구한테서 먼저 연락 옴. 나도 미안했다고 했다. 이제 좀 숨 쉬어진다", "labels": ["relieved", "light"], "intensity": {"relieved": 4, "light": 3}, "group": "calm", "style": []}
+{"id": "v091", "text": "비행기 놓칠 뻔 했는데 게이트 닫히기 직전에 탔다. 땀범벅", "labels": ["relieved"], "intensity": {"relieved": 4}, "group": "calm", "style": []}
+{"id": "v092", "text": "코로나 음성. 다음주 여행 갈 수 있다", "labels": ["relieved", "excited"], "intensity": {"relieved": 4, "excited": 3}, "group": "calm", "style": ["mixed"]}
+{"id": "v093", "text": "팀장님이 내 보고서 보고 아무 말 안 했다. 그거면 됐다", "labels": ["relieved"], "intensity": {"relieved": 3}, "group": "calm", "style": []}
+{"id": "v094", "text": "재계약 됬다 ㅠㅠ 이번 달 내내 짤릴까봐 불안했는데", "labels": ["relieved", "anxious"], "intensity": {"relieved": 5, "anxious": 2}, "group": "calm", "style": ["typo", "chat", "mixed"]}
+{"id": "v095", "text": "걱정했던 면담 별거 아니였음", "labels": ["relieved"], "intensity": {"relieved": 3}, "group": "calm", "style": ["typo", "short"]}
+{"id": "v096", "text": "아빠가 혈압약 꼬박꼬박 드시기로 약속하셨다. 몇 년을 말했는데 드디어", "labels": ["relieved"], "intensity": {"relieved": 3}, "group": "calm", "style": []}
+{"id": "v097", "text": "퇴사 메일 보냈다. 손 떨렸는데 보내고 나니 어깨가 가볍다", "labels": ["light", "anxious"], "intensity": {"light": 5, "anxious": 2}, "group": "calm", "style": ["mixed"]}
+{"id": "v098", "text": "몇 년 묵은 옷 세 박스 기부함. 옷장이 숨을 쉰다", "labels": ["light"], "intensity": {"light": 4}, "group": "calm", "style": []}
+{"id": "v099", "text": "종강!!!", "labels": ["light", "joy"], "intensity": {"light": 4, "joy": 3}, "group": "calm", "style": ["mixed", "short"]}
+{"id": "v100", "text": "하고 싶던 말 다 하고 헤어졌다. 슬프긴 한데 이상하게 후련하다", "labels": ["light", "sad"], "intensity": {"light": 4, "sad": 3}, "group": "calm", "style": ["mixed"]}
+{"id": "v101", "text": "학자금 대출 마지막 회차 상환 완료. 4년 걸렸다", "labels": ["light", "proud"], "intensity": {"light": 5, "proud": 3}, "group": "calm", "style": ["mixed"]}
+{"id": "v102", "text": "단톡방 세 개 나왔다. 알림이 안 울리니 살꺼 같음", "labels": ["light"], "intensity": {"light": 4}, "group": "calm", "style": ["typo"]}
+{"id": "v103", "text": "미뤄둔 과제 다 끝냄. 이제 진짜 놀 수 있다", "labels": ["light", "excited"], "intensity": {"light": 4, "excited": 2}, "group": "calm", "style": ["mixed"]}
+{"id": "v104", "text": "엄마한테 자퇴 고민 털어놨다. 혼날 줄 알았는데 들어주셨다. 말하고 나니 가슴이 뻥 뚫림", "labels": ["light", "grateful"], "intensity": {"light": 4, "grateful": 3}, "group": "calm", "style": ["mixed"]}
+{"id": "v105", "text": "이사 끝. 짐 다 풀었다", "labels": ["light", "tired"], "intensity": {"light": 3, "tired": 3}, "group": "calm", "style": ["mixed", "short"]}
+{"id": "v106", "text": "전남친 사진 다 지웠다. 갤러리 용량이 확 늘어남 ㅋㅋ 마음도", "labels": ["light"], "intensity": {"light": 4}, "group": "calm", "style": ["chat"]}
+{"id": "v107", "text": "기말 발표 끝났다 이제 자유다", "labels": ["light"], "intensity": {"light": 4}, "group": "calm", "style": []}
+{"id": "v108", "text": "오늘 상담 선생님한테 처음으로 다 말했다. 울고 나니 머리가 맑다. 무거운 돌 하나 내려놓은 느낌이다.", "labels": ["light", "relieved"], "intensity": {"light": 4, "relieved": 3}, "group": "calm", "style": ["long"]}
+{"id": "v109", "text": "쓸데없는 구독 다 해지함. 매달 4만원 아낌", "labels": ["light"], "intensity": {"light": 3}, "group": "calm", "style": []}
+{"id": "v110", "text": "썸남이 내 스토리에 하트 눌렀다... 아무것도 아닌데 왜 심장이", "labels": ["flutter"], "intensity": {"flutter": 4}, "group": "flutter", "style": []}
+{"id": "v111", "text": "오늘 카페에서 그 사람이 내 이름 불렀다 별거 아닌데 왜 이렇게 설레는건지 모르겟다", "labels": ["flutter"], "intensity": {"flutter": 4}, "group": "flutter", "style": ["typo"]}
+{"id": "v112", "text": "두근두근", "labels": ["flutter"], "intensity": {"flutter": 3}, "group": "flutter", "style": ["short"]}
+{"id": "v113", "text": "소개팅 상대가 먼저 다음 주에 또 보자고 했다 꺄", "labels": ["flutter", "hope"], "intensity": {"flutter": 5, "hope": 4}, "group": "flutter", "style": ["chat"]}
+{"id": "v114", "text": "같은 과 선배가 우산 같이 쓰자고 함. 어깨 닿을 때마다 숨 참음 ㅋㅋㅋ", "labels": ["flutter"], "intensity": {"flutter": 5}, "group": "flutter", "style": ["chat"]}
+{"id": "v115", "text": "걔가 나한테만 이모티콘 다르게 보내는 거 같은데 착각인가", "labels": ["flutter", "anxious"], "intensity": {"flutter": 3, "anxious": 2}, "group": "flutter", "style": ["mixed"]}
+{"id": "v116", "text": "내일 첫 데이트. 옷 다섯 벌 입어봤다", "labels": ["flutter", "excited"], "intensity": {"flutter": 4, "excited": 3}, "group": "flutter", "style": ["mixed"]}
+{"id": "v117", "text": "헬스장에서 맨날 보는 그분이 오늘 처음 인사함. 낼부터 않 하던 화장이라도 해야되나", "labels": ["flutter"], "intensity": {"flutter": 3}, "group": "flutter", "style": ["typo"]}
+{"id": "v118", "text": "손 잡혔다", "labels": ["flutter"], "intensity": {"flutter": 5}, "group": "flutter", "style": ["short"]}
+{"id": "v119", "text": "전화 끊고 나서도 한참 폰 들고 있었다. 목소리가 계속 귀에 남는다", "labels": ["flutter", "love"], "intensity": {"flutter": 4, "love": 2}, "group": "flutter", "style": []}
+{"id": "v120", "text": "썸 타는 중인데 걔가 \"너는 어떤 스타일 좋아해?\" 물어봄 이거 뭐야 뭐냐고", "labels": ["flutter"], "intensity": {"flutter": 4}, "group": "flutter", "style": ["chat", "slang"]}
+{"id": "v121", "text": "첫 출근 날 옆자리 사람이 너무 내 스타일이다. 모니터 너머로 자꾸 눈이 간다. 점심 같이 먹자고 해서 체할 뻔했다. 일에 집중이 안 된다 큰일이다.", "labels": ["flutter"], "intensity": {"flutter": 4}, "group": "flutter", "style": ["long"]}
+{"id": "v122", "text": "새 학기 첫날 짝꿍이 지우개 빌려줌. 고딩 마지막 해에 이런 설렘이라니", "labels": ["flutter"], "intensity": {"flutter": 3}, "group": "flutter", "style": []}
+{"id": "v123", "text": "덕질하는 배우가 내 댓글에 답글 달았다 ㅠㅠㅠㅠ 손 떨려서 캡처를 다섯 번 함", "labels": ["flutter", "joy"], "intensity": {"flutter": 5, "joy": 4}, "group": "flutter", "style": ["chat", "mixed"]}
+{"id": "v124", "text": "엄마 손이 많이 거칠어졌다. 핸드크림 발라드리면서 오래오래 건강하시라고 속으로 빌었다", "labels": ["love", "sad"], "intensity": {"love": 4, "sad": 2}, "group": "flutter", "style": ["formal-ish", "mixed"]}
+{"id": "v125", "text": "우리 콩이 자는 얼굴 보면 세상 다 가진 거 같다", "labels": ["love"], "intensity": {"love": 5}, "group": "flutter", "style": []}
+{"id": "v126", "text": "사랑해 우리 가족", "labels": ["love"], "intensity": {"love": 4}, "group": "flutter", "style": ["short"]}
+{"id": "v127", "text": "남자친구랑 3주년. 화려한 건 없었고 처음 만난 떡볶이집에 갔다. 사장님이 아직 우리를 기억하신다.", "labels": ["love", "joy"], "intensity": {"love": 4, "joy": 3}, "group": "flutter", "style": ["long", "mixed"]}
+{"id": "v128", "text": "아빠가 딸 퇴근길 위험하다고 역까지 마중 나옴. 츤데레 아빠 진짜", "labels": ["love", "grateful"], "intensity": {"love": 4, "grateful": 3}, "group": "flutter", "style": ["mixed"]}
+{"id": "v129", "text": "남편 코 고는 소리도 이제 자장가다 결혼 10년차", "labels": ["love", "comfy"], "intensity": {"love": 3, "comfy": 3}, "group": "flutter", "style": ["mixed"]}
+{"id": "v130", "text": "동생이 군대 가기 전날 머리 밀고 와서 웃는데 나만 울었다. 귀여운 놈", "labels": ["love", "sad"], "intensity": {"love": 4, "sad": 3}, "group": "flutter", "style": ["mixed"]}
+{"id": "v131", "text": "여친이 나 회사에서 깨진 날 아무 말 없이 안아줌. 이 사람이랑 결혼하고 싶다", "labels": ["love", "hope"], "intensity": {"love": 5, "hope": 3}, "group": "flutter", "style": []}
+{"id": "v132", "text": "조카가 이모 사랑해 하고 뽀뽀함 녹았다 어떻해", "labels": ["love"], "intensity": {"love": 5}, "group": "flutter", "style": ["chat", "typo"]}
+{"id": "v133", "text": "할머니가 전화로 밥은 먹었냐고만 세 번 물어보셨다. 그게 할머니 사랑 표현이다", "labels": ["love"], "intensity": {"love": 4}, "group": "flutter", "style": []}
+{"id": "v134", "text": "자기 전에 고양이 냄새 맡는 게 하루 루틴임 꼬순내 최고", "labels": ["love", "comfy"], "intensity": {"love": 4, "comfy": 3}, "group": "flutter", "style": ["slang", "mixed"]}
+{"id": "v135", "text": "십년지기 친구 생일. 편지 쓰다 보니 이 친구 없었으면 내 20대는 어땠을까 싶다", "labels": ["love", "grateful"], "intensity": {"love": 4, "grateful": 3}, "group": "flutter", "style": ["mixed"]}
+{"id": "v136", "text": "남친이 내가 지나가듯 말한 책을 기억했다가 선물함. 이런 거에 약하다 진짜", "labels": ["love", "flutter"], "intensity": {"love": 4, "flutter": 3}, "group": "flutter", "style": []}
+{"id": "v137", "text": "아들이 처음으로 엄마 힘들지 하고 어깨 주물러줬다. 중2병 와서 말도 안 하던 녀석이", "labels": ["love", "joy"], "intensity": {"love": 5, "joy": 3}, "group": "flutter", "style": ["mixed"]}
+{"id": "v138", "text": "서류 합격했다. 아직 면접 남았지만 이번엔 될 것 같은 느낌", "labels": ["hope", "joy"], "intensity": {"hope": 4, "joy": 3}, "group": "flutter", "style": ["mixed"]}
+{"id": "v139", "text": "내년엔 꼭 독립한다. 적금 통장 하나 새로 만들었다", "labels": ["hope"], "intensity": {"hope": 4}, "group": "flutter", "style": []}
+{"id": "v140", "text": "할 수 있다", "labels": ["hope"], "intensity": {"hope": 3}, "group": "flutter", "style": ["short"]}
+{"id": "v141", "text": "다음 달 워홀 비자 나온대. 호주에서 뭐 할지 매일 밤 검색 중", "labels": ["hope", "excited"], "intensity": {"hope": 5, "excited": 4}, "group": "flutter", "style": ["mixed"]}
+{"id": "v142", "text": "재활 3개월 차. 오늘 처음으로 계단을 지팡이 없이 올라갔다. 여름엔 다시 뛸 수 있을 것 같다.", "labels": ["hope", "proud"], "intensity": {"hope": 5, "proud": 3}, "group": "flutter", "style": ["long", "formal-ish", "mixed"]}
+{"id": "v143", "text": "새 다이어리 샀다. 첫 장에 올해 목표 열 개 씀. 이번엔 반이라도 지키자. 바램이 있다면 꾸준함", "labels": ["hope"], "intensity": {"hope": 3}, "group": "flutter", "style": ["typo"]}
+{"id": "v144", "text": "이직 최종면접 분위기 좋았음. 연락 기다리는 중 제발", "labels": ["hope", "anxious"], "intensity": {"hope": 4, "anxious": 3}, "group": "flutter", "style": ["mixed"]}
+{"id": "v145", "text": "내일은 오늘보다 낫겠지", "labels": ["hope", "down"], "intensity": {"hope": 3, "down": 2}, "group": "flutter", "style": ["mixed", "short"]}
+{"id": "v146", "text": "다음 시즌 콘서트 공지 떴다 이번엔 무조건 간다 적금 깸", "labels": ["hope", "excited"], "intensity": {"hope": 4, "excited": 4}, "group": "flutter", "style": ["slang", "mixed"]}
+{"id": "v147", "text": "시험관 시술 두 번째. 이번엔 좋은 소식 있었으면 좋겠다. 남편이 손 꼭 잡아줬다", "labels": ["hope", "anxious"], "intensity": {"hope": 4, "anxious": 3}, "group": "flutter", "style": ["mixed"]}
+{"id": "v148", "text": "이번 학기 학점 잘 받으면 교환학생 지원할 수 있다. 진짜 열심히 해보자", "labels": ["hope"], "intensity": {"hope": 4}, "group": "flutter", "style": []}
+{"id": "v149", "text": "우리 팀 신규 프로젝트 승인남! 내년엔 좀 재밌게 일할 수 있을 듯", "labels": ["hope", "joy"], "intensity": {"hope": 4, "joy": 3}, "group": "flutter", "style": ["mixed"]}
+{"id": "v150", "text": "다이어트 2주차 2키로 빠짐. 이 속도면 여름엔 비키니 가능할지도?", "labels": ["hope", "proud"], "intensity": {"hope": 3, "proud": 2}, "group": "flutter", "style": ["typo", "mixed"]}
+{"id": "v151", "text": "할머니 돌아가신 지 3년. 오늘 시장에서 할머니가 자주 사주시던 꽈배기 보고 한참 서 있었다. 설탕 많이 묻은 걸로 골라주시던 손이 생각났다. 하나 사서 집에 오는 길에 다 먹었다.", "labels": ["miss", "sad"], "intensity": {"miss": 5, "sad": 3}, "group": "flutter", "style": ["long", "mixed"]}
+{"id": "v152", "text": "고등학교 때 매점 앞에서 떠들던 애들 보고 싶다", "labels": ["miss"], "intensity": {"miss": 4}, "group": "flutter", "style": []}
+{"id": "v153", "text": "보고싶다", "labels": ["miss"], "intensity": {"miss": 4}, "group": "flutter", "style": ["typo", "short"]}
+{"id": "v154", "text": "전남친이랑 자주 가던 카페 앞을 지나쳤다. 아직도 그 자리에 있네", "labels": ["miss", "sad"], "intensity": {"miss": 4, "sad": 2}, "group": "flutter", "style": ["mixed"]}
+{"id": "v155", "text": "해외 나와 산 지 2년. 엄마 된장찌개 냄새가 너무 그립다", "labels": ["miss", "lonely"], "intensity": {"miss": 5, "lonely": 3}, "group": "flutter", "style": ["mixed"]}
+{"id": "v156", "text": "무지개다리 건넌 초코 생각나서 산책길에 괜히 그 벤치에 앉아봤다", "labels": ["miss", "sad"], "intensity": {"miss": 5, "sad": 4}, "group": "flutter", "style": ["mixed"]}
+{"id": "v157", "text": "대학 동기들 다 취업하고 흩어지니까 새벽까지 술 마시던 그때가 그립다", "labels": ["miss"], "intensity": {"miss": 4}, "group": "flutter", "style": []}
+{"id": "v158", "text": "군대 간 남친 첫 편지 왔다 ㅠㅠ 글씨 보니까 더 보고 싶어", "labels": ["miss", "love"], "intensity": {"miss": 5, "love": 4}, "group": "flutter", "style": ["chat"]}
+{"id": "v159", "text": "돌아가신 아빠 번호 아직 못 지웠다. 가끔 카톡 프사 그대로인지 확인함", "labels": ["miss", "sad"], "intensity": {"miss": 5, "sad": 4}, "group": "flutter", "style": ["mixed"]}
+{"id": "v160", "text": "초딩 때 살던 동네 갔는데 문방구가 없어졌다. 그 시절이 그립다", "labels": ["miss"], "intensity": {"miss": 3}, "group": "flutter", "style": []}
+{"id": "v161", "text": "졸업한 학교 운동장", "labels": ["miss"], "intensity": {"miss": 3}, "group": "flutter", "style": ["short"]}
+{"id": "v162", "text": "작년 이맘때 친구들이랑 갔던 오사카 사진이 떴다. 그때로 돌아가고 싶다", "labels": ["miss"], "intensity": {"miss": 4}, "group": "flutter", "style": []}
+{"id": "v163", "text": "이민 간 베프랑 영상통화. 시차 때문에 10분밖에 못 했는데 끊고 나니 더 보고싶어짐", "labels": ["miss", "lonely"], "intensity": {"miss": 4, "lonely": 3}, "group": "flutter", "style": ["typo", "mixed"]}
+{"id": "v164", "text": "할아버지가 쓰시던 라디오를 틀어봤다. 아직 소리가 난다. 할아버지 목소리도 같이 나올 것 같았다.", "labels": ["miss"], "intensity": {"miss": 5}, "group": "flutter", "style": ["long", "formal-ish"]}
+{"id": "v165", "text": "오늘 콩이 보내줬다. 15년 동안 고마웠어", "labels": ["sad", "miss"], "intensity": {"sad": 5, "miss": 4}, "group": "low", "style": ["mixed"]}
+{"id": "v166", "text": "면접 또 떨어졌다. 이번엔 진짜 될 줄 알았는데", "labels": ["sad", "down"], "intensity": {"sad": 4, "down": 3}, "group": "low", "style": []}
+{"id": "v167", "text": "눈물만 난다", "labels": ["sad"], "intensity": {"sad": 4}, "group": "low", "style": ["short"]}
+{"id": "v168", "text": "헤어졌다. 3년 만났는데 마지막은 카톡 한 줄이었다", "labels": ["sad", "hurt"], "intensity": {"sad": 5, "hurt": 4}, "group": "low", "style": []}
+{"id": "v169", "text": "할머니가 치매 진단을 받으셨다. 오늘 병원에서 나를 엄마 이름으로 부르셨다. 웃으면서 네 하고 대답했는데 화장실 가서 한참 울었다. 나 키워주신 분인데.", "labels": ["sad"], "intensity": {"sad": 5}, "group": "low", "style": ["long", "formal-ish"]}
+{"id": "v170", "text": "친한 언니가 지방으로 이사 간다 마지막 밥 먹고 오는 길에 울었다", "labels": ["sad", "miss"], "intensity": {"sad": 4, "miss": 3}, "group": "low", "style": ["mixed"]}
+{"id": "v171", "text": "슬픈 영화 보다가 펑펑 움. 내 얘기 같아서", "labels": ["sad"], "intensity": {"sad": 3}, "group": "low", "style": []}
+{"id": "v172", "text": "아끼던 반지 잃어버림 할머니가 주신 건데", "labels": ["sad"], "intensity": {"sad": 4}, "group": "low", "style": []}
+{"id": "v173", "text": "수능 잘 봤다~ 재수 확정 ^^ 엄마는 괜찮다는데 그게 더 슬프다", "labels": ["sad", "down"], "intensity": {"sad": 5, "down": 3}, "group": "low", "style": ["sarcasm"]}
+{"id": "v174", "text": "아빠 회사 문 닫는대. 저녁 먹으면서 아무도 말 안 함", "labels": ["sad", "anxious"], "intensity": {"sad": 4, "anxious": 3}, "group": "low", "style": ["mixed"]}
+{"id": "v175", "text": "화분 다 죽었다 ㅠ 나 식물 킬러 인증 ㅋㅋ 물 너무 줬나", "labels": ["sad"], "intensity": {"sad": 2}, "group": "low", "style": ["chat", "sarcasm"]}
+{"id": "v176", "text": "친구 부모님 장례식 다녀왔다. 친구가 웃으면서 와줘서 고맙다고 하는데 그게 더 마음 아팠다. 돌아오는 지하철에서 엄마한테 전화했다. 별 말은 안 했다.", "labels": ["sad", "love"], "intensity": {"sad": 4, "love": 2}, "group": "low", "style": ["long", "formal-ish", "mixed"]}
+{"id": "v177", "text": "키우던 햄스터 별됨.. 손바닥만한게 뭐라고 이렇게 허전하냐", "labels": ["sad"], "intensity": {"sad": 4}, "group": "low", "style": ["slang", "typo"]}
+{"id": "v178", "text": "오디션 최종에서 떨어졌다. 2년 준비한 게 3분 만에 끝났다", "labels": ["sad"], "intensity": {"sad": 5}, "group": "low", "style": []}
+{"id": "v179", "text": "아무것도 하기 싫다", "labels": ["down"], "intensity": {"down": 4}, "group": "low", "style": ["short"]}
+{"id": "v180", "text": "일주일째 방에서 안 나감. 배달 음식 용기만 쌓인다", "labels": ["down"], "intensity": {"down": 5}, "group": "low", "style": []}
+{"id": "v181", "text": "다들 잘 사는데 나만 제자리. 인스타 보니까 아주 힘이 난다 ^^ 그냥 지웠다", "labels": ["down", "lonely"], "intensity": {"down": 4, "lonely": 2}, "group": "low", "style": ["sarcasm"]}
+{"id": "v182", "text": "취준 1년 넘어가니까 이제 떨어져도 아무 느낌이 없다", "labels": ["down"], "intensity": {"down": 5}, "group": "low", "style": []}
+{"id": "v183", "text": "회색 하늘 회색 기분", "labels": ["down"], "intensity": {"down": 3}, "group": "low", "style": ["short"]}
+{"id": "v184", "text": "알람 다섯 번 끄고 겨우 일어나서 출근함. 하루 종일 멍했다. 집에 오자마자 씻지도 않고 누웠다. 이게 사는 건가 싶다.", "labels": ["down", "tired"], "intensity": {"down": 4, "tired": 4}, "group": "low", "style": ["long", "mixed"]}
+{"id": "v185", "text": "오늘도 할일 목록 하나도 못 지움 그냥 누워만 있었다", "labels": ["down"], "intensity": {"down": 4}, "group": "low", "style": ["typo"]}
+{"id": "v186", "text": "좋아하던 게임도 재미없다. 와 나 드디어 해탈했나 봄 ㅋ", "labels": ["down"], "intensity": {"down": 4}, "group": "low", "style": ["sarcasm", "chat"]}
+{"id": "v187", "text": "잘 지내냐는 말에 응 이라고 했다. 사실은 아닌데", "labels": ["down", "lonely"], "intensity": {"down": 4, "lonely": 3}, "group": "low", "style": []}
+{"id": "v188", "text": "아주 잘 하고 있다 나 ^^ 오늘도 침대랑 한 몸", "labels": ["down"], "intensity": {"down": 4}, "group": "low", "style": ["sarcasm"]}
+{"id": "v189", "text": "겨울만 되면 이렇다. 해가 짧아지니 기운이 하나도 없다", "labels": ["down", "tired"], "intensity": {"down": 3, "tired": 3}, "group": "low", "style": ["formal-ish", "mixed"]}
+{"id": "v190", "text": "웃는 척 하느라 지쳤다. 집에 오면 아무 표정도 안 짓게 된다", "labels": ["down", "tired"], "intensity": {"down": 4, "tired": 3}, "group": "low", "style": ["mixed"]}
+{"id": "v191", "text": "역시 나는 뭘 해도 안 되는구나 ㅎㅎ 재밌다 인생", "labels": ["down"], "intensity": {"down": 5}, "group": "low", "style": ["sarcasm"]}
+{"id": "v192", "text": "생일인데 카톡 세 개. 두 개는 쇼핑몰 쿠폰 ㅋ 쿠폰 회사만 날 기억해주네", "labels": ["lonely", "sad"], "intensity": {"lonely": 5, "sad": 3}, "group": "low", "style": ["sarcasm"]}
+{"id": "v193", "text": "혼밥 혼영 혼술 오늘 다 함 ㅋㅋ 나 완전 자유로운 영혼", "labels": ["lonely"], "intensity": {"lonely": 3}, "group": "low", "style": ["sarcasm", "chat"]}
+{"id": "v194", "text": "외롭다", "labels": ["lonely"], "intensity": {"lonely": 4}, "group": "low", "style": ["short"]}
+{"id": "v195", "text": "자취방 불 켜고 들어오면 아무도 없는 게 아직도 적응 안 된다", "labels": ["lonely"], "intensity": {"lonely": 4}, "group": "low", "style": []}
+{"id": "v196", "text": "단톡방에서 나만 빼고 약속 잡은 거 봄", "labels": ["lonely", "hurt"], "intensity": {"lonely": 4, "hurt": 4}, "group": "low", "style": []}
+{"id": "v197", "text": "크리스마스에 혼자 케이크 먹는 중 ^^ 아주 낭만적이다", "labels": ["lonely"], "intensity": {"lonely": 4}, "group": "low", "style": ["sarcasm"]}
+{"id": "v198", "text": "서울 올라온 지 반년. 아직 밥 먹자고 연락할 사람이 없다", "labels": ["lonely"], "intensity": {"lonely": 5}, "group": "low", "style": []}
+{"id": "v199", "text": "다들 커플인데 나만 솔로 ㅋㅋ 괜찮아 괜찮아", "labels": ["lonely"], "intensity": {"lonely": 3}, "group": "low", "style": ["sarcasm", "chat"]}
+{"id": "v200", "text": "회사에서 하루 종일 말 한마디 안 했다. 메신저로만 일함", "labels": ["lonely"], "intensity": {"lonely": 4}, "group": "low", "style": []}
+{"id": "v201", "text": "남편이랑 같이 사는데 왜 이렇게 혼자인 느낌일까. 대화가 없다", "labels": ["lonely", "sad"], "intensity": {"lonely": 4, "sad": 3}, "group": "low", "style": []}
+{"id": "v202", "text": "퇴근길 버스 창밖으로 불 켜진 집들 보면 괜시리 쓸쓸하다", "labels": ["lonely"], "intensity": {"lonely": 3}, "group": "low", "style": ["typo"]}
+{"id": "v203", "text": "아플 때 물 떠다 줄 사람 없는 게 제일 서럽다. 열이 38도인데 혼자 약국 갔다. 약사님이 보호자 없냐고 물어보시는데 괜히 눈물 날 뻔. 자취 5년 차인데 이건 적응이 안 된다.", "labels": ["lonely", "sad"], "intensity": {"lonely": 5, "sad": 3}, "group": "low", "style": ["long"]}
+{"id": "v204", "text": "친구들 다 결혼하고 애 키우느라 바빠서 주말에 연락할 데가 없음", "labels": ["lonely"], "intensity": {"lonely": 4}, "group": "low", "style": []}
+{"id": "v205", "text": "휴학하고 나니까 학교 친구들이랑 점점 멀어지는 게 느껴진다. 단톡도 조용", "labels": ["lonely", "sad"], "intensity": {"lonely": 4, "sad": 2}, "group": "low", "style": []}
+{"id": "v206", "text": "남친이 내 생일 까먹음 ㅎㅎ 회사 바빴대. 그래 바쁘면 그럴 수 있지^^", "labels": ["hurt"], "intensity": {"hurt": 5}, "group": "low", "style": ["sarcasm", "chat"]}
+{"id": "v207", "text": "엄마는 항상 동생 편이다. 그래 나는 주워온 자식이니까~", "labels": ["hurt"], "intensity": {"hurt": 4}, "group": "low", "style": ["sarcasm"]}
+{"id": "v208", "text": "너무하네 진짜", "labels": ["hurt", "annoyed"], "intensity": {"hurt": 3, "annoyed": 2}, "group": "low", "style": ["mixed", "short"]}
+{"id": "v209", "text": "제일 친한 친구가 내 비밀을 다른 애들한테 말한 거 알게 됨", "labels": ["hurt", "angry"], "intensity": {"hurt": 5, "angry": 3}, "group": "low", "style": ["mixed"]}
+{"id": "v210", "text": "열심히 준비한 선물인데 고맙다는 말도 없이 가방에 넣더라", "labels": ["hurt"], "intensity": {"hurt": 4}, "group": "low", "style": []}
+{"id": "v211", "text": "아 네~ 저는 원래 없어도 되는 사람이죠^^ 회의 공지 나만 못 받음", "labels": ["hurt", "annoyed"], "intensity": {"hurt": 4, "annoyed": 3}, "group": "low", "style": ["sarcasm", "mixed"]}
+{"id": "v212", "text": "아빠가 친척들 앞에서 내 성적 얘기했다. 웃으면서 했지만 나는 하나도 안 웃겼다", "labels": ["hurt"], "intensity": {"hurt": 4}, "group": "low", "style": []}
+{"id": "v213", "text": "생일선물로 준 목도리 한 번도 안 하고 다니네. 별거 아닌데 서운하다", "labels": ["hurt"], "intensity": {"hurt": 3}, "group": "low", "style": []}
+{"id": "v214", "text": "썸남 답장 6시간째 않옴 근데 인스타 스토리는 올림 ㅋ", "labels": ["hurt", "annoyed"], "intensity": {"hurt": 4, "annoyed": 3}, "group": "low", "style": ["chat", "typo", "mixed"]}
+{"id": "v215", "text": "친구가 내 결혼식에 안 왔다. 축의금만 보냈다. 나는 걔 결혼식에서 축사까지 했는데.", "labels": ["hurt"], "intensity": {"hurt": 5}, "group": "low", "style": ["long", "formal-ish"]}
+{"id": "v216", "text": "좋겠다 넌 친구 많아서 ^^ 나 빼고 여행 가니까 재밌지", "labels": ["hurt", "lonely"], "intensity": {"hurt": 4, "lonely": 3}, "group": "low", "style": ["sarcasm"]}
+{"id": "v217", "text": "언니가 내 고민 듣다가 폰 봄. 그래 내 얘기가 재미없지 뭐", "labels": ["hurt"], "intensity": {"hurt": 3}, "group": "low", "style": ["sarcasm"]}
+{"id": "v218", "text": "오랜만에 연락한 동창이 결국 보험 얘기하려고 연락한 거였다. 반가웠던 내가 바보지 ^^ 역시 사람 믿으면 안 돼", "labels": ["hurt"], "intensity": {"hurt": 4}, "group": "low", "style": ["sarcasm"]}
+{"id": "v219", "text": "남편이 내가 차린 생일상 보고 \"왜 이렇게 많이 했어 돈 아깝게\" 이 한마디", "labels": ["hurt", "angry"], "intensity": {"hurt": 5, "angry": 2}, "group": "low", "style": ["mixed"]}
+{"id": "v220", "text": "피곤해 죽겠다", "labels": ["tired"], "intensity": {"tired": 4}, "group": "worn", "style": ["short"]}
+{"id": "v221", "text": "야간 편의점 알바 끝나고 바로 1교시 수업. 교수님 말이 외계어처럼 들린다. 점심 먹고 도서관 책상에 엎드렸는데 눈 떠보니 4시. 오늘 한 게 아무것도 없다.", "labels": ["tired"], "intensity": {"tired": 5}, "group": "worn", "style": ["long"]}
+{"id": "v222", "text": "이번 주 야근 4일째 ㅎㅎ 회사가 우리 집이다 아주 좋아", "labels": ["tired", "annoyed"], "intensity": {"tired": 5, "annoyed": 3}, "group": "worn", "style": ["sarcasm"]}
+{"id": "v223", "text": "애 둘 재우고 나니 밤 11시. 설겆이는 내일 하자", "labels": ["tired"], "intensity": {"tired": 4}, "group": "worn", "style": ["typo"]}
+{"id": "v224", "text": "시험기간 3일 연속 밤샘. 커피 6잔째 심장이 이상하다", "labels": ["tired", "anxious"], "intensity": {"tired": 5, "anxious": 2}, "group": "worn", "style": []}
+{"id": "v225", "text": "주말인데 결혼식 두 탕 ^^ 알찬 주말 보냈다 아주", "labels": ["tired"], "intensity": {"tired": 4}, "group": "worn", "style": ["sarcasm"]}
+{"id": "v226", "text": "오늘 진상 손님만 열 명 상대함. 운수 대통이다 ㅋ 말할 힘도 없다", "labels": ["tired", "annoyed"], "intensity": {"tired": 4, "annoyed": 3}, "group": "worn", "style": ["sarcasm", "chat"]}
+{"id": "v227", "text": "이사 준비하느라 2주째 박스만 싸는 중 허리 나갈 듯", "labels": ["tired"], "intensity": {"tired": 4}, "group": "worn", "style": []}
+{"id": "v228", "text": "몸이 천근만근", "labels": ["tired"], "intensity": {"tired": 4}, "group": "worn", "style": ["short"]}
+{"id": "v229", "text": "헬스 하체 날이었는데 계단 못 내려가겠음 ㅋㅋ 다리가 내 다리가 아니다", "labels": ["tired", "proud"], "intensity": {"tired": 3, "proud": 2}, "group": "worn", "style": ["chat", "mixed"]}
+{"id": "v230", "text": "출장 다녀와서 바로 보고서. 오늘 몇시간 잤는지 기억도 안 난다", "labels": ["tired"], "intensity": {"tired": 5}, "group": "worn", "style": ["typo"]}
+{"id": "v231", "text": "감기 걸려서 일주일째 골골. 약 먹으면 졸리고 않먹으면 아프고", "labels": ["tired"], "intensity": {"tired": 4}, "group": "worn", "style": ["typo"]}
+{"id": "v232", "text": "하루 종일 사람 상대하고 오니 아무 말도 하기 싫다. 카톡 쌓인 거 내일 볼래", "labels": ["tired"], "intensity": {"tired": 4}, "group": "worn", "style": []}
+{"id": "v233", "text": "월요일 아침 7시 출근 저녁 10시 퇴근. 내일도 똑같다. 기계가 된 기분", "labels": ["tired", "down"], "intensity": {"tired": 5, "down": 3}, "group": "worn", "style": ["mixed"]}
+{"id": "v234", "text": "내일 수능이다. 잠이 안 온다", "labels": ["anxious"], "intensity": {"anxious": 5}, "group": "worn", "style": []}
+{"id": "v235", "text": "건강검진에서 재검 나왔다. 결과 나올 때까지 일주일 어떻게 기다리지", "labels": ["anxious"], "intensity": {"anxious": 5}, "group": "worn", "style": []}
+{"id": "v236", "text": "불안해", "labels": ["anxious"], "intensity": {"anxious": 4}, "group": "worn", "style": ["short"]}
+{"id": "v237", "text": "팀장님이 \"잠깐 얘기 좀 해\" 하고 회의실 들어감. 아직 안 나왔는데 뭐지", "labels": ["anxious"], "intensity": {"anxious": 4}, "group": "worn", "style": []}
+{"id": "v238", "text": "월세 날짜 다가오는데 통장 잔고가 모자란다. 어떻게 되겠지 하다가 벌써 몇일 남음", "labels": ["anxious"], "intensity": {"anxious": 4}, "group": "worn", "style": ["typo"]}
+{"id": "v239", "text": "남친이 할 말 있다고 저녁에 보자는데 하루 종일 일이 손에 안 잡혀", "labels": ["anxious"], "intensity": {"anxious": 5}, "group": "worn", "style": []}
+{"id": "v240", "text": "발표 내일인데 아직 대본 못 외움 ㅠㅠ 망하면 어떻하지", "labels": ["anxious"], "intensity": {"anxious": 4}, "group": "worn", "style": ["typo", "chat"]}
+{"id": "v241", "text": "엄마가 전화를 안 받는다. 벌써 세 번째", "labels": ["anxious"], "intensity": {"anxious": 4}, "group": "worn", "style": []}
+{"id": "v242", "text": "구조조정 소문 돌고 있음. 다들 눈치만 보는 중", "labels": ["anxious"], "intensity": {"anxious": 4}, "group": "worn", "style": []}
+{"id": "v243", "text": "역시 난 멘탈 최강이야 ㅋㅋ 면접 대기실에서 손 덜덜 떨고 있음", "labels": ["anxious"], "intensity": {"anxious": 4}, "group": "worn", "style": ["sarcasm", "chat"]}
+{"id": "v244", "text": "첫 출근 전날 밤. 사람들이 나 싫어하면 어쩌지 별 생각 다 든다", "labels": ["anxious", "hope"], "intensity": {"anxious": 4, "hope": 2}, "group": "worn", "style": ["mixed"]}
+{"id": "v245", "text": "고양이가 하루 종일 밥을 안 먹는다. 내일 아침에 병원 가야겠다", "labels": ["anxious"], "intensity": {"anxious": 4}, "group": "worn", "style": []}
+{"id": "v246", "text": "졸업은 다가오는데 아직 아무 데도 안 붙었다. 나만 뒤처지는 것 같아서 가슴이 답답하다. 다들 어디 붙었다는 소식만 들린다. 밤마다 채용공고만 새로고침한다.", "labels": ["anxious", "down"], "intensity": {"anxious": 5, "down": 3}, "group": "worn", "style": ["long", "mixed"]}
+{"id": "v247", "text": "비행기 난기류 너무 심해서 손잡이 꽉 잡고 있었음", "labels": ["anxious"], "intensity": {"anxious": 4}, "group": "worn", "style": []}
+{"id": "v248", "text": "아 짜증나", "labels": ["annoyed"], "intensity": {"annoyed": 4}, "group": "worn", "style": ["short"]}
+{"id": "v249", "text": "윗집 또 새벽 2시에 쿵쿵거림. 몇번째냐 진짜", "labels": ["annoyed"], "intensity": {"annoyed": 5}, "group": "worn", "style": ["typo"]}
+{"id": "v250", "text": "조별과제 단톡방 읽씹 3명. 역시 대학생활 최고다 ^^", "labels": ["annoyed"], "intensity": {"annoyed": 4}, "group": "worn", "style": ["sarcasm", "slang"]}
+{"id": "v251", "text": "지하철에서 옆사람 쩍벌에 영상 소리까지 풀로. 매너 진짜 최고시네요", "labels": ["annoyed"], "intensity": {"annoyed": 4}, "group": "worn", "style": ["sarcasm"]}
+{"id": "v252", "text": "택배 문 앞에 두라고 했는데 경비실에 맡겨주심 ㅎ 비 오는 날 산책시켜주셔서 감사합니다", "labels": ["annoyed"], "intensity": {"annoyed": 3}, "group": "worn", "style": ["sarcasm"]}
+{"id": "v253", "text": "엄마 잔소리 오늘만 다섯 번째. 알아서 한다고", "labels": ["annoyed"], "intensity": {"annoyed": 4}, "group": "worn", "style": []}
+{"id": "v254", "text": "손님이 아메리카노 시키고 쓰다고 환불해달래 어의없다. 아메리카노는 원래 쓴 거라고 설명했더니 나보고 불친절하대. 결국 점장님이 환불해줌. 하루 종일 기분 잡침.", "labels": ["annoyed"], "intensity": {"annoyed": 5}, "group": "worn", "style": ["typo", "long", "slang"]}
+{"id": "v255", "text": "와 우리 팀장님 진짜 대단하시다~ 퇴근 5분 전에 일 주는 능력", "labels": ["annoyed", "tired"], "intensity": {"annoyed": 5, "tired": 2}, "group": "worn", "style": ["sarcasm"]}
+{"id": "v256", "text": "렌즈 한쪽 하수구에 떨어뜨림 아침부터 되는 게 없음", "labels": ["annoyed"], "intensity": {"annoyed": 3}, "group": "worn", "style": []}
+{"id": "v257", "text": "동생이 내 옷 또 말도 없이 입고 나감. 옷장 공유 서비스 오픈했나 봄", "labels": ["annoyed"], "intensity": {"annoyed": 4}, "group": "worn", "style": ["sarcasm"]}
+{"id": "v258", "text": "인터넷 또 끊김 게임 중이었는데 ㅅㅂ", "labels": ["annoyed"], "intensity": {"annoyed": 5}, "group": "worn", "style": ["slang", "chat"]}
+{"id": "v259", "text": "카톡 답장 \"ㅇㅇ\" 이게 다냐", "labels": ["annoyed", "hurt"], "intensity": {"annoyed": 3, "hurt": 2}, "group": "worn", "style": ["chat", "mixed"]}
+{"id": "v260", "text": "배달 40분 걸린다더니 1시간 반. 덕분에 식은 국물 잘 먹었습니다^^", "labels": ["annoyed"], "intensity": {"annoyed": 4}, "group": "worn", "style": ["sarcasm"]}
+{"id": "v261", "text": "왠만하면 참으려고 했는데 옆자리 동료 키보드 소리 진짜 너무하다", "labels": ["annoyed"], "intensity": {"annoyed": 4}, "group": "worn", "style": ["typo"]}
+{"id": "v262", "text": "진짜 열받네", "labels": ["angry"], "intensity": {"angry": 4}, "group": "worn", "style": ["short"]}
+{"id": "v263", "text": "팀장이 내 기획안 자기 이름으로 올렸다. 회의 때 그거 자기 아이디어라고 발표함", "labels": ["angry", "hurt"], "intensity": {"angry": 5, "hurt": 3}, "group": "worn", "style": ["mixed"]}
+{"id": "v264", "text": "집주인이 보증금 핑계 대면서 안 돌려줌. 참 양심적이시다. 법적으로 갈 거다", "labels": ["angry", "anxious"], "intensity": {"angry": 5, "anxious": 3}, "group": "worn", "style": ["sarcasm"]}
+{"id": "v265", "text": "알바 사장이 주휴수당 안 준대. 사장님 법 공부 참 열심히 하셨네요", "labels": ["angry"], "intensity": {"angry": 5}, "group": "worn", "style": ["sarcasm"]}
+{"id": "v266", "text": "남친이 바람폈다. 내 친구랑. 말이 안 나온다", "labels": ["angry", "hurt"], "intensity": {"angry": 5, "hurt": 5}, "group": "worn", "style": ["mixed"]}
+{"id": "v267", "text": "아주 잘났다 진짜 ^^ 자기 실수를 나한테 덮어씌우고", "labels": ["angry"], "intensity": {"angry": 5}, "group": "worn", "style": ["sarcasm"]}
+{"id": "v268", "text": "길에서 담배 피우던 사람이 꽁초를 우리 애 유모차 쪽으로 튕김. 소리 질렀다", "labels": ["angry"], "intensity": {"angry": 5}, "group": "worn", "style": []}
+{"id": "v269", "text": "진상 손님이 반말하면서 카드 던짐. 웃으면서 받았지만 손이 떨렸다", "labels": ["angry", "hurt"], "intensity": {"angry": 4, "hurt": 3}, "group": "worn", "style": ["mixed"]}
+{"id": "v270", "text": "내 차 긁고 그냥 간 놈 블랙박스에 다 찍혔다 가만 않둬", "labels": ["angry"], "intensity": {"angry": 5}, "group": "worn", "style": ["typo"]}
+{"id": "v271", "text": "동생이 내 노트북 떨어뜨려놓고 원래 그랬다네? 와 원래 그랬구나 몰랐네", "labels": ["angry"], "intensity": {"angry": 4}, "group": "worn", "style": ["sarcasm"]}
+{"id": "v272", "text": "회사에서 성희롱 신고했는데 오히려 나를 예민한 사람 취급한다. 인사팀은 좋게 넘어가자고만 한다. 가해자는 오늘도 아무렇지 않게 웃으면서 출근했다. 이게 말이 되나.", "labels": ["angry", "hurt"], "intensity": {"angry": 5, "hurt": 4}, "group": "worn", "style": ["long", "mixed"]}
+{"id": "v273", "text": "고맙네요 정말~ 3시간 줄 서서 기다렸는데 앞사람이 한정판을 전부 쓸어감. 1인 1개라며", "labels": ["angry", "sad"], "intensity": {"angry": 4, "sad": 2}, "group": "worn", "style": ["sarcasm", "mixed"]}
+{"id": "v274", "text": "아빠가 또 술 먹고 엄마한테 소리 질렀다. 이제 나도 못 참겠다", "labels": ["angry", "sad"], "intensity": {"angry": 5, "sad": 3}, "group": "worn", "style": ["mixed"]}
+{"id": "v275", "text": "중고거래 사기 당함. 입금하자마자 차단. 경찰서 다녀왔다. 30만원", "labels": ["angry", "sad"], "intensity": {"angry": 5, "sad": 3}, "group": "worn", "style": ["mixed"]}
+{"id": "v276", "text": "그냥 그런 하루", "labels": ["unsure"], "intensity": {"unsure": 2}, "group": "unsure", "style": ["short"]}
+{"id": "v277", "text": "출근 업무 퇴근 끝", "labels": ["unsure"], "intensity": {"unsure": 2}, "group": "unsure", "style": ["short"]}
+{"id": "v278", "text": "점심에 김밥 먹음. 오후엔 회의 두 개. 별일 없었다", "labels": ["unsure"], "intensity": {"unsure": 2}, "group": "unsure", "style": []}
+{"id": "v279", "text": "모르겠다 내 기분", "labels": ["unsure"], "intensity": {"unsure": 3}, "group": "unsure", "style": ["short"]}
+{"id": "v280", "text": "합격했는데 하나도 기쁘지가 않다. 그렇다고 슬픈 것도 아니고. 이게 뭔지 모르겠음.", "labels": ["unsure"], "intensity": {"unsure": 3}, "group": "unsure", "style": ["long"]}
+{"id": "v281", "text": "오늘 뭐했더라", "labels": ["unsure"], "intensity": {"unsure": 1}, "group": "unsure", "style": ["short"]}
+{"id": "v282", "text": "비 옴. 우산 챙김", "labels": ["unsure"], "intensity": {"unsure": 1}, "group": "unsure", "style": ["short"]}
+{"id": "v283", "text": "전남친 결혼한대. 축하해야 하는 건지 뭔지 감정이 안 정리됨", "labels": ["unsure"], "intensity": {"unsure": 3}, "group": "unsure", "style": []}
+{"id": "v284", "text": "평범. 진짜 평범", "labels": ["unsure"], "intensity": {"unsure": 1}, "group": "unsure", "style": ["short"]}
+{"id": "v285", "text": "학원 가고 집 오고 숙제 함", "labels": ["unsure"], "intensity": {"unsure": 1}, "group": "unsure", "style": ["short"]}
+{"id": "v286", "text": "머리 자름 생각보다 짧음 뭐 괜찮은듯?", "labels": ["unsure"], "intensity": {"unsure": 2}, "group": "unsure", "style": ["typo", "chat"]}
+{"id": "v287", "text": "엄마랑 장보고 왔다. 무 하나, 두부 두 모, 계란 한 판", "labels": ["unsure"], "intensity": {"unsure": 1}, "group": "unsure", "style": ["formal-ish"]}
+{"id": "v288", "text": "기분이 좋은 것 같기도 하고 아닌 것 같기도 하고", "labels": ["unsure"], "intensity": {"unsure": 3}, "group": "unsure", "style": []}
+{"id": "v289", "text": "ㅇㅇ 그냥 그럼", "labels": ["unsure"], "intensity": {"unsure": 1}, "group": "unsure", "style": ["chat", "short"]}
+{"id": "v290", "text": "오늘 날씨 흐림. 기온 12도", "labels": ["unsure"], "intensity": {"unsure": 1}, "group": "unsure", "style": []}
+{"id": "v291", "text": "알바 대타 뛰고 옴. 손님 적었음", "labels": ["unsure"], "intensity": {"unsure": 1}, "group": "unsure", "style": []}
+{"id": "v292", "text": "이별인데 홀가분한 건지 슬픈 건지 하루에도 열 번씩 바뀐다", "labels": ["unsure"], "intensity": {"unsure": 3}, "group": "unsure", "style": []}
+{"id": "v293", "text": "별일 없음", "labels": ["unsure"], "intensity": {"unsure": 1}, "group": "unsure", "style": ["short"]}
+{"id": "v294", "text": "하루가 지나갔다", "labels": ["unsure"], "intensity": {"unsure": 1}, "group": "unsure", "style": ["formal-ish", "short"]}
+{"id": "v295", "text": "은행 가서 통장 정리하고 서류 떼고 옴. 대기 번호 47번이었음", "labels": ["unsure"], "intensity": {"unsure": 1}, "group": "unsure", "style": []}
+{"id": "v296", "text": "회사 워크숍. 레크레이션 하고 고기 먹고 숙소에서 잠", "labels": ["unsure"], "intensity": {"unsure": 2}, "group": "unsure", "style": ["typo"]}
+{"id": "v297", "text": "그 사람한테 연락이 왔다. 답장을 할지 말지 아직 모르겠다", "labels": ["unsure"], "intensity": {"unsure": 3}, "group": "unsure", "style": []}
+{"id": "v298", "text": "오늘 일기 쓸 게 없다", "labels": ["unsure"], "intensity": {"unsure": 1}, "group": "unsure", "style": ["short"]}
+{"id": "v299", "text": "낮잠 자고 일어나니 저녁이었다. 이상한 기분", "labels": ["unsure"], "intensity": {"unsure": 2}, "group": "unsure", "style": []}
+{"id": "v300", "text": "머리는 맑은데 마음은 좀 복잡한 날. 뭐라 이름 붙이기 어렵다", "labels": ["unsure"], "intensity": {"unsure": 3}, "group": "unsure", "style": []}
+{"id": "m01", "text": "6월 모의고사 수학 또 3등급. 30번은 손도 못 댔고 21번은 계산 실수로 날림. 담임쌤이 이 성적이면 인서울 힘들다고 해서 집에 오는 내내 멍했다. 엄마한테 성적표 보여주기 싫어서 아직 가방에 넣어둠. 수능까지 150일도 안 남았는데 나만 제자리인 것 같아.", "labels": ["anxious", "down", "sad"], "group": "worn", "style": ["long", "model-eval"]}
+{"id": "m02", "text": "중간고사 전공 두 과목 연달아 봤다. 어제 새벽 4시까지 회계원리 정리하다가 1시간 자고 갔더니 시험 중에 눈이 감김. 끝나고 도서관 앞 벤치에서 아메리카노 마시면서 멍때렸다. 내일 마케팅원론 하나 남았는데 진짜 몸이 안 따라준다.", "labels": ["tired", "anxious"], "group": "worn", "style": ["long", "model-eval"]}
+{"id": "m03", "text": "오늘 주간회의에서 박 팀장님이 내 보고서를 화면에 띄워놓고 '이걸 3년차가 쓴 거냐'고 했다. 다들 보는 앞에서. 수치 하나 틀린 건 내 잘못 맞는데 그렇게까지 말할 일인가 싶다. 회의 끝나고 화장실에서 5분 정도 그냥 서 있었다.", "labels": ["angry", "annoyed", "sad"], "group": "worn", "style": ["long", "model-eval"]}
+{"id": "m04", "text": "6시 10분 전에 차장님이 내일 아침까지 거래처 견적 비교표 만들어 달라고 함. 오늘 친구랑 저녁 약속 있었는데 결국 취소했다. 9시 반에 사무실 나오면서 편의점 삼각김밥 하나 먹음. 이게 맞나.", "labels": ["annoyed", "tired", "angry"], "group": "worn", "style": ["long", "model-eval"]}
+{"id": "m05", "text": "민준이랑 처음으로 둘이서 영화 봤다!! 성수에서 만나서 파스타 먹고 메가박스 갔는데 팝콘 먹다가 손 닿아서 심장 터질 뻔ㅠㅠ 집 가는 길에 '다음엔 내가 맛집 찾아올게'라고 함. 다음이 있다는 거잖아. 잠이 안 온다.", "labels": ["flutter", "joy", "excited"], "group": "flutter", "style": ["long", "model-eval"]}
+{"id": "m06", "text": "남자친구랑 또 연락 문제로 싸웠다. 친구들이랑 술 마신다고 하고 4시간 동안 카톡 하나 없었음. 걱정돼서 전화했더니 '왜 이렇게 집착하냐'고. 집착이 아니라 그냥 걱정한 건데. 결국 내가 먼저 미안하다고 했는데 왜 내가 사과했는지 모르겠다.", "labels": ["hurt", "angry", "sad"], "group": "low", "style": ["long", "model-eval"]}
+{"id": "m07", "text": "헤어진 지 딱 한 달. 오늘 학교 앞 붕어빵 트럭 지나가다가 걔가 팥 말고 슈크림만 먹던 게 생각났다. 괜찮아진 줄 알았는데 아직 아닌가 봐. 사진첩 정리는 아직도 못 했다.", "labels": ["miss", "sad", "lonely"], "group": "flutter", "style": ["long", "model-eval"]}
+{"id": "m08", "text": "오늘 내 생일이었는데 지수가 하루 종일 연락이 없었다. 다른 애들은 다 기프티콘 보내줬는데. 지수 생일 때 나는 케이크까지 사서 찾아갔었는데. 밤 11시 넘어서 '헐 오늘이었어? 미안ㅋㅋ' 하고 끝. 괜찮다고 답장했지만 하나도 안 괜찮음.", "labels": ["hurt", "sad"], "group": "low", "style": ["long", "model-eval"]}
+{"id": "m09", "text": "인스타 스토리 보니까 고등학교 친구들 셋이서 홍대에서 놀고 있었다. 단톡방에는 아무 말 없었는데. 나만 빼고 따로 방이 있나 싶어서 계속 신경 쓰임. 물어보면 쪼잔해 보일까 봐 그냥 좋아요만 눌렀다.", "labels": ["hurt", "lonely", "sad"], "group": "low", "style": ["long", "model-eval"]}
+{"id": "m10", "text": "엄마가 또 사촌언니랑 비교했다. 언니는 공기업 붙었는데 너는 언제 정신 차리냐고. 나도 나름 자격증 공부하고 있는데 그건 안 보이나 봄. 방문 쾅 닫고 들어와서 이어폰 끼고 누워 있음. 저녁도 안 먹었다.", "labels": ["annoyed", "hurt", "angry"], "group": "worn", "style": ["long", "model-eval"]}
+{"id": "m11", "text": "할머니가 어제 넘어지셔서 고관절 수술을 하셨다. 수업 끝나고 아빠랑 병원 갔는데 할머니가 생각보다 작아 보여서 마음이 이상했다. 그래도 나 보자마자 밥은 먹었냐고 물어보셨다. 의사 선생님은 회복까지 몇 달 걸린다고 함.", "labels": ["anxious", "sad"], "group": "worn", "style": ["long", "model-eval"]}
+{"id": "m12", "text": "아빠 생신이라 온 가족이 동네 갈비집에 갔다. 동생이랑 몰래 준비한 케이크 꺼냈더니 아빠가 쑥스러워하면서도 사진을 열 장은 찍으심. 집에 와서 엄마가 옛날 앨범까지 꺼내서 다 같이 웃었다. 이런 날이 자주 있었으면.", "labels": ["joy", "grateful", "comfy", "love"], "group": "bright", "style": ["long", "model-eval"]}
+{"id": "m13", "text": "홈트 30일 챌린지 오늘 끝!! 중간에 생리할 때도 스트레칭이라도 하고 체크했다. 처음엔 플랭크 30초도 힘들었는데 오늘은 1분 20초 버팀. 몸무게는 별로 안 빠졌지만 계단 오를 때 숨이 덜 찬다. 나 자신 칭찬해.", "labels": ["proud", "joy"], "group": "bright", "style": ["long", "model-eval"]}
+{"id": "m14", "text": "카페 알바 첫 월급 들어왔다. 68만 원. 동생이 갖고 싶어 하던 무선 이어폰 사줬더니 언니 최고라고 안아줬다. 엄마한테는 홍삼 하나 사드림. 내 돈으로 누구한테 뭘 해준 게 처음이라 기분이 묘하게 좋다.", "labels": ["proud", "joy", "grateful"], "group": "bright", "style": ["long", "model-eval"]}
+{"id": "m15", "text": "알람 세 번 끄고 일어나서 1교시 겨우 들어감. 점심은 학식 돈까스. 오후엔 과제 조금 하고 유튜브 보다가 하루 끝. 특별한 건 없었다.", "labels": ["serene", "comfy", "unsure"], "group": "calm", "style": ["long", "model-eval"]}
+{"id": "m16", "text": "그냥 피곤함", "labels": ["tired"], "group": "worn", "style": ["long", "model-eval"]}
+{"id": "m17", "text": "오늘 떡볶이 개맛있었다 ㅎㅎ", "labels": ["joy", "excited"], "group": "bright", "style": ["long", "model-eval"]}
+{"id": "m18", "text": "아 진짜 오늘 개빡쳣음 ㅋㅋㅋ 아침에 버스 놓쳐서 지각하고 비오는데 우산 안가져와서 쫄딱 젖음 ㅅㅂ 근데 편의점가서 우산 사니까 비 그침 ㅋㅋㅋㅋ 머선일이고 진짜 오늘 운 다씀", "labels": ["annoyed", "angry"], "group": "worn", "style": ["long", "model-eval"]}
+{"id": "m19", "text": "몰겟다 그냥 기분 꿀꿀햇음 딱히 먼일 잇던것도 아닌데 하루종일 멍때림 저녁에 친구랑 코노 갓는데 노래 부르다가 갑자기 눈물날뻔 왜그런지 나도 모름", "labels": ["down", "unsure", "sad"], "group": "low", "style": ["long", "model-eval"]}
+{"id": "m20", "text": "이번 주는 정말 길었다. 월요일에 원룸 계약 만료 통보를 받고 화요일부터 퇴근 후에 매일 집을 보러 다녔다. 신림 쪽은 너무 비싸고, 봉천 쪽 반지하는 습기가 심해서 포기했다. 수요일엔 지원했던 디자인 에이전시에서 2차 면접 연락이 왔다. 기쁜데 포트폴리오를 다시 손봐야 해서 목요일 밤을 거의 샜다. 금요일 면접에서는 생각보다 말을 잘한 것 같기도 하고, 마지막에 연봉 질문에 버벅인 게 계속 떠오른다. 결과는 다음 주 수요일에 나온다고 했다. 오늘은 오랜만에 늦잠 자고 동네 공원을 한 바퀴 걸었다. 벚꽃이 다 지고 초록 잎이 올라와 있었다. 집도 일도 아직 아무것도 정해지지 않았는데, 이상하게 오늘은 조금 괜찮았다. 다음 주에 붙으면 회사 근처로 집을 구하고, 떨어지면… 그건 그때 생각하기로.", "labels": ["anxious", "hope", "tired"], "group": "worn", "style": ["long", "model-eval"]}
+{"id": "m21", "text": "와 정말 최고의 팀플이었다^^ 발표 전날 밤 11시에 자료 보내준다던 조원 두 명 중 한 명은 잠수, 한 명은 위키백과 복붙. 덕분에 새벽 3시까지 PPT 혼자 만들고 발표도 내가 함. 교수님이 '팀워크가 좋네요'라고 하셨다. 네 아주 좋죠 ㅎㅎ", "labels": ["annoyed", "angry"], "group": "worn", "style": ["long", "model-eval"]}
+{"id": "m22", "text": "오늘 부장님께서 친히 '요즘 애들 치고는 근성 있다'고 칭찬해 주셨다. 주말 출근 3주 연속 한 보람이 있네. 감동해서 눈물이 다 난다. 연차는 언제 쓸 수 있냐고 물었더니 웃으면서 지나가심. 역시 우리 회사 최고.", "labels": ["annoyed", "angry"], "group": "worn", "style": ["long", "model-eval"]}
+{"id": "m23", "text": "요즘 아무것도 하기가 싫다. 씻는 것도 귀찮고 좋아하던 웹툰도 안 본 지 2주 됐다. 학교는 가는데 수업 내용이 하나도 안 들어온다. 친구들한테 연락 오면 괜히 바쁜 척하고 안 만남. 그냥 이불 속에만 있고 싶다.", "labels": ["down", "tired", "lonely"], "group": "low", "style": ["long", "model-eval"]}
+{"id": "m24", "text": "새벽 2시인데 잠이 안 온다. 누우면 심장이 쿵쿵거리고 다음 달 인턴 끝나면 뭐 하지, 계약 연장 안 되면 어떡하지 같은 생각이 꼬리를 문다. 숨을 크게 쉬어 봐도 잘 안 가라앉음. 내일 9시 출근인데.", "labels": ["anxious"], "group": "worn", "style": ["long", "model-eval"]}
+{"id": "m25", "text": "다 그만하고 싶다. 아무도 내 편이 아닌 것 같고 내가 없어져도 아무도 모를 것 같다. 오늘도 책상 서랍에 있는 커터칼을 한참 쳐다봤다. 지난번처럼 팔에 하면 조금은 덜 답답할 것 같다.", "labels": ["down", "sad", "lonely"], "group": "low", "style": ["long", "model-eval"]}
+{"id": "m26", "text": "퇴근하고 콩이랑 한강공원 산책했다. 바람이 선선해서 콩이가 신나서 꼬리를 막 흔들었다. 벤치에 앉아서 노을 보는데 콩이가 내 무릎에 턱을 올려놨다. 아무 생각 없이 30분 정도 그냥 앉아 있었다.", "labels": ["comfy", "serene", "joy"], "group": "calm", "style": ["long", "model-eval"]}
+{"id": "m27", "text": "티켓팅 성공!!!!! 8시 정각에 대기 번호 2만 번대 떠서 망했다 싶었는데 취소표 잡아서 2층 C구역 잡음ㅠㅠㅠ 친구랑 통화하면서 소리 질러서 엄마한테 혼남ㅋㅋ 7월 콘서트까지 다이어트 한다", "labels": ["excited", "joy", "flutter"], "group": "bright", "style": ["long", "model-eval"]}
+{"id": "m28", "text": "간호조무사 국가시험 합격했다. 학원 끝나고 매일 밤 문제집 풀던 게 생각나서 결과 화면 보자마자 울었다. 엄마한테 전화했더니 엄마도 울었다. 이제 진짜 일 시작할 수 있다.", "labels": ["joy", "relieved", "light", "proud"], "group": "bright", "style": ["long", "model-eval"]}
+{"id": "m29", "text": "자취 시작하고 처음으로 아팠다. 열이 38도까지 올라서 혼자 약국 갔다가 죽 사 들고 왔다. 집에 오니까 너무 조용해서 괜히 티비를 틀어놨다. 엄마 목소리 듣고 싶었는데 걱정할까 봐 전화 안 함.", "labels": ["lonely", "sad"], "group": "low", "style": ["long", "model-eval"]}
+{"id": "m30", "text": "요즘 내가 힘들어 보였는지 유나가 퇴근길에 우리 집 앞까지 와서 마카롱이랑 손편지를 주고 갔다. 편지에 '넌 생각보다 잘하고 있어'라고 써 있었다. 집에 들어와서 한참 읽었다. 나도 유나한테 이런 친구가 돼야지.", "labels": ["grateful", "comfy", "love"], "group": "bright", "style": ["long", "model-eval"]}

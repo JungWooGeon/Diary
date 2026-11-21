@@ -1,0 +1,651 @@
+{
+    "version": 1,
+    "spec": "core/light/src/main/kotlin/com/pass/diary/core/light/LightMixer.kt (KDoc of LightMixer). Regenerate: REGEN_LIGHT_VECTORS=1 ./gradlew :core:light:test",
+    "mix": [
+        {
+            "name": "empty",
+            "emotions": [],
+            "expect": {
+                "light": "#D6D0C9",
+                "glow": "#A39A91",
+                "strength": 0.0,
+                "off": true
+            }
+        },
+        {
+            "name": "unsure only",
+            "emotions": [
+                {
+                    "key": "unsure",
+                    "intensity": 3
+                }
+            ],
+            "expect": {
+                "light": "#D6D0C9",
+                "glow": "#A39A91",
+                "strength": 0.0,
+                "off": true
+            }
+        },
+        {
+            "name": "bright joy@1",
+            "emotions": [
+                {
+                    "key": "joy",
+                    "intensity": 1
+                }
+            ],
+            "expect": {
+                "light": "#E5DCAD",
+                "glow": "#D5B467",
+                "strength": 0.2,
+                "off": false
+            }
+        },
+        {
+            "name": "bright joy@2",
+            "emotions": [
+                {
+                    "key": "joy",
+                    "intensity": 2
+                }
+            ],
+            "expect": {
+                "light": "#ECE1AC",
+                "glow": "#DDB85F",
+                "strength": 0.4,
+                "off": false
+            }
+        },
+        {
+            "name": "bright joy@3",
+            "emotions": [
+                {
+                    "key": "joy",
+                    "intensity": 3
+                }
+            ],
+            "expect": {
+                "light": "#F2E6AB",
+                "glow": "#E4BB56",
+                "strength": 0.6,
+                "off": false
+            }
+        },
+        {
+            "name": "bright joy@4",
+            "emotions": [
+                {
+                    "key": "joy",
+                    "intensity": 4
+                }
+            ],
+            "expect": {
+                "light": "#F9EBA9",
+                "glow": "#ECBF4B",
+                "strength": 0.8,
+                "off": false
+            }
+        },
+        {
+            "name": "bright joy@5",
+            "emotions": [
+                {
+                    "key": "joy",
+                    "intensity": 5
+                }
+            ],
+            "expect": {
+                "light": "#FFF0A8",
+                "glow": "#F4C23E",
+                "strength": 1.0,
+                "off": false
+            }
+        },
+        {
+            "name": "calm comfy@1",
+            "emotions": [
+                {
+                    "key": "comfy",
+                    "intensity": 1
+                }
+            ],
+            "expect": {
+                "light": "#C8DAC1",
+                "glow": "#81AB8B",
+                "strength": 0.2,
+                "off": false
+            }
+        },
+        {
+            "name": "calm comfy@2",
+            "emotions": [
+                {
+                    "key": "comfy",
+                    "intensity": 2
+                }
+            ],
+            "expect": {
+                "light": "#CCDFC3",
+                "glow": "#81B18C",
+                "strength": 0.4,
+                "off": false
+            }
+        },
+        {
+            "name": "calm comfy@3",
+            "emotions": [
+                {
+                    "key": "comfy",
+                    "intensity": 3
+                }
+            ],
+            "expect": {
+                "light": "#CFE5C6",
+                "glow": "#80B68D",
+                "strength": 0.6,
+                "off": false
+            }
+        },
+        {
+            "name": "calm comfy@4",
+            "emotions": [
+                {
+                    "key": "comfy",
+                    "intensity": 4
+                }
+            ],
+            "expect": {
+                "light": "#D3EAC8",
+                "glow": "#80BB8E",
+                "strength": 0.8,
+                "off": false
+            }
+        },
+        {
+            "name": "calm comfy@5",
+            "emotions": [
+                {
+                    "key": "comfy",
+                    "intensity": 5
+                }
+            ],
+            "expect": {
+                "light": "#D6F0CB",
+                "glow": "#7FC08F",
+                "strength": 1.0,
+                "off": false
+            }
+        },
+        {
+            "name": "flutter flutter@1",
+            "emotions": [
+                {
+                    "key": "flutter",
+                    "intensity": 1
+                }
+            ],
+            "expect": {
+                "light": "#E3C7CD",
+                "glow": "#CB8999",
+                "strength": 0.2,
+                "off": false
+            }
+        },
+        {
+            "name": "flutter flutter@2",
+            "emotions": [
+                {
+                    "key": "flutter",
+                    "intensity": 2
+                }
+            ],
+            "expect": {
+                "light": "#EACBD1",
+                "glow": "#D4899C",
+                "strength": 0.4,
+                "off": false
+            }
+        },
+        {
+            "name": "flutter flutter@3",
+            "emotions": [
+                {
+                    "key": "flutter",
+                    "intensity": 3
+                }
+            ],
+            "expect": {
+                "light": "#F1CFD6",
+                "glow": "#DD8A9F",
+                "strength": 0.6,
+                "off": false
+            }
+        },
+        {
+            "name": "flutter flutter@4",
+            "emotions": [
+                {
+                    "key": "flutter",
+                    "intensity": 4
+                }
+            ],
+            "expect": {
+                "light": "#F8D2DA",
+                "glow": "#E58BA2",
+                "strength": 0.8,
+                "off": false
+            }
+        },
+        {
+            "name": "flutter flutter@5",
+            "emotions": [
+                {
+                    "key": "flutter",
+                    "intensity": 5
+                }
+            ],
+            "expect": {
+                "light": "#FFD6DF",
+                "glow": "#EE8BA5",
+                "strength": 1.0,
+                "off": false
+            }
+        },
+        {
+            "name": "low sad@1",
+            "emotions": [
+                {
+                    "key": "sad",
+                    "intensity": 1
+                }
+            ],
+            "expect": {
+                "light": "#C5CFDC",
+                "glow": "#7C91B3",
+                "strength": 0.2,
+                "off": false
+            }
+        },
+        {
+            "name": "low sad@2",
+            "emotions": [
+                {
+                    "key": "sad",
+                    "intensity": 2
+                }
+            ],
+            "expect": {
+                "light": "#C8D3E2",
+                "glow": "#7D95BA",
+                "strength": 0.4,
+                "off": false
+            }
+        },
+        {
+            "name": "low sad@3",
+            "emotions": [
+                {
+                    "key": "sad",
+                    "intensity": 3
+                }
+            ],
+            "expect": {
+                "light": "#CCD8E9",
+                "glow": "#7D98C2",
+                "strength": 0.6,
+                "off": false
+            }
+        },
+        {
+            "name": "low sad@4",
+            "emotions": [
+                {
+                    "key": "sad",
+                    "intensity": 4
+                }
+            ],
+            "expect": {
+                "light": "#CFDDEF",
+                "glow": "#7E9CC9",
+                "strength": 0.8,
+                "off": false
+            }
+        },
+        {
+            "name": "low sad@5",
+            "emotions": [
+                {
+                    "key": "sad",
+                    "intensity": 5
+                }
+            ],
+            "expect": {
+                "light": "#D3E2F6",
+                "glow": "#7F9FD1",
+                "strength": 1.0,
+                "off": false
+            }
+        },
+        {
+            "name": "worn tired@1",
+            "emotions": [
+                {
+                    "key": "tired",
+                    "intensity": 1
+                }
+            ],
+            "expect": {
+                "light": "#D2CCDB",
+                "glow": "#958BB2",
+                "strength": 0.2,
+                "off": false
+            }
+        },
+        {
+            "name": "worn tired@2",
+            "emotions": [
+                {
+                    "key": "tired",
+                    "intensity": 2
+                }
+            ],
+            "expect": {
+                "light": "#D7D0E1",
+                "glow": "#998EB9",
+                "strength": 0.4,
+                "off": false
+            }
+        },
+        {
+            "name": "worn tired@3",
+            "emotions": [
+                {
+                    "key": "tired",
+                    "intensity": 3
+                }
+            ],
+            "expect": {
+                "light": "#DCD4E7",
+                "glow": "#9D90C0",
+                "strength": 0.6,
+                "off": false
+            }
+        },
+        {
+            "name": "worn tired@4",
+            "emotions": [
+                {
+                    "key": "tired",
+                    "intensity": 4
+                }
+            ],
+            "expect": {
+                "light": "#E1D9EE",
+                "glow": "#A193C8",
+                "strength": 0.8,
+                "off": false
+            }
+        },
+        {
+            "name": "worn tired@5",
+            "emotions": [
+                {
+                    "key": "tired",
+                    "intensity": 5
+                }
+            ],
+            "expect": {
+                "light": "#E6DDF4",
+                "glow": "#A595CF",
+                "strength": 1.0,
+                "off": false
+            }
+        },
+        {
+            "name": "joy5 + sad5",
+            "emotions": [
+                {
+                    "key": "joy",
+                    "intensity": 5
+                },
+                {
+                    "key": "sad",
+                    "intensity": 5
+                }
+            ],
+            "expect": {
+                "light": "#EAECBC",
+                "glow": "#CAB355",
+                "strength": 1.0,
+                "off": false
+            }
+        },
+        {
+            "name": "joy5 + sad1",
+            "emotions": [
+                {
+                    "key": "joy",
+                    "intensity": 5
+                },
+                {
+                    "key": "sad",
+                    "intensity": 1
+                }
+            ],
+            "expect": {
+                "light": "#F9EEAE",
+                "glow": "#E8BC47",
+                "strength": 1.0,
+                "off": false
+            }
+        },
+        {
+            "name": "comfy2 + flutter2",
+            "emotions": [
+                {
+                    "key": "comfy",
+                    "intensity": 2
+                },
+                {
+                    "key": "flutter",
+                    "intensity": 2
+                }
+            ],
+            "expect": {
+                "light": "#F0DDBD",
+                "glow": "#DC996B",
+                "strength": 0.8,
+                "off": false
+            }
+        },
+        {
+            "name": "tired4 + anxious3 + unsure5",
+            "emotions": [
+                {
+                    "key": "tired",
+                    "intensity": 4
+                },
+                {
+                    "key": "anxious",
+                    "intensity": 3
+                },
+                {
+                    "key": "unsure",
+                    "intensity": 5
+                }
+            ],
+            "expect": {
+                "light": "#E6DDF4",
+                "glow": "#A595CF",
+                "strength": 1.0,
+                "off": false
+            }
+        },
+        {
+            "name": "love3 + miss2 + sad1",
+            "emotions": [
+                {
+                    "key": "love",
+                    "intensity": 3
+                },
+                {
+                    "key": "miss",
+                    "intensity": 2
+                },
+                {
+                    "key": "sad",
+                    "intensity": 1
+                }
+            ],
+            "expect": {
+                "light": "#FCD6E3",
+                "glow": "#E58BAD",
+                "strength": 1.0,
+                "off": false
+            }
+        },
+        {
+            "name": "all five groups @1",
+            "emotions": [
+                {
+                    "key": "joy",
+                    "intensity": 1
+                },
+                {
+                    "key": "comfy",
+                    "intensity": 1
+                },
+                {
+                    "key": "flutter",
+                    "intensity": 1
+                },
+                {
+                    "key": "sad",
+                    "intensity": 1
+                },
+                {
+                    "key": "tired",
+                    "intensity": 1
+                }
+            ],
+            "expect": {
+                "light": "#F4E4BF",
+                "glow": "#E9947E",
+                "strength": 1.0,
+                "off": false
+            }
+        },
+        {
+            "name": "all five groups @5",
+            "emotions": [
+                {
+                    "key": "joy",
+                    "intensity": 5
+                },
+                {
+                    "key": "comfy",
+                    "intensity": 5
+                },
+                {
+                    "key": "flutter",
+                    "intensity": 5
+                },
+                {
+                    "key": "sad",
+                    "intensity": 5
+                },
+                {
+                    "key": "tired",
+                    "intensity": 5
+                }
+            ],
+            "expect": {
+                "light": "#F4E4BF",
+                "glow": "#E9947E",
+                "strength": 1.0,
+                "off": false
+            }
+        },
+        {
+            "name": "proud1 + angry1",
+            "emotions": [
+                {
+                    "key": "proud",
+                    "intensity": 1
+                },
+                {
+                    "key": "angry",
+                    "intensity": 1
+                }
+            ],
+            "expect": {
+                "light": "#E8D8B7",
+                "glow": "#D49B6F",
+                "strength": 0.4,
+                "off": false
+            }
+        }
+    ],
+    "dayGradient": [
+        {
+            "name": "three entries, out of order",
+            "entries": [
+                {
+                    "time": "21:40",
+                    "emotions": [
+                        {
+                            "key": "tired",
+                            "intensity": 4
+                        }
+                    ]
+                },
+                {
+                    "time": "08:15",
+                    "emotions": [
+                        {
+                            "key": "joy",
+                            "intensity": 3
+                        },
+                        {
+                            "key": "hope",
+                            "intensity": 2
+                        }
+                    ]
+                },
+                {
+                    "time": "13:00",
+                    "emotions": [
+                        {
+                            "key": "unsure",
+                            "intensity": 3
+                        }
+                    ]
+                }
+            ],
+            "expect": [
+                {
+                    "light": "#FFE5B2",
+                    "glow": "#FFA758",
+                    "strength": 1.0,
+                    "off": false,
+                    "position": 0.34375
+                },
+                {
+                    "light": "#D6D0C9",
+                    "glow": "#A39A91",
+                    "strength": 0.0,
+                    "off": true,
+                    "position": 0.5416667
+                },
+                {
+                    "light": "#E1D9EE",
+                    "glow": "#A193C8",
+                    "strength": 0.8,
+                    "off": false,
+                    "position": 0.9027778
+                }
+            ]
+        }
+    ]
+}

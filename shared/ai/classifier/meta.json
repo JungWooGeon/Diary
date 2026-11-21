@@ -1,0 +1,83 @@
+{
+ "version": 1,
+ "base": "monologg/koelectra-small-v3-discriminator (Apache-2.0)",
+ "train": "KOTE (MIT) + diary_train (self-written)",
+ "maxLen": 192,
+ "inputs": [
+  "input_ids",
+  "attention_mask"
+ ],
+ "output": "logits[21] -> sigmoid",
+ "thresholds": {
+  "joy": 0.35,
+  "proud": 0.225,
+  "excited": 0.375,
+  "grateful": 0.35,
+  "comfy": 0.3,
+  "serene": 0.325,
+  "relieved": 0.35,
+  "light": 0.3,
+  "flutter": 0.375,
+  "love": 0.375,
+  "hope": 0.375,
+  "miss": 0.375,
+  "sad": 0.4,
+  "down": 0.275,
+  "lonely": 0.275,
+  "hurt": 0.35,
+  "tired": 0.25,
+  "anxious": 0.275,
+  "annoyed": 0.325,
+  "angry": 0.275,
+  "unsure": 0.35
+ },
+ "unsureFloor": 0.1,
+ "lexicon": {
+  "joy": "기뻤|기쁘|기쁨|행복|좋았다|좋았음|좋았어|넘 좋|너무 좋|개좋|웃겼|웃겨|신이 났",
+  "proud": "뿌듯|해냈|해냄|성공했|합격|칭찬받|대견|자랑스",
+  "excited": "신났|신난|신나|재밌|재미있|꿀잼|개꿀잼|들떴|들뜬|흥분",
+  "grateful": "고마|감사|덕분에|감동",
+  "comfy": "편안|편했|편하다|포근|아늑|따뜻했|뒹굴|여유롭",
+  "serene": "차분|잔잔|고요|평온|조용했|담담",
+  "relieved": "안심|다행|안도|휴\\s|살았다|무사히",
+  "light": "홀가분|후련|개운|시원섭섭|짐을 덜|해방|속 시원|속이 시원",
+  "flutter": "설레|설렜|설렘|두근|떨렸|심쿵|썸",
+  "love": "사랑|좋아해|애틋|귀여워|소중",
+  "hope": "기대돼|기대된|기대가|기대하|기다려져|기다려진|빨리 .*(오면|왔으면)",
+  "miss": "보고\\s?싶|보구\\s?싶|그립|그리워|그리웠|생각난다|생각나서",
+  "sad": "슬프|슬펐|슬픔|눈물|울었|울컥|펑펑|ㅠㅠ|ㅜㅜ",
+  "down": "우울|무기력|의욕이 없|의욕 없|아무것도 하기 싫|공허|허무|자괴감|한심",
+  "lonely": "외로|외롭|혼자인|쓸쓸|나만 빼고|아무도 없",
+  "hurt": "서운|섭섭|서러|속상|상처받|실망",
+  "tired": "피곤|지친|지쳤|힘들|졸려|녹초|기진|체력|몸살|피로",
+  "anxious": "불안|걱정|초조|긴장|무서|두려|떨린다|막막|조마조마",
+  "annoyed": "짜증|빡치|빡쳐|귀찮|답답|어이없|짱나|열받|킹받",
+  "angry": "화났|화가|화남|분노|열받|빡쳤|억울|미치겠|어이가 없"
+ },
+ "lexiconBoost": 0.3,
+ "lexiconRule": "p[key] = min(0.99, p[key] + lexiconBoost) when re.search(lexicon[key], text) and the 2 chars before the match do not end with 안|않|못|없 (+ optional space)",
+ "intensityRule": {
+  "pLow": 0.05,
+  "pHigh": 0.5,
+  "base": 3,
+  "span": 1,
+  "boost": "너무|진짜|정말|완전|엄청|개빡|개좋|개웃|미친|미쳤|최악|최고|죽겠|ㅠㅠ|ㅜㅜ|!!|펑펑|미치겠",
+  "soften": "조금|좀|살짝|약간|그럭저럭|나름|괜찮았",
+  "formula": "i = base + round(span*clamp((p-pLow)/(pHigh-pLow),0,1)) + (boost matches) - (soften matches), clamp 1..5"
+ },
+ "decision": "after lexicon boost: if max emotion p < unsureFloor or p(unsure) > max emotion p -> [unsure]; else the top emotion plus every other key with p >= thresholds[key], sorted by p, max 3",
+ "eval": {
+  "n": 330,
+  "top1GroupAcc_2fold": 0.561,
+  "groupF1_2fold": {
+   "bright": 0.564,
+   "calm": 0.558,
+   "flutter": 0.636,
+   "low": 0.578,
+   "worn": 0.593,
+   "unsure": 0.362
+  },
+  "intensityMAE_2fold": 0.72,
+  "intensityWithin1_2fold": 0.884
+ }
+}

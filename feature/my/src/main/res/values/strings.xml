@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Web OAuth client id from Google Cloud Console (core/sync/README.md step 3). Blank = sign-in disabled. -->
+    <string name="google_web_client_id" translatable="false"></string>
+    <string name="my_premium">프리미엄</string>
+    <string name="my_premium_desc">평생 3,300원 · 광고 제거, 올해의 빛, PDF 일기책 (준비 중)</string>
+    <string name="my_backup">백업·계정</string>
+    <string name="my_backup_signed_out">구글 드라이브 앱 전용 폴더에 자동으로 백업해요. 다른 사람이나 우리 서버는 볼 수 없어요.</string>
+    <string name="my_backup_sign_in">구글 계정으로 로그인</string>
+    <string name="my_backup_sign_out">로그아웃</string>
+    <string name="my_backup_account">%1$s</string>
+    <string name="my_backup_last">마지막 백업: %1$s</string>
+    <string name="my_backup_never">아직 백업하지 않았어요</string>
+    <string name="my_backup_pending">올릴 기록 %1$d개</string>
+    <string name="my_backup_running">백업하는 중…</string>
+    <string name="my_backup_now">지금 백업</string>
+    <string name="my_backup_error_auth">다시 로그인해 주세요</string>
+    <string name="my_backup_error_verify">백업 확인에 실패했어요. 다시 시도할게요</string>
+    <string name="my_backup_error_network">인터넷 연결을 확인해 주세요</string>
+    <string name="my_backup_error_unknown">백업 중 문제가 생겼어요</string>
+    <string name="my_backup_no_client">로그인 설정이 아직 준비되지 않았어요 (OAuth 클라이언트 ID 필요)</string>
+    <string name="my_backup_failed">로그인하지 못했어요</string>
+    <string name="my_lock">잠금</string>
+    <string name="my_lock_use">암호 잠금</string>
+    <string name="my_lock_biometric">지문·얼굴 인식</string>
+    <string name="my_lock_relock">다시 잠그기</string>
+    <string name="my_lock_relock_0">바로</string>
+    <string name="my_lock_relock_60">1분 뒤</string>
+    <string name="my_lock_relock_300">5분 뒤</string>
+    <string name="my_lock_secure">최근 앱 화면 가리기</string>
+    <string name="my_lock_secure_desc">최근 앱 목록에서 내용을 가리고 화면 캡처를 막아요</string>
+    <string name="my_ai">온이 깨우기</string>
+    <string name="my_ai_desc">대화형 AI 내려받기 (준비 중)</string>
+    <string name="my_decorate">꾸미기</string>
+    <string name="my_theme_system">시스템</string>
+    <string name="my_theme_light">라이트</string>
+    <string name="my_theme_dark">다크</string>
+    <string name="my_soon">준비 중</string>
+</resources>

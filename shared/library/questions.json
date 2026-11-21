@@ -1,0 +1,1514 @@
+[
+ {
+  "id": "q001",
+  "time": "morning",
+  "text": "오늘 아침에 눈 뜨자마자 든 생각은 뭐였어?"
+ },
+ {
+  "id": "q002",
+  "time": "morning",
+  "text": "오늘 아침은 뭐 먹고 나왔어?"
+ },
+ {
+  "id": "q003",
+  "time": "morning",
+  "text": "오늘 입고 나갈 옷은 뭘로 골랐어?"
+ },
+ {
+  "id": "q004",
+  "time": "morning",
+  "text": "오늘 하루 중에 제일 기다려지는 일은 뭐야?"
+ },
+ {
+  "id": "q005",
+  "time": "morning",
+  "text": "어젯밤 꾼 꿈 중에 기억나는 장면 있어?"
+ },
+ {
+  "id": "q006",
+  "time": "morning",
+  "text": "아침에 본 창밖 하늘은 어떤 색이었어?"
+ },
+ {
+  "id": "q007",
+  "time": "morning",
+  "text": "오늘 꼭 하나만 해낸다면 뭘 하고 싶어?"
+ },
+ {
+  "id": "q008",
+  "time": "morning",
+  "text": "출근길이나 등굣길에 들은 노래 있어?"
+ },
+ {
+  "id": "q009",
+  "time": "morning",
+  "text": "일어나서 제일 먼저 한 일은 뭐였어?"
+ },
+ {
+  "id": "q010",
+  "time": "morning",
+  "text": "오늘 만날 사람 중에 제일 반가운 사람은 누구야?"
+ },
+ {
+  "id": "q011",
+  "time": "day",
+  "text": "오늘 점심 메뉴는 뭐였고, 맛은 어땠어?"
+ },
+ {
+  "id": "q012",
+  "time": "day",
+  "text": "지금 있는 곳에서 제일 먼저 눈에 들어오는 건 뭐야?"
+ },
+ {
+  "id": "q013",
+  "time": "day",
+  "text": "오늘 오후에 잠깐이라도 쉰 순간 있었어?"
+ },
+ {
+  "id": "q014",
+  "time": "day",
+  "text": "오늘 마신 커피나 음료는 어땠어?"
+ },
+ {
+  "id": "q015",
+  "time": "day",
+  "text": "점심 먹고 나서는 뭐 하면서 보냈어?"
+ },
+ {
+  "id": "q016",
+  "time": "night",
+  "text": "오늘 먹은 것 중에 제일 맛있던 건 뭐였어?"
+ },
+ {
+  "id": "q017",
+  "time": "night",
+  "text": "오늘 가장 많이 웃었던 순간은 언제였어?"
+ },
+ {
+  "id": "q018",
+  "time": "night",
+  "text": "오늘 누군가랑 나눈 대화 중에 기억에 남는 말 있어?"
+ },
+ {
+  "id": "q019",
+  "time": "night",
+  "text": "오늘 하루를 색으로 칠한다면 무슨 색일까?"
+ },
+ {
+  "id": "q020",
+  "time": "night",
+  "text": "오늘 찍은 사진 중에 제일 마음에 드는 건 뭐야?"
+ },
+ {
+  "id": "q021",
+  "time": "night",
+  "text": "오늘 들은 노래 중에 계속 맴도는 곡 있어?"
+ },
+ {
+  "id": "q022",
+  "time": "night",
+  "text": "잠들기 전에 오늘 하루한테 한마디 해 준다면 뭐라고 할래?"
+ },
+ {
+  "id": "q023",
+  "time": "night",
+  "text": "오늘 처음 해 본 일이 있다면 뭐야?"
+ },
+ {
+  "id": "q024",
+  "time": "night",
+  "text": "오늘 나를 조금 기분 좋게 한 작은 일은 뭐였어?"
+ },
+ {
+  "id": "q025",
+  "time": "night",
+  "text": "오늘 가장 오래 머문 곳은 어디였어?"
+ },
+ {
+  "id": "q026",
+  "time": "night",
+  "text": "오늘 하루 중에 다시 돌아가고 싶은 순간은 언제야?"
+ },
+ {
+  "id": "q027",
+  "time": "night",
+  "text": "오늘 받은 메시지 중에 제일 반가웠던 건 누구 거였어?"
+ },
+ {
+  "id": "q028",
+  "time": "night",
+  "text": "오늘 걸으면서 본 풍경 중에 기억나는 거 있어?"
+ },
+ {
+  "id": "q029",
+  "time": "night",
+  "text": "내일의 나한테 미리 전하고 싶은 말 있어?"
+ },
+ {
+  "id": "q030",
+  "time": "night",
+  "text": "오늘 하루 중에 제일 조용했던 순간은 언제였어?"
+ },
+ {
+  "id": "q031",
+  "time": "night",
+  "text": "오늘 제일 배고팠을 때 뭐 먹었어?"
+ },
+ {
+  "id": "q032",
+  "time": "night",
+  "text": "오늘 본 것 중에 제일 귀여웠던 건 뭐야?"
+ },
+ {
+  "id": "q033",
+  "time": "night",
+  "text": "오늘 들은 소리 중에 기억나는 소리 있어?"
+ },
+ {
+  "id": "q034",
+  "time": "night",
+  "text": "요즘 자기 전에 꼭 하는 일이 있어?"
+ },
+ {
+  "id": "q035",
+  "time": "night",
+  "text": "오늘 나한테 칭찬 하나 해 준다면 뭐라고 할래?"
+ },
+ {
+  "id": "q036",
+  "text": "요즘 자주 듣는 노래는 뭐야?"
+ },
+ {
+  "id": "q037",
+  "text": "요즘 제일 자주 입는 옷은 어떤 거야?"
+ },
+ {
+  "id": "q038",
+  "text": "요즘 빠져 있는 거 하나만 알려 줄래?"
+ },
+ {
+  "id": "q039",
+  "text": "최근에 산 것 중에 제일 잘 샀다 싶은 건 뭐야?"
+ },
+ {
+  "id": "q040",
+  "text": "요즘 휴대폰 배경 화면은 어떤 사진이야?"
+ },
+ {
+  "id": "q041",
+  "text": "요즘 제일 자주 연락하는 사람은 누구야?"
+ },
+ {
+  "id": "q042",
+  "text": "최근에 본 영상 중에 기억에 남는 건 뭐야?"
+ },
+ {
+  "id": "q043",
+  "text": "요즘 즐겨 먹는 간식은 뭐야?"
+ },
+ {
+  "id": "q044",
+  "text": "이번 주에 제일 기대되는 일은 뭐야?"
+ },
+ {
+  "id": "q045",
+  "text": "요즘 나만 알고 싶은 장소가 있어?"
+ },
+ {
+  "id": "q046",
+  "text": "최근에 누군가한테 고마웠던 일 있어?"
+ },
+ {
+  "id": "q047",
+  "text": "요즘 머릿속을 가장 많이 차지하는 건 뭐야?"
+ },
+ {
+  "id": "q048",
+  "text": "요즘 내 방에서 제일 좋아하는 자리는 어디야?"
+ },
+ {
+  "id": "q049",
+  "text": "올해 들어 새로 생긴 습관이 있어?"
+ },
+ {
+  "id": "q050",
+  "text": "요즘 읽거나 보고 있는 이야기가 있어?"
+ },
+ {
+  "id": "q051",
+  "text": "요즘 같은 날씨에 제일 생각나는 음식은 뭐야?"
+ },
+ {
+  "id": "q052",
+  "text": "최근에 들은 말 중에 마음에 남은 한마디가 있어?"
+ },
+ {
+  "id": "q053",
+  "text": "요즘 자주 쓰는 이모티콘은 뭐야?"
+ },
+ {
+  "id": "q054",
+  "text": "지금 제일 먹고 싶은 건 뭐야?"
+ },
+ {
+  "id": "q055",
+  "text": "이번 계절에 꼭 해 보고 싶은 일 있어?"
+ },
+ {
+  "id": "q056",
+  "text": "요즘 나를 웃게 하는 사람은 누구야?"
+ },
+ {
+  "id": "q057",
+  "text": "최근에 혼자서 해낸 일 중에 뿌듯했던 건 뭐야?"
+ },
+ {
+  "id": "q058",
+  "text": "요즘 사진첩에 제일 많이 쌓이는 사진은 뭐야?"
+ },
+ {
+  "id": "q059",
+  "text": "요즘 가장 편하게 쉬는 방법은 뭐야?"
+ },
+ {
+  "id": "q060",
+  "text": "최근에 새로 알게 된 것 하나만 들려줄래?"
+ },
+ {
+  "id": "q061",
+  "text": "요즘 가장 갖고 싶은 물건은 뭐야?"
+ },
+ {
+  "id": "q062",
+  "text": "지금 내 책상 위에는 뭐가 놓여 있어?"
+ },
+ {
+  "id": "q063",
+  "tags": [
+   "person"
+  ],
+  "time": "night",
+  "text": "오늘 {person}(이)랑 무슨 얘기 나눴어?"
+ },
+ {
+  "id": "q064",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}한테 요즘 하고 싶은 말이 있어?"
+ },
+ {
+  "id": "q065",
+  "tags": [
+   "person"
+  ],
+  "text": "최근에 {person}(이)랑 같이 웃은 일 있어?"
+ },
+ {
+  "id": "q066",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}(은)는 요즘 어떻게 지내는 것 같아?"
+ },
+ {
+  "id": "q067",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}(이)랑 먹으면 더 맛있는 음식이 있어?"
+ },
+ {
+  "id": "q068",
+  "tags": [
+   "person"
+  ],
+  "time": "night",
+  "text": "오늘 {person}한테 들은 말 중에 기억나는 거 있어?"
+ },
+ {
+  "id": "q069",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}(이)랑 처음 만났던 날 기억나?"
+ },
+ {
+  "id": "q070",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}(이)랑 자주 가는 곳이 있어?"
+ },
+ {
+  "id": "q071",
+  "tags": [
+   "place"
+  ],
+  "time": "night",
+  "text": "오늘 {place}에서는 어떤 일이 있었어?"
+ },
+ {
+  "id": "q072",
+  "tags": [
+   "place"
+  ],
+  "text": "{place}에 가면 제일 먼저 뭐 해?"
+ },
+ {
+  "id": "q073",
+  "tags": [
+   "place"
+  ],
+  "text": "{place}에 가면 꼭 앉는 자리가 있어?"
+ },
+ {
+  "id": "q074",
+  "tags": [
+   "place"
+  ],
+  "time": "night",
+  "text": "오늘 {place}(으)로 가는 길은 어땠어?"
+ },
+ {
+  "id": "q075",
+  "tags": [
+   "place"
+  ],
+  "time": "day",
+  "text": "{place}에서 오늘 눈에 띈 게 있었어?"
+ },
+ {
+  "id": "q076",
+  "tags": [
+   "place"
+  ],
+  "text": "{place}에 다시 간다면 누구랑 가고 싶어?"
+ },
+ {
+  "id": "q077",
+  "tags": [
+   "activity"
+  ],
+  "time": "night",
+  "text": "오늘 {activity}할 때 기억에 남는 장면 있어?"
+ },
+ {
+  "id": "q078",
+  "tags": [
+   "activity"
+  ],
+  "text": "{activity}하면서 주로 무슨 생각 해?"
+ },
+ {
+  "id": "q079",
+  "tags": [
+   "activity"
+  ],
+  "text": "요즘 {activity}(을)를 하고 나면 기분이 어때?"
+ },
+ {
+  "id": "q080",
+  "tags": [
+   "activity"
+  ],
+  "time": "night",
+  "text": "오늘 {activity} 끝나고 제일 먼저 한 일은 뭐야?"
+ },
+ {
+  "id": "q081",
+  "tags": [
+   "activity"
+  ],
+  "text": "{activity}할 때 자주 듣는 노래 있어?"
+ },
+ {
+  "id": "q082",
+  "tags": [
+   "activity"
+  ],
+  "text": "{activity}(을)를 하기 전에 꼭 하는 일이 있어?"
+ },
+ {
+  "id": "q083",
+  "tags": [
+   "person",
+   "place"
+  ],
+  "time": "night",
+  "text": "오늘 {place}에서 {person}(이)랑 뭐 했어?"
+ },
+ {
+  "id": "q084",
+  "tags": [
+   "person",
+   "place"
+  ],
+  "text": "다음에 {person}(이)랑 {place}에 가면 뭐 하고 싶어?"
+ },
+ {
+  "id": "q085",
+  "group": "bright",
+  "text": "요즘 좋은 일이 많아 보여. 그중에 제일 좋았던 건 뭐야?"
+ },
+ {
+  "id": "q086",
+  "group": "bright",
+  "time": "night",
+  "text": "오늘 제일 신났던 순간을 한 장면으로 남겨 줄래?"
+ },
+ {
+  "id": "q087",
+  "group": "bright",
+  "text": "요즘 뿌듯했던 일 중에 자랑하고 싶은 거 있어?"
+ },
+ {
+  "id": "q088",
+  "group": "bright",
+  "text": "최근에 고맙다고 말하고 싶었던 사람은 누구야?"
+ },
+ {
+  "id": "q089",
+  "group": "bright",
+  "time": "night",
+  "text": "오늘 웃음이 터진 순간이 있었다면 언제였어?"
+ },
+ {
+  "id": "q090",
+  "group": "bright",
+  "text": "지금 이 기분을 노래 한 곡으로 고른다면 뭐야?"
+ },
+ {
+  "id": "q091",
+  "group": "bright",
+  "text": "요즘 잘 풀리고 있는 일 하나만 들려줄래?"
+ },
+ {
+  "id": "q092",
+  "group": "bright",
+  "time": "night",
+  "text": "오늘 스스로 잘했다 싶었던 순간은 언제야?"
+ },
+ {
+  "id": "q093",
+  "group": "bright",
+  "text": "기분 좋은 날엔 주로 뭐 하면서 보내?"
+ },
+ {
+  "id": "q094",
+  "group": "bright",
+  "time": "morning",
+  "text": "오늘 아침에 기분이 좋아진 작은 계기가 있었어?"
+ },
+ {
+  "id": "q095",
+  "group": "bright",
+  "text": "좋은 소식이 생기면 제일 먼저 누구한테 알리고 싶어?"
+ },
+ {
+  "id": "q096",
+  "group": "bright",
+  "time": "night",
+  "text": "오늘의 좋은 기분을 사진 한 장으로 남긴다면 뭘 찍을래?"
+ },
+ {
+  "id": "q097",
+  "group": "bright",
+  "text": "요즘 새로 좋아하게 된 게 있어?"
+ },
+ {
+  "id": "q098",
+  "group": "bright",
+  "text": "이번 주에 제일 크게 웃었던 날은 언제야?"
+ },
+ {
+  "id": "q099",
+  "group": "bright",
+  "text": "요즘 나한테 생긴 좋은 변화가 있다면 뭐야?"
+ },
+ {
+  "id": "q100",
+  "group": "bright",
+  "time": "night",
+  "text": "오늘 나한테 상을 하나 준다면 무슨 상이야?"
+ },
+ {
+  "id": "q101",
+  "group": "bright",
+  "time": "night",
+  "text": "오늘 제일 반짝였던 장면 하나만 들려줄래?"
+ },
+ {
+  "id": "q102",
+  "group": "bright",
+  "time": "morning",
+  "text": "기분 좋은 김에 오늘 해 보고 싶은 일 있어?"
+ },
+ {
+  "id": "q103",
+  "group": "bright",
+  "text": "요즘 감사했던 일 세 가지를 꼽는다면 뭐야?"
+ },
+ {
+  "id": "q104",
+  "group": "bright",
+  "tags": [
+   "person"
+  ],
+  "text": "요즘 {person}(이)랑 있으면 어떤 점이 제일 좋아?"
+ },
+ {
+  "id": "q105",
+  "group": "bright",
+  "tags": [
+   "person"
+  ],
+  "time": "night",
+  "text": "오늘 {person}한테 고마웠던 순간 있었어?"
+ },
+ {
+  "id": "q106",
+  "group": "bright",
+  "tags": [
+   "place"
+  ],
+  "text": "요즘 {place}에 가면 어떤 기분이 들어?"
+ },
+ {
+  "id": "q107",
+  "group": "bright",
+  "tags": [
+   "activity"
+  ],
+  "text": "{activity}할 때 기분이 좋아지는 순간은 언제야?"
+ },
+ {
+  "id": "q108",
+  "group": "bright",
+  "tags": [
+   "place"
+  ],
+  "time": "night",
+  "text": "오늘 {place}에서 제일 즐거웠던 일은 뭐야?"
+ },
+ {
+  "id": "q109",
+  "group": "bright",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}(이)랑 요즘 새로 생긴 추억 있어?"
+ },
+ {
+  "id": "q110",
+  "group": "bright",
+  "tags": [
+   "activity"
+  ],
+  "time": "night",
+  "text": "{activity}(을)를 하다가 오늘 잘했다 싶은 순간 있었어?"
+ },
+ {
+  "id": "q111",
+  "group": "bright",
+  "tags": [
+   "place"
+  ],
+  "time": "night",
+  "text": "{place} 가는 길에 좋아하는 풍경이 있어?"
+ },
+ {
+  "id": "q112",
+  "group": "bright",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}(이)랑 찍은 사진 중에 제일 좋아하는 건 뭐야?"
+ },
+ {
+  "id": "q113",
+  "group": "calm",
+  "time": "night",
+  "text": "오늘 제일 편안했던 순간은 언제였어?"
+ },
+ {
+  "id": "q114",
+  "group": "calm",
+  "text": "요즘 마음이 차분해지는 시간은 언제야?"
+ },
+ {
+  "id": "q115",
+  "group": "calm",
+  "time": "night",
+  "text": "별일 없던 오늘, 그래도 좋았던 작은 장면 있어?"
+ },
+ {
+  "id": "q116",
+  "group": "calm",
+  "time": "night",
+  "text": "오늘 한숨 놓였던 일이 있었어?"
+ },
+ {
+  "id": "q117",
+  "group": "calm",
+  "text": "요즘 제일 아끼는 쉬는 시간은 어떤 모습이야?"
+ },
+ {
+  "id": "q118",
+  "group": "calm",
+  "time": "morning",
+  "text": "오늘 아침 공기는 어떤 느낌이었어?"
+ },
+ {
+  "id": "q119",
+  "group": "calm",
+  "time": "morning",
+  "text": "조용한 아침에 제일 먼저 하고 싶은 건 뭐야?"
+ },
+ {
+  "id": "q120",
+  "group": "calm",
+  "time": "night",
+  "text": "오늘 홀가분하게 끝낸 일이 있다면 뭐야?"
+ },
+ {
+  "id": "q121",
+  "group": "calm",
+  "text": "요즘 자주 마시는 따뜻한 음료가 있어?"
+ },
+ {
+  "id": "q122",
+  "group": "calm",
+  "time": "night",
+  "text": "오늘 서두르지 않고 천천히 한 일이 있어?"
+ },
+ {
+  "id": "q123",
+  "group": "calm",
+  "text": "마음이 편해지는 냄새나 소리가 있어?"
+ },
+ {
+  "id": "q124",
+  "group": "calm",
+  "text": "요즘 하루 중에 제일 좋아하는 시간대는 언제야?"
+ },
+ {
+  "id": "q125",
+  "group": "calm",
+  "time": "day",
+  "text": "오늘 창밖을 보면서 든 생각 있어?"
+ },
+ {
+  "id": "q126",
+  "group": "calm",
+  "text": "편하게 쉬고 싶을 때 꼭 챙기는 물건이 있어?"
+ },
+ {
+  "id": "q127",
+  "group": "calm",
+  "time": "night",
+  "text": "오늘 하루는 느긋한 편이었어, 바쁜 편이었어?"
+ },
+ {
+  "id": "q128",
+  "group": "calm",
+  "time": "day",
+  "text": "오늘 저녁엔 어떻게 쉬고 싶어?"
+ },
+ {
+  "id": "q129",
+  "group": "calm",
+  "time": "night",
+  "text": "오늘 걷다가 잠깐 멈춰 본 곳 있어?"
+ },
+ {
+  "id": "q130",
+  "group": "calm",
+  "text": "요즘 나를 안심시켜 주는 건 뭐야?"
+ },
+ {
+  "id": "q131",
+  "group": "calm",
+  "time": "day",
+  "text": "오늘 점심시간은 어떻게 보냈어?"
+ },
+ {
+  "id": "q132",
+  "group": "calm",
+  "text": "요즘 아무 생각 없이 하게 되는 좋아하는 일이 있어?"
+ },
+ {
+  "id": "q133",
+  "group": "calm",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}(이)랑 있으면 왜 마음이 편해지는 것 같아?"
+ },
+ {
+  "id": "q134",
+  "group": "calm",
+  "tags": [
+   "place"
+  ],
+  "time": "night",
+  "text": "오늘 {place}에서 마음이 놓였던 순간 있었어?"
+ },
+ {
+  "id": "q135",
+  "group": "calm",
+  "tags": [
+   "activity"
+  ],
+  "text": "{activity}하면서 머리가 맑아진 순간 있었어?"
+ },
+ {
+  "id": "q136",
+  "group": "calm",
+  "tags": [
+   "place"
+  ],
+  "text": "요즘 {place}에 있으면 어떤 소리가 들려?"
+ },
+ {
+  "id": "q137",
+  "group": "calm",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}(이)랑 조용히 보내고 싶은 하루는 어떤 모습이야?"
+ },
+ {
+  "id": "q138",
+  "group": "calm",
+  "tags": [
+   "activity"
+  ],
+  "text": "{activity}(을)를 하다 보면 시간 가는 줄 모를 때 있어?"
+ },
+ {
+  "id": "q139",
+  "group": "calm",
+  "tags": [
+   "place"
+  ],
+  "text": "{place}에서 혼자 보내는 시간은 어때?"
+ },
+ {
+  "id": "q140",
+  "group": "calm",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}(이)랑 말없이 있어도 편한 순간이 있어?"
+ },
+ {
+  "id": "q141",
+  "group": "flutter",
+  "text": "요즘 제일 두근거리는 일은 뭐야?"
+ },
+ {
+  "id": "q142",
+  "group": "flutter",
+  "text": "요즘 손꼽아 기다리는 날이 있어?"
+ },
+ {
+  "id": "q143",
+  "group": "flutter",
+  "time": "night",
+  "text": "오늘 괜히 설렜던 순간 있었어?"
+ },
+ {
+  "id": "q144",
+  "group": "flutter",
+  "text": "요즘 자꾸 생각나는 사람이 있어?"
+ },
+ {
+  "id": "q145",
+  "group": "flutter",
+  "text": "문득 그리워진 장소나 시간이 있어?"
+ },
+ {
+  "id": "q146",
+  "group": "flutter",
+  "text": "요즘 달력에 동그라미 쳐 둔 날이 있어?"
+ },
+ {
+  "id": "q147",
+  "group": "flutter",
+  "time": "night",
+  "text": "오늘 받은 연락 중에 마음이 몽글해진 게 있어?"
+ },
+ {
+  "id": "q148",
+  "group": "flutter",
+  "text": "요즘 듣기만 해도 설레는 노래는 뭐야?"
+ },
+ {
+  "id": "q149",
+  "group": "flutter",
+  "text": "설레는 일을 앞두고 미리 준비하고 있는 게 있어?"
+ },
+ {
+  "id": "q150",
+  "group": "flutter",
+  "text": "요즘 새로 시작하고 싶은 일이 있어?"
+ },
+ {
+  "id": "q151",
+  "group": "flutter",
+  "time": "morning",
+  "text": "오늘 누군가를 만난다면 어떤 옷을 입고 싶어?"
+ },
+ {
+  "id": "q152",
+  "group": "flutter",
+  "text": "누군가한테 보내려다 못 보낸 메시지가 있어?"
+ },
+ {
+  "id": "q153",
+  "group": "flutter",
+  "text": "오래된 사진을 보다가 그리워진 순간 있어?"
+ },
+ {
+  "id": "q154",
+  "group": "flutter",
+  "text": "올해가 가기 전에 꼭 해 보고 싶은 일은 뭐야?"
+ },
+ {
+  "id": "q155",
+  "group": "flutter",
+  "text": "요즘 상상만 해도 기분 좋아지는 계획 있어?"
+ },
+ {
+  "id": "q156",
+  "group": "flutter",
+  "time": "night",
+  "text": "오늘 하루 중에 심장이 조금 빨리 뛴 순간은 언제였어?"
+ },
+ {
+  "id": "q157",
+  "group": "flutter",
+  "text": "가장 최근에 '보고 싶다'고 느낀 사람은 누구야?"
+ },
+ {
+  "id": "q158",
+  "group": "flutter",
+  "text": "요즘 설렘을 색으로 말한다면 어떤 색이야?"
+ },
+ {
+  "id": "q159",
+  "group": "flutter",
+  "time": "night",
+  "text": "오늘 밤 잠들기 전에 떠올리고 싶은 장면이 있어?"
+ },
+ {
+  "id": "q160",
+  "group": "flutter",
+  "tags": [
+   "person"
+  ],
+  "text": "언젠가 {person}(이)랑 꼭 가 보고 싶은 곳이 있어?"
+ },
+ {
+  "id": "q161",
+  "group": "flutter",
+  "tags": [
+   "person"
+  ],
+  "text": "요즘 {person}(을)를 떠올리면 어떤 기분이 들어?"
+ },
+ {
+  "id": "q162",
+  "group": "flutter",
+  "tags": [
+   "place"
+  ],
+  "text": "{place}에서 기다려지는 일이 있어?"
+ },
+ {
+  "id": "q163",
+  "group": "flutter",
+  "tags": [
+   "activity"
+  ],
+  "text": "{activity}하면서 기대되는 일이 있어?"
+ },
+ {
+  "id": "q164",
+  "group": "flutter",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}한테 듣고 싶은 말이 있다면 뭐야?"
+ },
+ {
+  "id": "q165",
+  "group": "flutter",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}(이)랑 함께한 날 중에 제일 그리운 날은 언제야?"
+ },
+ {
+  "id": "q166",
+  "group": "flutter",
+  "tags": [
+   "activity"
+  ],
+  "text": "다음에 {activity}할 때 꼭 해 보고 싶은 게 있어?"
+ },
+ {
+  "id": "q167",
+  "group": "flutter",
+  "tags": [
+   "place"
+  ],
+  "text": "{place}에서 누군가 만날 약속이 있어?"
+ },
+ {
+  "id": "q168",
+  "group": "flutter",
+  "tags": [
+   "activity"
+  ],
+  "text": "{activity}(을)를 처음 시작했을 때 기분 기억나?"
+ },
+ {
+  "id": "q169",
+  "group": "low",
+  "time": "night",
+  "text": "오늘 조금이라도 숨 돌린 순간이 있었어?"
+ },
+ {
+  "id": "q170",
+  "group": "low",
+  "time": "night",
+  "text": "오늘 뭐라도 따뜻한 거 먹었어?"
+ },
+ {
+  "id": "q171",
+  "group": "low",
+  "text": "지금 곁에 있는 물건 중에 위로가 되는 게 있어?"
+ },
+ {
+  "id": "q172",
+  "group": "low",
+  "text": "요즘 마음이 가라앉을 때 듣는 노래 있어?"
+ },
+ {
+  "id": "q173",
+  "group": "low",
+  "time": "night",
+  "text": "오늘 하루 중에 덜 힘들었던 시간은 언제였어?"
+ },
+ {
+  "id": "q174",
+  "group": "low",
+  "time": "night",
+  "text": "한 줄만 써도 괜찮아. 오늘 제일 기억나는 장면은 뭐야?"
+ },
+ {
+  "id": "q175",
+  "group": "low",
+  "time": "night",
+  "text": "오늘 나를 잠깐 웃게 한 게 있었다면 뭐야?"
+ },
+ {
+  "id": "q176",
+  "group": "low",
+  "text": "요즘 나한테 제일 다정했던 사람은 누구야?"
+ },
+ {
+  "id": "q177",
+  "group": "low",
+  "time": "night",
+  "text": "오늘 누가 해 줬으면 좋았을 말이 있어?"
+ },
+ {
+  "id": "q178",
+  "group": "low",
+  "text": "요즘 기대고 싶은 사람이나 장소가 있어?"
+ },
+ {
+  "id": "q179",
+  "group": "low",
+  "time": "night",
+  "text": "오늘 하루를 날씨로 말하면 어떤 날씨였어?"
+ },
+ {
+  "id": "q180",
+  "group": "low",
+  "text": "혼자 있고 싶을 때 주로 어디에 있어?"
+ },
+ {
+  "id": "q181",
+  "group": "low",
+  "time": "night",
+  "text": "오늘 밤엔 뭘 하면서 쉬고 싶어?"
+ },
+ {
+  "id": "q182",
+  "group": "low",
+  "text": "서운했던 일이 있었다면, 어떤 장면이 제일 남아 있어?"
+ },
+ {
+  "id": "q183",
+  "group": "low",
+  "time": "morning",
+  "text": "오늘 아침, 눈 떴을 때 몸은 좀 어땠어?"
+ },
+ {
+  "id": "q184",
+  "group": "low",
+  "time": "morning",
+  "text": "오늘 하루, 작게라도 기대되는 게 하나 있어?"
+ },
+ {
+  "id": "q185",
+  "group": "low",
+  "text": "요즘 내 얘기를 들어 줬으면 하는 사람이 있어?"
+ },
+ {
+  "id": "q186",
+  "group": "low",
+  "time": "night",
+  "text": "오늘 울컥했던 순간이 있었다면 언제였어?"
+ },
+ {
+  "id": "q187",
+  "group": "low",
+  "text": "요즘 나를 조금 덜 외롭게 해 주는 건 뭐야?"
+ },
+ {
+  "id": "q188",
+  "group": "low",
+  "time": "night",
+  "text": "오늘의 나한테 해 주고 싶은 다정한 말 있어?"
+ },
+ {
+  "id": "q189",
+  "group": "low",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}(이)랑 있었던 일 중에 마음에 남은 게 있어?"
+ },
+ {
+  "id": "q190",
+  "group": "low",
+  "tags": [
+   "place"
+  ],
+  "time": "night",
+  "text": "오늘 {place}에 있으면서 잠깐 쉰 틈이 있었어?"
+ },
+ {
+  "id": "q191",
+  "group": "low",
+  "tags": [
+   "activity"
+  ],
+  "text": "{activity}하는 동안엔 마음이 좀 어땠어?"
+ },
+ {
+  "id": "q192",
+  "group": "low",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}한테 하지 못한 말이 있다면 여기 적어 볼래?"
+ },
+ {
+  "id": "q193",
+  "group": "low",
+  "tags": [
+   "place"
+  ],
+  "text": "요즘 {place}에 있을 때 마음은 어때?"
+ },
+ {
+  "id": "q194",
+  "group": "low",
+  "tags": [
+   "activity"
+  ],
+  "time": "night",
+  "text": "오늘 {activity}(을)를 하고 나서 조금 나아진 게 있었어?"
+ },
+ {
+  "id": "q195",
+  "group": "low",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}한테 연락이 온다면 어떤 말이었으면 좋겠어?"
+ },
+ {
+  "id": "q196",
+  "group": "low",
+  "tags": [
+   "activity"
+  ],
+  "time": "night",
+  "text": "오늘 {activity} 말고 한 일 중에 기억나는 거 있어?"
+ },
+ {
+  "id": "q197",
+  "group": "worn",
+  "time": "night",
+  "text": "오늘 정말 애썼어. 제일 버거웠던 순간은 언제였어?"
+ },
+ {
+  "id": "q198",
+  "group": "worn",
+  "text": "오늘 하루에서 딱 하나 지울 수 있다면 뭘 지울래?"
+ },
+ {
+  "id": "q199",
+  "group": "worn",
+  "time": "night",
+  "text": "오늘 나를 제일 지치게 한 건 뭐였어?"
+ },
+ {
+  "id": "q200",
+  "group": "worn",
+  "time": "night",
+  "text": "짧게 써도 돼. 오늘 끝내서 다행인 일 하나만 적어 줄래?"
+ },
+ {
+  "id": "q201",
+  "group": "worn",
+  "time": "night",
+  "text": "짜증 났던 일은 여기다 털어놔도 돼. 어떤 일이었어?"
+ },
+ {
+  "id": "q202",
+  "group": "worn",
+  "text": "요즘 자꾸 신경 쓰이는 일이 있어?"
+ },
+ {
+  "id": "q203",
+  "group": "worn",
+  "time": "night",
+  "text": "오늘 몸에서 제일 피곤한 곳은 어디야?"
+ },
+ {
+  "id": "q204",
+  "group": "worn",
+  "text": "지금 당장 누울 수 있다면 어디에 눕고 싶어?"
+ },
+ {
+  "id": "q205",
+  "group": "worn",
+  "time": "morning",
+  "text": "오늘 할 일 목록에서 제일 무거운 건 뭐야?"
+ },
+ {
+  "id": "q206",
+  "group": "worn",
+  "time": "night",
+  "text": "오늘 하루 중에 숨 고를 수 있었던 곳은 어디였어?"
+ },
+ {
+  "id": "q207",
+  "group": "worn",
+  "text": "요즘 먹으면 제일 빨리 기운 나는 음식은 뭐야?"
+ },
+ {
+  "id": "q208",
+  "group": "worn",
+  "time": "night",
+  "text": "오늘 꾹 참았던 말이 있다면 여기다 적어 볼래?"
+ },
+ {
+  "id": "q209",
+  "group": "worn",
+  "text": "요즘 걱정되는 일 중에 제일 큰 건 뭐야?"
+ },
+ {
+  "id": "q210",
+  "group": "worn",
+  "time": "night",
+  "text": "오늘 화가 났다면, 어떤 장면에서였어?"
+ },
+ {
+  "id": "q211",
+  "group": "worn",
+  "time": "day",
+  "text": "오늘 점심은 제대로 챙겨 먹었어?"
+ },
+ {
+  "id": "q212",
+  "group": "worn",
+  "time": "day",
+  "text": "오늘 남은 시간 동안 제일 하고 싶은 건 뭐야?"
+ },
+ {
+  "id": "q213",
+  "group": "worn",
+  "text": "요즘 나를 제일 바쁘게 하는 건 뭐야?"
+ },
+ {
+  "id": "q214",
+  "group": "worn",
+  "time": "night",
+  "text": "오늘 밤 제일 먼저 하고 싶은 건 씻기야, 눕기야?"
+ },
+ {
+  "id": "q215",
+  "group": "worn",
+  "text": "이번 주에 유난히 길게 느껴진 날 있었어?"
+ },
+ {
+  "id": "q216",
+  "group": "worn",
+  "text": "피곤한 날 나한테 주는 작은 선물이 있어?"
+ },
+ {
+  "id": "q217",
+  "group": "worn",
+  "tags": [
+   "person"
+  ],
+  "time": "night",
+  "text": "오늘 {person} 때문에 신경 쓰인 일이 있었어?"
+ },
+ {
+  "id": "q218",
+  "group": "worn",
+  "tags": [
+   "place"
+  ],
+  "time": "night",
+  "text": "{place}에서 오늘 제일 정신없던 일은 뭐였어?"
+ },
+ {
+  "id": "q219",
+  "group": "worn",
+  "tags": [
+   "activity"
+  ],
+  "text": "{activity}하다가 제일 힘이 빠지는 순간은 언제야?"
+ },
+ {
+  "id": "q220",
+  "group": "worn",
+  "tags": [
+   "activity"
+  ],
+  "text": "요즘 {activity} 말고 하고 싶은 게 있다면 뭐야?"
+ },
+ {
+  "id": "q221",
+  "group": "worn",
+  "tags": [
+   "place"
+  ],
+  "text": "{place}에서 벗어나면 제일 먼저 하고 싶은 건 뭐야?"
+ },
+ {
+  "id": "q222",
+  "group": "worn",
+  "tags": [
+   "person"
+  ],
+  "text": "요즘 {person}(이)랑 연락은 자주 하는 편이야?"
+ },
+ {
+  "id": "q223",
+  "group": "worn",
+  "tags": [
+   "activity"
+  ],
+  "time": "night",
+  "text": "오늘 {activity}하면서 제일 오래 붙잡고 있던 건 뭐야?"
+ },
+ {
+  "id": "q224",
+  "group": "worn",
+  "tags": [
+   "person"
+  ],
+  "text": "{person}(이)랑 얘기하고 나면 좀 풀리는 편이야?"
+ },
+ {
+  "id": "q225",
+  "group": "unsure",
+  "text": "기분이 잘 안 잡히면, 오늘 있었던 일 하나만 적어 볼래?"
+ },
+ {
+  "id": "q226",
+  "group": "unsure",
+  "time": "night",
+  "text": "오늘 있었던 일 중에 제일 먼저 떠오르는 건 뭐야?"
+ },
+ {
+  "id": "q227",
+  "group": "unsure",
+  "text": "지금 몸은 가벼운 편이야, 무거운 편이야?"
+ },
+ {
+  "id": "q228",
+  "group": "unsure",
+  "time": "night",
+  "text": "오늘 하루에 점수를 매긴다면 몇 점쯤이야?"
+ },
+ {
+  "id": "q229",
+  "group": "unsure",
+  "time": "night",
+  "text": "오늘 '오, 좋다' 싶었던 순간이 잠깐이라도 있었어?"
+ },
+ {
+  "id": "q230",
+  "group": "unsure",
+  "text": "요즘 마음을 왔다 갔다 하게 만드는 일이 있어?"
+ },
+ {
+  "id": "q231",
+  "group": "unsure",
+  "text": "기분이 애매할 땐 주로 뭐 하면서 보내?"
+ },
+ {
+  "id": "q232",
+  "group": "unsure",
+  "time": "night",
+  "text": "오늘 한 일 중에 다시 하라면 할 것 같은 건 뭐야?"
+ },
+ {
+  "id": "q233",
+  "group": "unsure",
+  "text": "지금 머릿속에 둥둥 떠다니는 생각이 있다면 뭐야?"
+ },
+ {
+  "id": "q234",
+  "group": "unsure",
+  "time": "morning",
+  "text": "오늘 아침 기분은 맑음이랑 흐림 중에 어디에 가까웠어?"
+ },
+ {
+  "id": "q235",
+  "group": "unsure",
+  "time": "night",
+  "text": "오늘 눈에 들어온 것 중에 하나만 적어 볼래?"
+ },
+ {
+  "id": "q236",
+  "group": "unsure",
+  "text": "요즘 결정하기 제일 어려운 일은 뭐야?"
+ },
+ {
+  "id": "q237",
+  "group": "unsure",
+  "time": "night",
+  "text": "오늘 시간이 제일 빨리 간 때는 언제였어?"
+ },
+ {
+  "id": "q238",
+  "group": "unsure",
+  "time": "night",
+  "text": "오늘 했던 선택 중에 기억나는 거 있어?"
+ },
+ {
+  "id": "q239",
+  "group": "unsure",
+  "text": "요즘은 하고 싶은 일이랑 해야 하는 일 중에 뭐가 더 많아?"
+ },
+ {
+  "id": "q240",
+  "group": "unsure",
+  "time": "night",
+  "text": "오늘 가장 오래 들여다본 화면은 뭐였어?"
+ },
+ {
+  "id": "q241",
+  "group": "unsure",
+  "time": "night",
+  "text": "오늘 기분에 이름을 붙인다면 뭐라고 부를래?"
+ },
+ {
+  "id": "q242",
+  "group": "unsure",
+  "time": "day",
+  "text": "오늘 하품 나올 만큼 지루했던 순간 있었어?"
+ },
+ {
+  "id": "q243",
+  "group": "unsure",
+  "text": "요즘 멍하니 있을 때 주로 무슨 생각 해?"
+ },
+ {
+  "id": "q244",
+  "group": "unsure",
+  "time": "night",
+  "text": "오늘 '이 정도면 괜찮다' 싶었던 순간은 언제야?"
+ },
+ {
+  "id": "q245",
+  "group": "unsure",
+  "tags": [
+   "person"
+  ],
+  "time": "night",
+  "text": "오늘 {person}(이)랑 있을 때 기분은 어땠어?"
+ },
+ {
+  "id": "q246",
+  "group": "unsure",
+  "tags": [
+   "place"
+  ],
+  "time": "night",
+  "text": "오늘 {place}에서 뭐가 제일 기억나?"
+ },
+ {
+  "id": "q247",
+  "group": "unsure",
+  "tags": [
+   "activity"
+  ],
+  "text": "{activity}할 때랑 안 할 때, 기분이 좀 달라?"
+ },
+ {
+  "id": "q248",
+  "group": "unsure",
+  "tags": [
+   "person"
+  ],
+  "text": "요즘 {person}(이)랑 보내는 시간은 어때?"
+ },
+ {
+  "id": "q249",
+  "group": "unsure",
+  "tags": [
+   "activity"
+  ],
+  "text": "{activity}하고 나면 개운한 쪽이야, 지치는 쪽이야?"
+ },
+ {
+  "id": "q250",
+  "group": "unsure",
+  "tags": [
+   "place"
+  ],
+  "text": "{place}에 가는 날과 안 가는 날, 뭐가 제일 달라?"
+ },
+ {
+  "id": "q251",
+  "group": "unsure",
+  "tags": [
+   "person"
+  ],
+  "text": "{person} 눈에 요즘 나는 어떤 모습일 것 같아?"
+ },
+ {
+  "id": "q252",
+  "group": "unsure",
+  "tags": [
+   "place"
+  ],
+  "time": "night",
+  "text": "오늘 {place}에 있던 시간은 길게 느껴졌어, 짧게 느껴졌어?"
+ }
+]

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lock_title">암호를 입력해 주세요</string>
+    <string name="lock_wrong">암호가 맞지 않아요 (%1$d번)</string>
+    <string name="lock_locked_out">잠시 후 다시 시도해 주세요 (%1$d초)</string>
+    <string name="lock_biometric">지문·얼굴로 열기</string>
+    <string name="lock_biometric_title">온이 일기 잠금 해제</string>
+    <string name="lock_biometric_negative">암호 입력</string>
+    <string name="lock_delete">지우기</string>
+    <string name="pin_setup_title">새 암호 4자리</string>
+    <string name="pin_setup_confirm">한 번 더 입력해 주세요</string>
+    <string name="pin_setup_mismatch">두 암호가 달라요. 처음부터 다시 입력해 주세요</string>
+    <string name="cancel">취소</string>
+</resources>

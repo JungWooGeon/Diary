@@ -1,0 +1,6 @@
+{
+ "name": "qwen3-4b-2507",
+ "gguf_bytes": 2497281120,
+ "max_rss": 3069083648,
+ "peak_footprint": 1302793624
+}

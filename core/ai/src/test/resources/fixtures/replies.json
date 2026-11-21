@@ -1,0 +1,7 @@
+[
+ {"id":"b1","group":"bright","minIntensity":1,"maxIntensity":5,"text":"그 순간 얼마나 좋았을지 여기까지 환해지는 것 같아."},
+ {"id":"b2","group":"bright","minIntensity":3,"maxIntensity":5,"tags":["person"],"text":"{person}(이)랑 보낸 시간이 하루를 데워 줬구나."},
+ {"id":"w1","group":"worn","minIntensity":1,"maxIntensity":5,"text":"오늘 정말 애썼어. 이제 불 줄이고 푹 자자."},
+ {"id":"w2","group":"worn","minIntensity":1,"maxIntensity":5,"tags":["place"],"text":"{place}에서 버틴 하루, 나 다 알아."},
+ {"id":"u1","group":"unsure","minIntensity":1,"maxIntensity":5,"text":"어떤 하루였는지 다 몰라도 괜찮아. 나 여기 불 켜 두고 있을게."}
+]

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug only: sample data for screenshots. Usage is in DebugSeed.kt. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <receiver android:name=".DebugSeedReceiver" android:exported="true" />
+        <receiver android:name=".DebugAiReceiver" android:exported="true" />
+        <!-- LLM speed check on a real phone; see LlmBenchActivity.kt for the adb commands. -->
+        <activity android:name=".LlmBenchActivity" android:exported="true" android:theme="@android:style/Theme.DeviceDefault" />
+    </application>
+</manifest>

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pass.diary/schema/entry.schema.json",
+  "title": "Diary entry (Drive appDataFolder: entries/YYYY/MM/<id>.json)",
+  "description": "One file per entry. Writers MUST bump updatedAt on every change; conflicts resolve by highest updatedAt (last write wins). Deletion = tombstone: deleted=true, content fields may be emptied, the file is kept. Readers MUST ignore unknown fields.",
+  "type": "object",
+  "required": ["id", "date", "time", "createdAt", "updatedAt", "deleted"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "Local date YYYY-MM-DD" },
+    "time": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "description": "Local time HH:mm" },
+    "timeUnknown": { "type": "boolean", "default": false, "description": "true for entries migrated from v1 (no time recorded; time is 21:00)" },
+    "createdAt": { "type": "integer", "minimum": 0, "description": "epoch millis" },
+    "updatedAt": { "type": "integer", "minimum": 0, "description": "epoch millis, conflict key" },
+    "deleted": { "type": "boolean" },
+    "title": { "type": "string", "default": "" },
+    "body": { "type": "string", "default": "" },
+    "template": { "enum": ["free", "three_lines", "gratitude", "question"], "default": "free" },
+    "source": { "enum": ["text", "voice", "chat"], "default": "text" },
+    "weather": { "type": ["string", "null"] },
+    "emotions": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": ["key", "intensity"],
+        "properties": {
+          "key": {
+            "enum": ["joy", "proud", "excited", "grateful", "comfy", "serene", "relieved", "light", "flutter", "love", "hope", "miss",
+                     "sad", "down", "lonely", "hurt", "tired", "anxious", "annoyed", "angry", "unsure"]
+          },
+          "intensity": { "type": "integer", "minimum": 1, "maximum": 5 }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": ["kind", "value"],
+        "properties": {
+          "kind": { "enum": ["person", "place", "activity", "free"] },
+          "value": { "type": "string", "minLength": 1 },
+          "auto": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    "photos": {
+      "type": "array",
+      "default": [],
+      "description": "Image bytes live in photos/<id>.jpg (JPEG, long side <= 1600px, quality 80)",
+      "items": {
+        "type": "object",
+        "required": ["id", "w", "h"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "w": { "type": "integer", "minimum": 1 },
+          "h": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "reply": {
+      "type": ["object", "null"],
+      "required": ["text", "source", "createdAt"],
+      "properties": {
+        "text": { "type": "string" },
+        "source": { "enum": ["template", "llm"] },
+        "templateId": { "type": ["string", "null"] },
+        "createdAt": { "type": "integer" },
+        "reported": { "type": "boolean", "default": false }
+      }
+    },
+    "chat": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": ["role", "text", "at"],
+        "properties": {
+          "role": { "type": "string", "description": "\"user\" or \"oni\"" },
+          "text": { "type": "string" },
+          "at": { "type": "integer" }
+        }
+      }
+    }
+  }
+}

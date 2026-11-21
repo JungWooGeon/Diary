@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pass.diary/schema/settings.schema.json",
+  "title": "Drive appDataFolder settings.json",
+  "description": "Whole-file last write wins by updatedAt. The lock PIN and biometric settings are device-only and MUST NOT be written here. Readers MUST ignore unknown fields.",
+  "type": "object",
+  "required": ["updatedAt"],
+  "properties": {
+    "updatedAt": { "type": "integer", "minimum": 0 },
+    "theme": { "enum": ["system", "light", "dark"], "default": "system" },
+    "emotionDefs": {
+      "type": "array",
+      "description": "User overrides of emotion names/colors (Room emotion_def)",
+      "items": {
+        "type": "object",
+        "required": ["key", "name", "colorHex", "order"],
+        "properties": {
+          "key": { "type": "string" },
+          "name": { "type": "string" },
+          "groupKey": { "type": ["string", "null"], "enum": ["bright", "calm", "flutter", "low", "worn", null] },
+          "colorHex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+          "order": { "type": "integer" },
+          "custom": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    "notifications": {
+      "type": "object",
+      "properties": {
+        "dailyReminder": { "type": "boolean", "default": false },
+        "time": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" }
+      }
+    }
+  }
+}

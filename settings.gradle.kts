@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google()
         mavenCentral()
@@ -10,11 +11,14 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url = uri("https://jitpack.io") }
     }
 }
 
-rootProject.name = "diary"
-include(":presentation")
-include(":domain")
-include(":data")
+rootProject.name = "Diary"
+// _v1/ (old presentation/domain/data) is kept for reference only and is not part of the build.
+include(":app")
+include(
+    ":core:model", ":core:data", ":core:light", ":core:designsystem", ":core:security",
+    ":core:legacy", ":core:sync", ":core:ai", ":core:billing-ads", ":core:device",
+)
+include(":feature:today", ":feature:write", ":feature:calendar", ":feature:report", ":feature:my")

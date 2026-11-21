@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  API 31+: same whitelist as backup_rules.xml for cloud backup; device-to-device transfer has no quota, so photos go too.
+  sync_meta is left out of both on purpose (see backup_rules.xml): a restored phone does a full Drive pull.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="diary_v2.db" />
+        <include domain="database" path="diary_v2.db-wal" />
+        <include domain="database" path="diary_v2.db-shm" />
+        <include domain="file" path="datastore/settings_v2.preferences_pb" />
+        <include domain="file" path="datastore/app_prefs.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="diary_v2.db" />
+        <include domain="database" path="diary_v2.db-wal" />
+        <include domain="database" path="diary_v2.db-shm" />
+        <include domain="file" path="datastore/settings_v2.preferences_pb" />
+        <include domain="file" path="datastore/app_prefs.preferences_pb" />
+        <include domain="file" path="photos/" />
+    </device-transfer>
+</data-extraction-rules>

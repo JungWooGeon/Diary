@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pass.diary/schema/entitlement.schema.json",
+  "title": "Drive appDataFolder entitlement.json",
+  "description": "Written by Android after Play Billing confirms the one-time `premium` purchase; read by the web app to unlock premium UI. Not a security boundary (the user can edit their own Drive) - Android always re-checks with Play Billing.",
+  "type": "object",
+  "required": ["premium", "updatedAt"],
+  "properties": {
+    "premium": { "type": "boolean" },
+    "orderId": { "type": ["string", "null"] },
+    "purchasedAt": { "type": ["integer", "null"], "description": "epoch millis" },
+    "updatedAt": { "type": "integer", "minimum": 0 }
+  }
+}

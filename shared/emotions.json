@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "intensity": { "min": 1, "max": 5, "default": 3 },
+  "quickMoods": ["joy", "comfy", "flutter", "sad", "tired"],
+  "groups": [
+    {
+      "key": "bright", "name": "밝음", "light": "#FFF0A8", "glow": "#F4C23E",
+      "emotions": [
+        { "key": "joy", "name": "기쁨" },
+        { "key": "proud", "name": "뿌듯함" },
+        { "key": "excited", "name": "신남" },
+        { "key": "grateful", "name": "감사" }
+      ]
+    },
+    {
+      "key": "calm", "name": "평온", "light": "#D6F0CB", "glow": "#7FC08F",
+      "emotions": [
+        { "key": "comfy", "name": "편안함" },
+        { "key": "serene", "name": "차분함" },
+        { "key": "relieved", "name": "안심" },
+        { "key": "light", "name": "홀가분" }
+      ]
+    },
+    {
+      "key": "flutter", "name": "설렘", "light": "#FFD6DF", "glow": "#EE8BA5",
+      "emotions": [
+        { "key": "flutter", "name": "설렘" },
+        { "key": "love", "name": "사랑" },
+        { "key": "hope", "name": "기대" },
+        { "key": "miss", "name": "그리움" }
+      ]
+    },
+    {
+      "key": "low", "name": "가라앉음", "light": "#D3E2F6", "glow": "#7F9FD1",
+      "emotions": [
+        { "key": "sad", "name": "슬픔" },
+        { "key": "down", "name": "우울" },
+        { "key": "lonely", "name": "외로움" },
+        { "key": "hurt", "name": "서운함" }
+      ]
+    },
+    {
+      "key": "worn", "name": "지침", "light": "#E6DDF4", "glow": "#A595CF",
+      "emotions": [
+        { "key": "tired", "name": "피곤" },
+        { "key": "anxious", "name": "불안" },
+        { "key": "annoyed", "name": "짜증" },
+        { "key": "angry", "name": "화남" }
+      ]
+    }
+  ],
+  "unsure": { "key": "unsure", "name": "잘 모르겠음", "light": "#D6D0C9", "glow": "#A39A91" }
+}

@@ -1,0 +1,494 @@
+[
+ {
+  "id": "t001",
+  "kind": "weekly",
+  "condition": "always",
+  "text": "이번 주도 불 켜고 찾아와 줘서 고마웠어. 한 줄 한 줄 다 읽었어."
+ },
+ {
+  "id": "t002",
+  "kind": "weekly",
+  "condition": "always",
+  "text": "한 주 동안 켜 준 빛들, 내가 캘린더에 차곡차곡 모아 뒀어."
+ },
+ {
+  "id": "t003",
+  "kind": "weekly",
+  "condition": "always",
+  "text": "{period} 이야기들 하나하나 다 기억하고 있을게."
+ },
+ {
+  "id": "t004",
+  "kind": "weekly",
+  "condition": "always",
+  "text": "{period}도 수고 많았어. 다음 주엔 어떤 빛이 켜질까?"
+ },
+ {
+  "id": "t005",
+  "kind": "weekly",
+  "condition": "entries<=2",
+  "text": "{period}엔 {count}번 만났네. 짧게 들러 줘도 반가웠어."
+ },
+ {
+  "id": "t006",
+  "kind": "weekly",
+  "condition": "entries<=2",
+  "text": "바쁜 한 주였나 봐. 남겨 준 기록 {count}개, 소중히 간직할게."
+ },
+ {
+  "id": "t007",
+  "kind": "weekly",
+  "condition": "entries>=5",
+  "text": "{period}엔 {count}번이나 불을 켰어. 밤마다 책상이 조금씩 더 환했어."
+ },
+ {
+  "id": "t008",
+  "kind": "weekly",
+  "condition": "streak>=7",
+  "text": "일주일 내내 하루도 빠짐없이 들러 줬어. 이번 주엔 빛이 한 번도 안 꺼졌어."
+ },
+ {
+  "id": "t009",
+  "kind": "weekly",
+  "condition": "streak>=3",
+  "text": "{streak}일째 이어서 써 주고 있어. 그 꾸준함이 나한텐 따뜻한 빛이야."
+ },
+ {
+  "id": "t010",
+  "kind": "weekly",
+  "condition": "topGroup==bright",
+  "text": "노란빛이 제일 많이 켜진 한 주였어. 웃는 날이 많았나 봐."
+ },
+ {
+  "id": "t011",
+  "kind": "weekly",
+  "condition": "topGroup==bright && entries>=3",
+  "text": "{period}엔 {topEmotionName}의 빛이 제일 자주 켜졌어. 그 빛 오래 기억할게."
+ },
+ {
+  "id": "t012",
+  "kind": "weekly",
+  "condition": "topGroup==bright && trend==up",
+  "text": "지난주보다 밝은 날이 늘었어. 나까지 덩달아 환해지는 기분이야."
+ },
+ {
+  "id": "t013",
+  "kind": "weekly",
+  "condition": "topGroup==calm",
+  "text": "이번 주는 잔잔한 초록빛이었어. 큰일 없이 흘러간 날들도 다 소중해."
+ },
+ {
+  "id": "t014",
+  "kind": "weekly",
+  "condition": "topGroup==calm && streak>=3",
+  "text": "{streak}일 연속으로 써 줬고, 평온한 빛이 많았어. 차분하게 흘러간 한 주였네."
+ },
+ {
+  "id": "t015",
+  "kind": "weekly",
+  "condition": "topGroup==flutter",
+  "text": "{period}엔 분홍빛이 자주 켜졌어. 두근거리는 일이 많았던 것 같아."
+ },
+ {
+  "id": "t016",
+  "kind": "weekly",
+  "condition": "topGroup==flutter && topPerson!=null",
+  "text": "설레는 날이 많았던 이번 주, 일기마다 {person} 얘기가 자주 보였어."
+ },
+ {
+  "id": "t017",
+  "kind": "weekly",
+  "condition": "topGroup==low",
+  "text": "이번 주는 빛이 조금 낮게 켜진 날이 많았어. 그래도 여기 와서 적어 줘서 고마워."
+ },
+ {
+  "id": "t018",
+  "kind": "weekly",
+  "condition": "topGroup==low",
+  "text": "마음이 가라앉은 날이 많은 한 주였지. 나 여기 계속 불 켜 두고 있을게."
+ },
+ {
+  "id": "t019",
+  "kind": "weekly",
+  "condition": "topGroup==low && entries<=3",
+  "text": "무거운 한 주에도 {count}번 와 줬어. 다 털어놓지 않아도 괜찮아."
+ },
+ {
+  "id": "t020",
+  "kind": "weekly",
+  "condition": "topGroup==worn",
+  "text": "많이 지친 한 주였지. 그 와중에도 하루를 적어 준 거, 나는 다 봤어."
+ },
+ {
+  "id": "t021",
+  "kind": "weekly",
+  "condition": "topGroup==worn",
+  "text": "보랏빛이 짙은 한 주였어. 그 많은 일을 지나오느라 정말 애썼어."
+ },
+ {
+  "id": "t022",
+  "kind": "weekly",
+  "condition": "topGroup==unsure",
+  "text": "이번 주엔 이름 붙이기 어려운 마음이 자주 찾아왔어. 그런 날도 그대로 괜찮아."
+ },
+ {
+  "id": "t023",
+  "kind": "weekly",
+  "condition": "brightestPerson!=null",
+  "text": "이번 주엔 {person}(이)랑 함께한 날 빛이 제일 밝았어."
+ },
+ {
+  "id": "t024",
+  "kind": "weekly",
+  "condition": "brightestPerson!=null && entries>=3",
+  "text": "{person}(이)랑 있던 날마다 빛이 한 톤씩 밝아졌어. 좋은 사람이 곁에 있네."
+ },
+ {
+  "id": "t025",
+  "kind": "weekly",
+  "condition": "topPerson!=null",
+  "text": "{period} 일기에 {person} 얘기가 제일 자주 나왔어."
+ },
+ {
+  "id": "t026",
+  "kind": "weekly",
+  "condition": "topPlace!=null",
+  "text": "{period}엔 {place}에서 보낸 하루가 제일 많았어."
+ },
+ {
+  "id": "t027",
+  "kind": "weekly",
+  "condition": "topActivity!=null",
+  "text": "{period}엔 {activity}한 날이 제일 많았어. 그 시간들도 다 일기에 남았어."
+ },
+ {
+  "id": "t028",
+  "kind": "weekly",
+  "condition": "topActivity!=null && topGroup==worn",
+  "text": "{activity}한 날이 많았던 한 주였어. 몸도 마음도 수고 많았어."
+ },
+ {
+  "id": "t029",
+  "kind": "weekly",
+  "condition": "trend==up",
+  "text": "지난주보다 빛이 조금 더 밝아졌어. 캘린더 색이 한결 따뜻해."
+ },
+ {
+  "id": "t030",
+  "kind": "weekly",
+  "condition": "trend==down",
+  "text": "지난주보다 빛이 조금 낮아졌어. 그런 주도 있는 거야, 천천히 가도 돼."
+ },
+ {
+  "id": "t031",
+  "kind": "weekly",
+  "condition": "trend==down",
+  "text": "조금 무거운 한 주였던 것 같아. 나는 여기서 계속 들을게, 천천히 와."
+ },
+ {
+  "id": "t032",
+  "kind": "weekly",
+  "condition": "trend==flat",
+  "text": "지난주랑 비슷한 빛으로 한 주가 흘러갔어. 잔잔하게 이어진 날들이었네."
+ },
+ {
+  "id": "t033",
+  "kind": "weekly",
+  "condition": "nightShare>=0.5",
+  "text": "이번 주엔 밤늦게 찾아온 날이 많았어. 늦게까지 하루를 꼭 붙들고 있었구나."
+ },
+ {
+  "id": "t034",
+  "kind": "weekly",
+  "condition": "nightShare>=0.5 && topGroup==worn",
+  "text": "늦은 밤에 쓴 일기가 많았어. 그 시간까지 고생 많았어."
+ },
+ {
+  "id": "t035",
+  "kind": "weekly",
+  "condition": "unsureShare>=0.4",
+  "text": "{period}엔 '잘 모르겠음'을 고른 날이 꽤 있었어. 모르는 채로 적어 둔 것도 충분한 기록이야."
+ },
+ {
+  "id": "t036",
+  "kind": "weekly",
+  "condition": "distinctGroups>=4",
+  "text": "하루하루 빛 색이 다 달랐던 한 주였어. 여러 마음을 지나왔네."
+ },
+ {
+  "id": "t037",
+  "kind": "weekly",
+  "condition": "distinctGroups>=4 && entries>=5",
+  "text": "알록달록한 한 주였어. 여러 마음을 다 적어 준 덕분에 캘린더가 무지개 같아."
+ },
+ {
+  "id": "t038",
+  "kind": "weekly",
+  "condition": "entries>=3",
+  "text": "{bestDay}에 켜진 빛이 {period} 중 제일 환했어. 그날 일기는 다시 봐도 밝아."
+ },
+ {
+  "id": "t039",
+  "kind": "weekly",
+  "condition": "groupShare(bright)>=0.5",
+  "text": "한 주의 절반 넘게 밝은 빛이었어. 좋은 날들이 줄줄이 이어졌네."
+ },
+ {
+  "id": "t040",
+  "kind": "weekly",
+  "condition": "groupShare(calm)>=0.5",
+  "text": "평온한 날이 절반을 넘었어. 편안한 하루가 많아서 나도 포근했어."
+ },
+ {
+  "id": "t041",
+  "kind": "weekly",
+  "condition": "groupShare(worn)>=0.5 && entries>=3",
+  "text": "지친 날이 절반을 넘은 한 주였어. 이만큼 지나온 것만으로도 충분해."
+ },
+ {
+  "id": "t042",
+  "kind": "weekly",
+  "condition": "groupShare(low)>=0.5 && entries>=3",
+  "text": "가라앉은 날이 많았던 주야. 무거운 날에도 여기 와 줘서 고마워."
+ },
+ {
+  "id": "t043",
+  "kind": "monthly",
+  "condition": "always",
+  "text": "한 달 동안 남겨 준 이야기들, 하나도 빠짐없이 간직하고 있어."
+ },
+ {
+  "id": "t044",
+  "kind": "monthly",
+  "condition": "always",
+  "text": "이번 달 캘린더가 네 빛으로 물들었어. 한 칸 한 칸 다 소중해."
+ },
+ {
+  "id": "t045",
+  "kind": "monthly",
+  "condition": "always",
+  "text": "{period}도 수고 많았어. 다음 달에도 불 켜 두고 기다릴게."
+ },
+ {
+  "id": "t046",
+  "kind": "monthly",
+  "condition": "always",
+  "text": "한 달 치 빛을 모아 보니 꽤 근사해. 다음 달 캘린더엔 어떤 빛이 많을까?"
+ },
+ {
+  "id": "t047",
+  "kind": "monthly",
+  "condition": "entries<=2",
+  "text": "이번 달엔 {count}번 만났어. 가끔 들러 줘도 나는 늘 반가워."
+ },
+ {
+  "id": "t048",
+  "kind": "monthly",
+  "condition": "entries<=2",
+  "text": "바빴던 한 달이었나 봐. 생각날 때 언제든 와, 불 켜 둘게."
+ },
+ {
+  "id": "t049",
+  "kind": "monthly",
+  "condition": "entries>=15",
+  "text": "{period}엔 {count}번이나 하루를 들려줬어. 캘린더가 빛으로 꽉 찼어."
+ },
+ {
+  "id": "t050",
+  "kind": "monthly",
+  "condition": "entries>=25",
+  "text": "거의 매일 찾아와 줬어. 이번 달은 내가 제일 환하게 지낸 달이야."
+ },
+ {
+  "id": "t051",
+  "kind": "monthly",
+  "condition": "streak>=7",
+  "text": "{streak}일 연속으로 써 줬어. 그 날들이 차곡차곡 빛으로 쌓였어."
+ },
+ {
+  "id": "t052",
+  "kind": "monthly",
+  "condition": "streak>=20",
+  "text": "{streak}일 동안 하루도 빠짐없이 왔어. 이건 정말 오래 기억할 거야."
+ },
+ {
+  "id": "t053",
+  "kind": "monthly",
+  "condition": "topGroup==bright",
+  "text": "이번 달은 '{topGroupName}' 빛이 제일 많이 켜졌어. 웃는 날을 많이 모았네."
+ },
+ {
+  "id": "t054",
+  "kind": "monthly",
+  "condition": "topGroup==bright && entries>=5",
+  "text": "{topEmotionName}의 노란빛이 캘린더 곳곳에 켜졌어. 보기만 해도 기분 좋아져."
+ },
+ {
+  "id": "t055",
+  "kind": "monthly",
+  "condition": "topGroup==calm",
+  "text": "이번 달은 잔잔한 날이 많았어. 조용히 지나간 하루들도 다 예뻤어."
+ },
+ {
+  "id": "t056",
+  "kind": "monthly",
+  "condition": "topGroup==calm && entries>=5",
+  "text": "'{topGroupName}' 빛이 가장 많았던 한 달이야. 마음이 편한 날이 많아서 다행이야."
+ },
+ {
+  "id": "t057",
+  "kind": "monthly",
+  "condition": "topGroup==flutter",
+  "text": "설레는 일이 많은 한 달이었나 봐. 분홍빛이 자꾸 켜져서 나도 두근거렸어."
+ },
+ {
+  "id": "t058",
+  "kind": "monthly",
+  "condition": "topGroup==low",
+  "text": "이번 달은 마음이 자주 가라앉았지. 그 무게를 여기 내려놓아 줘서 고마워."
+ },
+ {
+  "id": "t059",
+  "kind": "monthly",
+  "condition": "topGroup==low && entries>=10",
+  "text": "가라앉은 날이 많았는데도 {count}번이나 와서 이야기해 줬어. 그 마음 다 받았어."
+ },
+ {
+  "id": "t060",
+  "kind": "monthly",
+  "condition": "topGroup==worn",
+  "text": "지치는 날이 많았던 한 달이었어. 버텨 낸 날들, 내가 다 기억하고 있어."
+ },
+ {
+  "id": "t061",
+  "kind": "monthly",
+  "condition": "topGroup==worn && nightShare>=0.4",
+  "text": "이번 달은 보랏빛이 짙었고, 늦은 밤에 쓴 날도 많았어. 오늘은 불 줄이고 푹 잤으면 좋겠어."
+ },
+ {
+  "id": "t062",
+  "kind": "monthly",
+  "condition": "topGroup==unsure",
+  "text": "이번 달엔 마음이 잘 안 보이는 날이 자주 있었어. 적어 둔 것만으로도 충분해."
+ },
+ {
+  "id": "t063",
+  "kind": "monthly",
+  "condition": "brightestPerson!=null",
+  "text": "{period} 캘린더에서 {person}(이)랑 보낸 날들이 유난히 밝게 빛나."
+ },
+ {
+  "id": "t064",
+  "kind": "monthly",
+  "condition": "brightestPerson!=null && topGroup==low",
+  "text": "무거운 날이 많았지만, {person}(이)랑 있던 날만큼은 빛이 따뜻했어."
+ },
+ {
+  "id": "t065",
+  "kind": "monthly",
+  "condition": "brightestPerson!=null && entries>=8",
+  "text": "이번 달 가장 환했던 날들엔 늘 {person} 얘기가 있었어."
+ },
+ {
+  "id": "t066",
+  "kind": "monthly",
+  "condition": "topPerson!=null",
+  "text": "이번 달 일기엔 {person} 얘기가 참 많았어. 어떤 사람인지 나도 조금 알 것 같아."
+ },
+ {
+  "id": "t067",
+  "kind": "monthly",
+  "condition": "topPlace!=null",
+  "text": "{place}에서 보낸 날이 제일 많은 한 달이었어. 그곳 공기가 일기에서도 느껴져."
+ },
+ {
+  "id": "t068",
+  "kind": "monthly",
+  "condition": "topActivity!=null",
+  "text": "이번 달 일기엔 {activity} 이야기가 자주 나왔어. 그 시간이 일기마다 조금씩 묻어 있어."
+ },
+ {
+  "id": "t069",
+  "kind": "monthly",
+  "condition": "topActivity!=null && groupShare(calm)>=0.3",
+  "text": "{activity}한 날이 많았고, 평온한 빛도 자주 켜진 한 달이었어."
+ },
+ {
+  "id": "t070",
+  "kind": "monthly",
+  "condition": "topActivity!=null && topGroup==worn",
+  "text": "{activity}(으)로 꽉 찬 한 달이었네. 그 많은 날을 지나오느라 고생했어."
+ },
+ {
+  "id": "t071",
+  "kind": "monthly",
+  "condition": "trend==up",
+  "text": "지난달보다 밝은 빛이 늘었어. 캘린더가 한결 환해졌어."
+ },
+ {
+  "id": "t072",
+  "kind": "monthly",
+  "condition": "trend==down",
+  "text": "지난달보다 빛이 조금 낮아진 달이었어. 어떤 날이든 와서 적어 줘서 고마워."
+ },
+ {
+  "id": "t073",
+  "kind": "monthly",
+  "condition": "trend==down && topGroup==worn",
+  "text": "지난달보다 지친 날이 늘었어. 많이 무거웠을 텐데, 여기 들러 줘서 다행이야."
+ },
+ {
+  "id": "t074",
+  "kind": "monthly",
+  "condition": "trend==flat",
+  "text": "지난달이랑 비슷한 빛으로 한 달을 보냈어. 잔잔하게 이어지는 것도 좋은 흐름이야."
+ },
+ {
+  "id": "t075",
+  "kind": "monthly",
+  "condition": "nightShare>=0.5",
+  "text": "이번 달엔 밤 10시 넘어서 쓴 날이 많았어. 늦은 밤의 너를 내가 제일 많이 만났네."
+ },
+ {
+  "id": "t076",
+  "kind": "monthly",
+  "condition": "unsureShare>=0.3",
+  "text": "이번 달엔 '잘 모르겠음'이 자주 켜졌어. 모르겠는 마음까지 적어 준 것도 소중한 기록이야."
+ },
+ {
+  "id": "t077",
+  "kind": "monthly",
+  "condition": "distinctGroups>=5",
+  "text": "여러 빛이 골고루 켜진 한 달이었어. 캘린더가 무지개처럼 알록달록해."
+ },
+ {
+  "id": "t078",
+  "kind": "monthly",
+  "condition": "entries>=5",
+  "text": "{bestDay}의 일기를 열면 이번 달에서 제일 밝은 빛이 켜져. 그날, 나도 가끔 떠올려."
+ },
+ {
+  "id": "t079",
+  "kind": "monthly",
+  "condition": "groupShare(bright)>=0.5",
+  "text": "한 달의 절반 넘게 밝은 빛이 켜졌어. 좋은 날을 이렇게 많이 모았네."
+ },
+ {
+  "id": "t080",
+  "kind": "monthly",
+  "condition": "groupShare(flutter)>=0.3",
+  "text": "설레는 날이 꽤 자주 있었어. 기다려지는 일이 많았던 한 달이야."
+ },
+ {
+  "id": "t081",
+  "kind": "monthly",
+  "condition": "groupShare(low)>=0.4 && trend==down",
+  "text": "마음이 무거운 날이 조금 늘었어. 다 괜찮아지지 않아도 돼, 이렇게 적어 준 걸로 충분해."
+ },
+ {
+  "id": "t082",
+  "kind": "monthly",
+  "condition": "groupShare(worn)>=0.4",
+  "text": "피곤한 빛이 자주 켜진 달이었어. 그 많은 날을 지나온 것만으로도 충분히 애썼어."
+ }
+]

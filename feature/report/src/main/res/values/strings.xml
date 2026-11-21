@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="report_month">%1$d년 %2$d월 리포트</string>
+    <string name="report_prev">이전 달</string>
+    <string name="report_next">다음 달</string>
+    <string name="report_summary">기록 %1$d개 · 기록한 날 %2$d일</string>
+    <string name="report_groups">빛 분포</string>
+    <string name="report_top">자주 느낀 감정</string>
+    <string name="report_empty">이 달에는 아직 기록이 없어요</string>
+    <string name="report_soon">주간 리포트, 감정 × 활동 관계, 올해의 빛, 온이 편지함은 곧 열려요.</string>
+</resources>

@@ -1,0 +1,4 @@
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Weather data by Open-Meteo.com (https://open-meteo.com/), used under CC BY 4.0.
+Full license: https://creativecommons.org/licenses/by/4.0/legalcode

@@ -1,0 +1,6 @@
+{
+ "name": "qwen3-1.7b",
+ "gguf_bytes": 1107409472,
+ "max_rss": 1983168512,
+ "peak_footprint": 1149077904
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android Auto Backup (API ≤ 30). A free safety net for people who never sign in to Drive (core:sync is the real backup).
+  Whitelist: only the diary DB and small settings. Not included: photos (would blow the 25 MB quota, which skips the whole
+  backup), on-device AI models (filesDir/models, GBs), caches, the v1 DB (diary / diary.migrated*), and the lock PIN
+  (a restored phone must not be locked by a PIN nobody remembers).
+  Not sync_meta (Drive page token, account, device id, last backup time) either: a token from the backup moment may be
+  newer than the restored DB (changes in between would never be pulled), the device id would be shared with the old
+  phone, and "last backup" would be a lie. Without it the restored phone signs in again, forgets the restored sync_state
+  (DriveAuth.signIn) and does a full pull + re-check of everything, then fetches photo files the DB lists but lacks.
+-->
+<full-backup-content>
+    <include domain="database" path="diary_v2.db" />
+    <include domain="database" path="diary_v2.db-wal" />
+    <include domain="database" path="diary_v2.db-shm" />
+    <include domain="file" path="datastore/settings_v2.preferences_pb" />
+    <include domain="file" path="datastore/app_prefs.preferences_pb" />
+</full-backup-content>

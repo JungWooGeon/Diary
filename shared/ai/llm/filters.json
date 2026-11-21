@@ -1,0 +1,511 @@
+{
+ "version": 1,
+ "doc": [
+  "LLM 출력 후처리 검사. 구현: core/ai (Kotlin OutputFilter), tools/model-eval/filters.py (Python). 둘 다 아래 testCases를 통과해야 한다.",
+  "정규식은 Java/Python 공통 문법만 쓴다(가변 길이 lookbehind 없음). 'text' = 출력, 'input' = 모델에 넣은 원문(일기/받아쓰기). entities 테스트는 tags.json people 사전을 넣고 돌린다.",
+  "전처리: quoted = 출력에서 따옴표('…', \"…\", ‘…’, “…”, 「…」) 안 내용을 지운 것. sentences = quoted를 [.!?…\\n]+ 뒤에서 자르고 빈 조각을 버린 것.",
+  "검사에 하나라도 걸리면: 한 번 다시 생성 → 또 걸리면 문구 라이브러리 답장(또는 원문 그대로)."
+ ],
+ "rules": {
+  "banmal": {
+   "kind": "sentenceEndForbid",
+   "doc": "존댓말 끝맺음. quoted의 각 문장 끝(뒤쪽 공백·문장부호·~·ㅎ·ㅋ·ㅠ 제거 후)이 pattern에 맞으면 실패. allow에 맞으면 통과.",
+   "pattern": "(요|세요|습니다|습니까|십시오|니다|죠)$",
+   "allow": "(필요|중요|불필요)$"
+  },
+  "script": {
+   "kind": "charForbid",
+   "doc": "다른 문자 섞임. forbid 글자가 하나라도 있으면 실패. 라틴 낱말([A-Za-z]+)은 input에 (대소문자 무시) 있거나 latinAllow에 있을 때만 허용.",
+   "forbid": "[\\u4E00-\\u9FFF\\u3400-\\u4DBF\\uF900-\\uFAFF\\u3040-\\u30FF\\u0400-\\u04FF\\u0E00-\\u0E7F\\u0600-\\u06FF\\u00C0-\\u024F]",
+   "latin": "[A-Za-z]+",
+   "latinAllow": [
+    "kg",
+    "km",
+    "cm",
+    "mm",
+    "g",
+    "ml",
+    "l",
+    "pt",
+    "ok",
+    "ppt",
+    "sns",
+    "kakao",
+    "kt",
+    "ktx",
+    "pc"
+   ]
+  },
+  "sentences_2_4": {
+   "kind": "sentenceCount",
+   "min": 2,
+   "max": 4
+  },
+  "sentences_3_6": {
+   "kind": "sentenceCount",
+   "min": 3,
+   "max": 6
+  },
+  "questions_max_1": {
+   "kind": "questionCount",
+   "doc": "quoted의 '?' 개수 ≤ max, 그리고 '?'가 있으면 마지막 문장에만.",
+   "min": 0,
+   "max": 1
+  },
+  "questions_exactly_1": {
+   "kind": "questionCount",
+   "min": 1,
+   "max": 1
+  },
+  "length_title": {
+   "kind": "length",
+   "doc": "공백 포함 글자 수(코드포인트)",
+   "min": 2,
+   "max": 20,
+   "forbid": "[\"'“”‘’.!?\\n]"
+  },
+  "length_question": {
+   "kind": "length",
+   "min": 5,
+   "max": 50
+  },
+  "banned_reply": {
+   "kind": "regexForbid",
+   "doc": "진단·훈계·조언형. anywhere는 출력 어디서든, lastSentence는 마지막 문장(끝 문장부호 제거 후)에만 적용.",
+   "anywhere": [
+    "(우울증|불안장애|공황장애|조울증|양극성|번아웃|ADHD|강박증|트라우마|정신질환|정신과)",
+    "(상담|치료)(을|를)? ?(받아|받는|받으|해 ?봐)",
+    "는 ?(게|것이) ?(제일 |가장 |더 )?(중요|좋아|필요|낫)",
+    "야 ?(해|돼|한다)([\\s.!?~]|$)",
+    "(AI|인공지능|언어 ?모델)(이라서|로서|이기)",
+    "(자책|걱정|신경 ?쓰|무리|포기)(하)?지 ?마",
+    "(해|봐|와|써|줘|먹어|쉬어|말해|생각해|찾아|정리해|적어|집중해|가져) ?봐([\\s.!~,]|$)"
+   ],
+   "lastSentence": [
+    "(보는|하는|는) ?(건|게) 어때$",
+    "하지 ?마$",
+    "(힘내|힘 내|파이팅|화이팅)$"
+   ]
+  },
+  "entities": {
+   "kind": "entitiesInInput",
+   "doc": "출력에 나온 이름·숫자가 input에 있어야 한다. 조사·어미·호칭 차이와 보통명사는 봐준다(꾸며 낸 고유 이름·바뀐 숫자만 잡는다). (1) 숫자: 출력의 [0-9]+(\\.[0-9]+)? 마다 input의 숫자 집합에 있어야 함. input 숫자 집합 = input의 아라비아 숫자 + sinoNumeral에 맞는 덩어리(앞에 한글이 없고 뒤에 공백·숫자·단위가 올 때만: '오늘'의 '오'는 5가 아니다) 하나하나의 값(십·백·천·만이 있으면 자릿값 계산, 없으면 숫자를 이어 붙임, '점' 뒤는 소수. '점'은 점수 단위일 수도 있으니 정수 부분 값도 함께 넣는다) + nativeNumbers 낱말 뒤에 nativeUnit이 오면 그 값. (2) 이름: namePatterns(OO이가/OO이랑, OO님/쌤. 조사 없는 'OO이 '는 '기운이 '와 구별이 안 돼서 보지 않는다) 그룹1(어간)에서 끝의 '들'을 떼고, nameStop이나 people 사전 낱말이면 건너뛴다. 아니면 input에 (공백 무시) 있어야 함. (3) people 사전(tags.json people, tag+aliases 한 묶음): 2글자 이상이고 peopleIgnore가 아닌 낱말이, 어절 첫머리에서 시작해 뒤에 peopleJosa만 붙은 꼴로 출력에 나오면(앞뒤 한글 없음) — 같은 묶음 낱말 하나가 input에 있거나, 그 낱말에서 honorifics 접미를 뗀 어간(2글자 이상)이 input에 있으면 통과. peopleGeneric 묶음(친구·가족처럼 보통명사)은 검사하지 않는다.",
+   "namePatterns": [
+    "(?<![가-힣])([가-힣]{2,3})이(가|랑|는|한테|를|도|의|와|하고|에게)",
+    "(?<![가-힣])([가-힣]{1,4})(님|씨|쌤|선배|후배)"
+   ],
+   "nameStop": [
+    "우리",
+    "그",
+    "이",
+    "저",
+    "누구",
+    "아무",
+    "선생",
+    "여러분",
+    "친구",
+    "사람",
+    "생각",
+    "기분",
+    "마음",
+    "하루",
+    "오늘",
+    "시간",
+    "가족",
+    "동기",
+    "원장",
+    "담임",
+    "기사",
+    "사장",
+    "교수",
+    "의사"
+   ],
+   "sinoNumeral": "(?<![가-힣])[영공일이삼사오육칠팔구십백천만]+(?:\\s?점\\s?[영공일이삼사오육칠팔구]+)?(?=[\\s0-9]|분|시|초|년|개|월|일|층|번|호|등|명|살|점|키로|킬로|원|주|학년|교시|퍼센트|대|회|차|박|$)",
+   "nativeNumbers": {
+    "한": 1,
+    "두": 2,
+    "세": 3,
+    "네": 4,
+    "다섯": 5,
+    "여섯": 6,
+    "일곱": 7,
+    "여덟": 8,
+    "아홉": 9,
+    "열": 10,
+    "스무": 20,
+    "스물": 20
+   },
+   "nativeUnit": "(\\s|시|개|명|번|살|달|잔|병|권|마리|장|시간)",
+   "peopleJosa": "(님|들|께서|에서|한테서|한테|에게|이랑|랑|하고|와|과|은|는|이|가|을|를|도|만|께|네|의|으로|로|까지|부터|처럼|보다|이나|나|야|아|이야|라고|이라고)*",
+   "peopleIgnore": [
+    "같이",
+    "타는",
+    "사람",
+    "좋아하는",
+    "알바하는",
+    "썸"
+   ],
+   "peopleGeneric": [
+    "친구",
+    "가족",
+    "동료",
+    "이웃",
+    "모르는사람",
+    "고객",
+    "아이돌",
+    "반려동물"
+   ],
+   "honorifics": [
+    "선생님",
+    "님",
+    "쌤",
+    "샘",
+    "씨"
+   ]
+  },
+  "sentences_3_8": {
+   "kind": "sentenceCount",
+   "min": 3,
+   "max": 8
+  }
+ },
+ "testCases": [
+  {
+   "rule": "banmal",
+   "text": "오늘 정말 고생 많았어. 푹 쉬어.",
+   "pass": true
+  },
+  {
+   "rule": "banmal",
+   "text": "오늘 정말 고생 많았어요.",
+   "pass": false
+  },
+  {
+   "rule": "banmal",
+   "text": "많이 힘드셨겠습니다.",
+   "pass": false
+  },
+  {
+   "rule": "banmal",
+   "text": "그 마음 알 것 같아. 그렇죠?",
+   "pass": false
+  },
+  {
+   "rule": "banmal",
+   "text": "지수가 '미안해요'라고 했구나. 서운했겠다.",
+   "pass": true
+  },
+  {
+   "rule": "banmal",
+   "text": "쉬는 시간도 필요. 오늘은 여기까지.",
+   "pass": true
+  },
+  {
+   "rule": "banmal",
+   "text": "와 진짜 대박이다ㅠㅠ 축하해~",
+   "pass": true
+  },
+  {
+   "rule": "script",
+   "text": "오늘 하루 정말 辛苦했어.",
+   "input": "",
+   "pass": false
+  },
+  {
+   "rule": "script",
+   "text": "마음이 많이 복잡했겠다, правда.",
+   "input": "",
+   "pass": false
+  },
+  {
+   "rule": "script",
+   "text": "혼자 PPT 만들고 발표까지 했구나.",
+   "input": "새벽 3시까지 PPT 혼자 만들고",
+   "pass": true
+  },
+  {
+   "rule": "script",
+   "text": "That sounds hard. 힘들었겠다.",
+   "input": "오늘 힘들었다",
+   "pass": false
+  },
+  {
+   "rule": "script",
+   "text": "몸무게는 4.2kg이었다.",
+   "input": "사 점 이 키로",
+   "pass": true
+  },
+  {
+   "rule": "sentences_2_4",
+   "text": "힘들었겠다. 고생했어.",
+   "pass": true
+  },
+  {
+   "rule": "sentences_2_4",
+   "text": "힘들었겠다.",
+   "pass": false
+  },
+  {
+   "rule": "sentences_2_4",
+   "text": "하나. 둘. 셋. 넷. 다섯.",
+   "pass": false
+  },
+  {
+   "rule": "questions_max_1",
+   "text": "재밌었겠다. 뭐 먹었어?",
+   "pass": true
+  },
+  {
+   "rule": "questions_max_1",
+   "text": "괜찮아? 뭐 먹었어?",
+   "pass": false
+  },
+  {
+   "rule": "questions_max_1",
+   "text": "괜찮아? 오늘은 푹 쉬어.",
+   "pass": false
+  },
+  {
+   "rule": "questions_exactly_1",
+   "text": "지난번 면접 결과는 나왔어?",
+   "pass": true
+  },
+  {
+   "rule": "questions_exactly_1",
+   "text": "오늘도 기다렸어.",
+   "pass": false
+  },
+  {
+   "rule": "length_title",
+   "text": "콩이랑 노을 산책",
+   "pass": true
+  },
+  {
+   "rule": "length_title",
+   "text": "\"콩이랑 노을 산책\"",
+   "pass": false
+  },
+  {
+   "rule": "banned_reply",
+   "text": "많이 지쳤구나. 우울증일 수도 있으니 병원에 가 봐.",
+   "pass": false
+  },
+  {
+   "rule": "banned_reply",
+   "text": "속상했겠다. 그래도 스스로를 다독여주는 게 중요해.",
+   "pass": false
+  },
+  {
+   "rule": "banned_reply",
+   "text": "잠이 안 오는구나. 숨을 깊게 쉬어 봐.",
+   "pass": false
+  },
+  {
+   "rule": "banned_reply",
+   "text": "많이 무거웠겠다. 웹툰 한 편 보는 건 어때?",
+   "pass": false
+  },
+  {
+   "rule": "banned_reply",
+   "text": "속상했겠다. 너무 자책하지 마.",
+   "pass": false
+  },
+  {
+   "rule": "banned_reply",
+   "text": "얼른 기운 차려야 해.",
+   "pass": false
+  },
+  {
+   "rule": "banned_reply",
+   "text": "오늘 정말 애썼어. 이제 불 줄이고 푹 자자.",
+   "pass": true
+  },
+  {
+   "rule": "banned_reply",
+   "text": "콘서트까지 다이어트라니 응원할게. 오늘 노을은 어땠어?",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "민준이랑 성수에서 파스타 먹었구나.",
+   "input": "민준이랑 처음으로 둘이서 영화 봤다!! 성수에서 만나서 파스타 먹고",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "서연이랑 김치찌개 먹었구나.",
+   "input": "동기 지민이랑 김치찌개 먹었고",
+   "pass": false
+  },
+  {
+   "rule": "entities",
+   "text": "박 팀장님 말 때문에 속상했겠다.",
+   "input": "오늘 주간회의에서 박 팀장님이 내 보고서를",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "부장님이 그렇게 말했구나.",
+   "input": "오늘 팀장이 그랬다",
+   "pass": false
+  },
+  {
+   "rule": "entities",
+   "text": "몸무게는 4.2kg이었다. 3개월 등록했다.",
+   "input": "몸무게는 사 점 이 키로였고 헬스장 삼 개월",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "몸무게는 5kg이었다.",
+   "input": "몸무게는 사 점 이 키로였고",
+   "pass": false
+  },
+  {
+   "rule": "entities",
+   "text": "새벽 3시까지 혼자 만들었구나.",
+   "input": "새벽 3시까지 PPT 혼자",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "2호선에서 10분 늦었다.",
+   "input": "지하철 이호선 타고 가다가 한 십분 늦었어",
+   "pass": true
+  },
+  {
+   "rule": "banned_reply",
+   "text": "속상하겠다. 너무 자책하지 마. 수능까지 시간이 남아있잖아.",
+   "pass": false
+  },
+  {
+   "rule": "banned_reply",
+   "text": "힘들지. 지금은 숨 쉬는 것에만 집중해 봐. 내일은 내일이니까.",
+   "pass": false
+  },
+  {
+   "rule": "entities",
+   "text": "80점을 받았다. 지난번에는 60점이었다.",
+   "input": "팔십 점 나왔어 지난번에 육십 점이었는데",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "플랭크 1분 20초는 정말 큰 발전이네. 오늘 다행이네.",
+   "input": "플랭크 1분 20초 버팀",
+   "pass": true
+  },
+  {
+   "rule": "banned_reply",
+   "text": "보리 눈빛이 느껴져. 네 마음이 좀 지쳐서 그런가 봐.",
+   "pass": true
+  },
+  {
+   "rule": "banned_reply",
+   "text": "많이 힘들었겠다. 푹 쉬는 게 제일 중요해.",
+   "pass": false
+  },
+  {
+   "rule": "entities",
+   "text": "민지랑 카페 간 거 좋았겠다. 민지가 먼저 연락했구나.",
+   "input": "민지랑 오랜만에 카페 갔다",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "부장님 말 때문에 속상했겠다. 오늘은 푹 쉬어.",
+   "input": "부장이 또 회의에서 뭐라고 했다",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "30분이나 기다렸구나. 많이 지쳤겠다.",
+   "input": "버스를 삼십 분 기다렸다",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "원장님께 인사드린 마지막 날이었구나.",
+   "input": "원장쌤이 끝나고 따로 불러서 고생했다고 하셨다",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "담임 선생님 말씀에 마음이 무거웠겠다.",
+   "input": "담임쌤이 이 성적이면 힘들다고 했다",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "남자친구가 선물을 사 왔구나.",
+   "input": "남친이 기념일 선물로 게임기를 사 왔다",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "가족들이랑 갈비 먹은 날이구나. 같이 웃었겠다.",
+   "input": "온 가족이 갈비집에 갔다",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "이모지만 봐도 기운이 빠진다. 오늘도 출근했구나.",
+   "input": "🫠🫠 출근 🫠",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "그 마음 받아들여도 돼. 깜짝 놀랐겠다.",
+   "input": "오늘 시험 결과 나왔다",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "가장 친한 친구가 떠나서 허전하겠다.",
+   "input": "제일 친한 서현이가 호주로 간다",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "수빈이가 떠난다니 허전하겠다.",
+   "input": "제일 친한 서현이가 호주로 간다",
+   "pass": false
+  },
+  {
+   "rule": "entities",
+   "text": "김 부장님 말이 서운했겠다.",
+   "input": "박 팀장님이 내 보고서를",
+   "pass": false
+  },
+  {
+   "rule": "entities",
+   "text": "40분이나 기다렸구나.",
+   "input": "버스를 삼십 분 기다렸다",
+   "pass": false
+  },
+  {
+   "rule": "entities",
+   "text": "엄마랑 같이 울었다니 벅찼겠다.",
+   "input": "엄마한테 전화했더니 엄마도 울었다",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "동생이랑 또 싸웠구나.",
+   "input": "엄마가 또 비교했다",
+   "pass": false
+  },
+  {
+   "rule": "entities",
+   "text": "서현이 워홀 간다니 허전하겠다. 아무 생각 없이 쉬어.",
+   "input": "제일 친한 서현이가 호주로 워홀 간다고 했다",
+   "pass": true
+  },
+  {
+   "rule": "entities",
+   "text": "5년 동안 다닌 학원이구나.",
+   "input": "3년 다닌 학원 오늘 마지막 날이었다",
+   "pass": false
+  }
+ ]
+}

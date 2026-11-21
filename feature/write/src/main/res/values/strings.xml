@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="write_title">기록</string>
+    <string name="write_back">뒤로</string>
+    <string name="write_done">완료</string>
+    <string name="write_delete">삭제</string>
+    <string name="write_delete_confirm">이 기록을 지울까요?</string>
+    <string name="write_delete_yes">지우기</string>
+    <string name="write_cancel">취소</string>
+    <string name="write_saving">저장 중…</string>
+    <string name="write_saved">자동 저장됨</string>
+    <string name="write_mood_question">지금 기분은 어때?</string>
+    <string name="write_more_emotions">감정 더 고르기</string>
+    <string name="write_less_emotions">접기</string>
+    <string name="write_intensity">강도</string>
+    <string name="write_template">템플릿</string>
+    <string name="write_title_hint">제목 (선택)</string>
+    <string name="write_body_hint">오늘 하루를 들려줘</string>
+    <string name="write_tags">태그</string>
+    <string name="write_tag_hint">태그 입력 후 추가</string>
+    <string name="write_tag_add">추가</string>
+    <string name="write_photos">사진 (%1$d/5)</string>
+    <string name="write_photo_add">사진 추가</string>
+    <string name="write_photo_remove">사진 빼기</string>
+    <string name="write_photo_importing">사진을 넣는 중…</string>
+    <string name="write_unsure_hint">괜찮아, 그런 날도 있어</string>
+</resources>
