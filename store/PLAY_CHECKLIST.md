@@ -129,7 +129,8 @@
   - 아이콘 `icon_512.png`
   - 그래픽 이미지 `feature_graphic.png`
   - 휴대전화 스크린샷 `screenshots/01~08`
-  - 시안 기반이므로 구현 화면이 크게 다르면 다시 만드세요(`listing.md` 그래픽 메모).
+  - 태블릿 스크린샷 `screenshots_tablet/01~04` (7인치·10인치 태블릿 칸)
+  - 모두 실제 앱 캡처(`captures/`). 화면이 바뀌면 다시 찍어 넣으세요(`listing.md` 그래픽 메모).
 
 ## 6. 빌드와 출시
 

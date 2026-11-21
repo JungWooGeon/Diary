@@ -1,9 +1,11 @@
 """Play Store graphics for 온이 일기 v2.0.
 
-Builds, from the approved screen designs (JWG/release/일기장_화면_시안/, dark theme):
+Builds, from real app captures in store/captures/ (debug build on the Pixel_8 / Pixel_Tablet emulators,
+DebugSeedReceiver sample data, `--es nav` deep links, SystemUI demo mode status bar, premium debug flag = no ads):
   store/icon_512.png                       app icon (copied from 캐릭터 시안 app_icon/final_A)
   store/feature_graphic.png                1024x500
-  store/screenshots/screenshot_01..08.png  1080x1920
+  store/screenshots/screenshot_01..08.png  1080x1920 (phone)
+  store/screenshots_tablet/tablet_01..04.png  2560x1600 (tablet, landscape)
   store/preview_sheet.png                  contact sheet for review
 
 Look: a warm night desk. Deep violet room, the mood light pooling behind the phone, Oni as the hero.
@@ -12,12 +14,12 @@ Rendered with headless Chrome through the character package's render_many (same 
     python3 store/make_store.py
 """
 import pathlib, shutil, sys
-from PIL import Image, ImageDraw
+from PIL import Image
 
 STORE = pathlib.Path(__file__).resolve().parent
 REPO = STORE.parent
 JWG = REPO.parent.parent
-SCREENS = JWG / 'release' / '일기장_화면_시안'
+CAPS = STORE / 'captures'
 CHAR = JWG / 'release' / '일기장_캐릭터_시안'
 sys.path.insert(0, str(CHAR / '_source'))
 import oni as O  # noqa: E402
@@ -66,52 +68,63 @@ SHOT_CSS = """
   color:#F4EFE8;background:rgba(28,24,48,.82);box-shadow:0 0 0 1px rgba(255,255,255,.1) inset,0 8px 24px rgba(0,0,0,.35);backdrop-filter:blur(6px)}
 """
 
-# (screen file, eyebrow, glow, headline, sub, note)
+# (capture, eyebrow, glow, headline, sub, note)
 SHOTS = [
-    ('02_오늘_dark', '오늘', '#F5A957', '기분이 빛이 되는 일기장', '무드등 온이가 오늘 마음의 색으로 켜져요', None),
-    ('08_위젯_홈화면_dark', '1탭 기분', '#EE8BA5', '톡 한 번이면 기록 끝', '홈 화면 위젯에서 1초 만에 남겨요', None),
-    ('03_쓰기_1_감정고르기_dark', '감정 + 강도', '#F4C23E', '마음은 한 가지가 아니니까', '감정 20가지를 골라 강도까지, 빛이 섞여요', None),
-    ('04_답장_2_도착_dark', '온이의 답장', '#F4C23E', '온이가 답장을 써 줘요', '일기는 폰 안의 AI만 읽어요, 서버 전송 없이', None),
-    ('05_캘린더_1_월간_dark', '무드 캘린더', '#7FC08F', '한 달이 빛으로 물들어요', '날짜마다 그날의 빛, 하루의 흐름까지', None),
-    ('06_리포트_1_월간_dark', '리포트', '#7FC08F', '내 마음의 패턴을 알아요', '자주 느낀 감정부터 기분을 바꾼 활동까지', None),
-    ('03_쓰기_3_대화로쓰기_dark', '대화로 쓰기', '#A595CF', '말하듯 쓰는 일기', '온이가 묻고 내가 답하면 한 편의 일기로', None),
-    ('07_마이_4_잠금_dark', '잠금 · 백업', '#F5A957', '내 일기는 나만 봐요', 'PIN·지문 잠금, 내 Google 드라이브에 자동 백업', None),
+    ('phone_01_today', '오늘', '#F5A957', '기분이 빛이 되는 일기장', '무드등 온이가 오늘 마음의 색으로 켜져요', None),
+    ('phone_02_widgets', '1탭 기분', '#EE8BA5', '톡 한 번이면 기록 끝', '홈 화면 위젯에서 1초 만에 남겨요', None),
+    ('phone_03_emotions', '감정 + 강도', '#F4C23E', '마음은 한 가지가 아니니까', '감정 20가지를 골라 강도까지, 빛이 섞여요', None),
+    ('phone_04_reply', '온이의 답장', '#F4C23E', '온이가 답장을 써 줘요', '일기는 폰 안의 AI만 읽어요, 서버 전송 없이', None),
+    ('phone_05_calendar', '무드 캘린더', '#7FC08F', '한 달이 빛으로 물들어요', '날짜마다 그날의 빛, 하루의 흐름까지', None),
+    ('phone_06_report', '리포트', '#7FC08F', '내 마음의 패턴을 알아요', '자주 느낀 감정부터 기분을 바꾼 활동까지', None),
+    ('phone_07_chat', '대화로 쓰기', '#A595CF', '말하듯 쓰는 일기', '온이가 묻고 내가 답하면 한 편의 일기로', None),
+    ('phone_08_lock', '잠금 · 백업', '#F5A957', '내 일기는 나만 봐요', 'PIN·지문 잠금, 내 Google 드라이브에 자동 백업', None),
+]
+
+TABLET = [
+    ('tablet_01_today', '오늘', '#F5A957', '넓은 화면에서도 온이와 함께', '오늘의 빛, 하루의 흐름, 1년 전 오늘까지 한눈에'),
+    ('tablet_02_calendar', '무드 캘린더', '#EE8BA5', '달력 옆에 그날의 이야기', '날짜를 누르면 일기와 답장이 바로 옆에 펼쳐져요'),
+    ('tablet_03_report', '리포트', '#7FC08F', '내 마음의 패턴을 한 화면에', '자주 느낀 감정, 기분을 바꾼 활동, 요일·시간대'),
+    ('tablet_04_write', '쓰기', '#F4C23E', '감정과 글을 나란히', '왼쪽에서 마음의 색을 고르고, 오른쪽에 하루를 적어요'),
 ]
 
 
-AD_TOP = {'05_캘린더_1_월간_dark': 1850}
+def cap(name):
+    return (CAPS / f'{name}.png').as_uri()
 
 
-def screen_src(name):
-    """Top 1080x2400 of the 시안 (long screens are full scrolls)."""
-    im = Image.open(SCREENS / f'{name}.png').convert('RGB')
-    p = TMP / f'{name}.png'
-    im = im.crop((0, 0, 1080, 2400))
-    if name in AD_TOP:  # the 시안 shows a placeholder banner; a store shot shouldn't advertise an empty ad slot
-        ImageDraw.Draw(im).rectangle((0, AD_TOP[name], 1080, 2400), fill='#1C1830')
-    im.save(p)
-    return p.as_uri()
-
-
-def backup_card():
-    p = TMP / 'backup_card.png'
-    Image.open(SCREENS / '07_마이_1_홈_dark.png').convert('RGB').crop((58, 865, 1022, 1177)).save(p)
-    return p.as_uri()
-
-
-def shot_html(i, name, eb, glow, hd, sub, note):
+def shot_html(name, eb, glow, hd, sub, note):
     pools = (f'<div class="pool" style="left:-60px;top:330px;width:660px;height:560px;background:{hx(glow, .30)}"></div>'
              f'<div class="pool" style="left:150px;top:150px;width:240px;height:200px;background:{hx(glow, .16)}"></div>'
              f'<div class="pool" style="left:-120px;top:880px;width:780px;height:220px;background:{hx("#F5A957", .10)}"></div>')
     extra = ''
-    if name.startswith('07_마이_4'):  # 잠금 + the verified backup card floating over it
-        extra = (f'<img class="float" src="{backup_card()}" style="left:34px;top:700px;width:472px">')
+    if name == 'phone_08_lock':  # 잠금 + the 마이 › 자동 백업 card floating over it
+        extra = f'<img class="float" src="{cap("phone_08_backup_card")}" style="left:34px;top:740px;width:472px;border-radius:26px">'
     nt = f'<div class="note"><span>{note}</span></div>' if note else ''
     body = (f'<div class="room"></div>{pools}<div class="grain"></div>'
             f'<div class="cap"><div class="eb"><i style="background:{glow};box-shadow:0 0 10px {glow}"></i>{eb}</div>'
             f'<div class="hd">{hd}</div><div class="sub">{sub}</div></div>'
-            f'<div class="phone"><div class="scr" style="background-image:url({screen_src(name)})"></div></div>{extra}{nt}')
+            f'<div class="phone"><div class="scr" style="background-image:url({cap(name)})"></div></div>{extra}{nt}')
     return page(W, H, body, SHOT_CSS, blur=70)
+
+
+# ---------- tablet screenshots (1280x800 CSS px @2x = 2560x1600, landscape) ----------
+TW, TH = 1280, 800
+TAB_CSS = SHOT_CSS.replace('top:58px', 'top:44px') + """
+.tab{position:absolute;left:50%;top:206px;width:1000px;margin-left:-500px;padding:10px;border-radius:36px;
+  background:linear-gradient(160deg,#3B3456,#221D36 40%,#17142A);z-index:2;
+  box-shadow:0 0 0 1px rgba(255,255,255,.07) inset,0 40px 80px rgba(6,4,16,.55),0 0 0 1.5px #0E0C1A}
+.tab .scr{width:980px;height:612.5px;border-radius:26px;overflow:hidden;background:#1C1830 top/100% auto no-repeat}
+"""
+
+
+def tablet_html(name, eb, glow, hd, sub):
+    pools = (f'<div class="pool" style="left:80px;top:300px;width:1120px;height:520px;background:{hx(glow, .28)}"></div>'
+             f'<div class="pool" style="left:470px;top:70px;width:340px;height:180px;background:{hx(glow, .16)}"></div>')
+    body = (f'<div class="room"></div>{pools}<div class="grain"></div>'
+            f'<div class="cap"><div class="eb"><i style="background:{glow};box-shadow:0 0 10px {glow}"></i>{eb}</div>'
+            f'<div class="hd">{hd}</div><div class="sub">{sub}</div></div>'
+            f'<div class="tab"><div class="scr" style="background-image:url({cap(name)})"></div></div>')
+    return page(TW, TH, body, TAB_CSS, blur=80)
 
 
 # ---------- feature graphic (1024x500 @1, rendered @2 then downscaled) ----------
@@ -150,12 +163,18 @@ def feature_html():
     return page(1024, 500, body, FG_CSS, blur=50)
 
 
-def preview_sheet(shots, fg):
+def preview_sheet(shots, fg, tabs):
     cols, tw, gap = 4, 380, 36
     th = round(tw * 1920 / 1080)
     fw = cols * tw + (cols - 1) * gap
     fh = round(fw * 500 / 1024)
-    sheet = Image.new('RGB', (fw + gap * 2, gap + fh + gap + 2 * (th + gap)), (20, 17, 36))
+    pw = (fw - gap) // 2
+    ph = round(pw * 1600 / 2560)
+    top = gap * 2 + fh + 2 * (th + gap)
+    sheet = Image.new('RGB', (fw + gap * 2, top + 2 * (ph + gap)), (20, 17, 36))
+    for i, p in enumerate(tabs):
+        r, c = divmod(i, 2)
+        sheet.paste(Image.open(p).resize((pw, ph), Image.LANCZOS), (gap + c * (pw + gap), top + r * (ph + gap)))
     sheet.paste(Image.open(fg).resize((fw, fh), Image.LANCZOS), (gap, gap))
     for i, p in enumerate(shots):
         r, c = divmod(i, cols)
@@ -177,21 +196,31 @@ if __name__ == '__main__':
     TMP.mkdir(exist_ok=True)
     (STORE / 'screenshots').mkdir(exist_ok=True)
     shutil.copy(CHAR / 'app_icon/final_A/playstore_512.png', STORE / 'icon_512.png')
-    only = sys.argv[1:]  # e.g. `make_store.py 3 fg`
+    only = sys.argv[1:]  # e.g. `make_store.py 3 t2 fg`
     jobs, shots = [], []
     for i, s in enumerate(SHOTS, 1):
         p = STORE / f'screenshots/screenshot_{i:02d}.png'
         shots.append(p)
         if not only or str(i) in only:
-            jobs.append((shot_html(i, *s), str(p), W, H, False, 2))
+            jobs.append((shot_html(*s), str(p), W, H, False, 2))
+    (STORE / 'screenshots_tablet').mkdir(exist_ok=True)
+    tabs = []
+    for i, t in enumerate(TABLET, 1):
+        p = STORE / f'screenshots_tablet/tablet_{i:02d}.png'
+        tabs.append(p)
+        if not only or f't{i}' in only:
+            jobs.append((tablet_html(*t), str(p), TW, TH, False, 2))
     fg = STORE / 'feature_graphic.png'
     if not only or 'fg' in only:
         jobs.append((feature_html(), str(fg), 1024, 500, False, 2))
     O.render_many(jobs, workers=6)
     for p in shots:
         to_rgb(p, (1080, 1920))
+    for p in tabs:
+        to_rgb(p, (2560, 1600))
     to_rgb(fg, (1024, 500))
-    print(preview_sheet(shots, fg))
+    print(preview_sheet(shots, fg, tabs))
     shutil.rmtree(TMP, ignore_errors=True)
     assert Image.open(fg).size == (1024, 500) and Image.open(fg).mode == 'RGB'
     assert all(Image.open(p).size == (1080, 1920) for p in shots)
+    assert all(Image.open(p).size == (2560, 1600) for p in tabs)
