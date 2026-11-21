@@ -51,7 +51,13 @@ object SyncScheduler {
     private val online = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 
     fun afterSave(context: Context) = enqueue(context, pushOnly = true)
+    @Volatile private var lastOpen = 0L
+
+    /** Every return to the foreground pulls (not just cold start); 60s throttle so app start + Activity.onStart don't double up. */
     fun onAppOpen(context: Context) {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (lastOpen != 0L && now - lastOpen < 60_000) return
+        lastOpen = now
         enqueue(context, pushOnly = false)
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             DAILY, ExistingPeriodicWorkPolicy.KEEP,

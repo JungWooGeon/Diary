@@ -26,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.compose.runtime.CompositionLocalProvider
@@ -52,6 +53,7 @@ import com.pass.diary.core.security.LockManager
 import com.pass.diary.core.security.LockScreen
 import com.pass.diary.core.security.PinRecovery
 import com.pass.diary.core.sync.DriveAuth
+import com.pass.diary.core.sync.SyncScheduler
 import com.pass.diary.core.sync.SyncLocalStore
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -211,6 +213,8 @@ class MainActivity : FragmentActivity() {
     override fun onStart() {
         super.onStart()
         lock.onForeground(vm.settings.value?.relockAfterSec ?: Settings().relockAfterSec)
+        // Pull what the web / another phone wrote while we were in the background.
+        lifecycleScope.launch { if (syncStore.meta(DriveAuth.META_ACCOUNT) != null) SyncScheduler.onAppOpen(applicationContext) }
     }
 
     /** Also resumes an immediate update left in progress (Play's recommended onResume check). */
