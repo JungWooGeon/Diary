@@ -222,7 +222,7 @@ fun ChatScreen(onBack: () -> Unit, onComposed: (String) -> Unit, onWake: () -> U
         Column(Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
             OdTopBar(
                 title = "온이와 대화로 쓰기", subtitle = "온이(AI) · 이 폰 안에서만 대화해요",
-                left = { IconBtn(OdIcon.Back, back, "뒤로") }, right = { IconBtn(OdIcon.More, {}, "더보기") },
+                left = { IconBtn(OdIcon.Back, back, "뒤로") },
             )
             Row(Modifier.padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 repeat(max) { i -> Box(Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(if (i < asked) glow else c.line)) }

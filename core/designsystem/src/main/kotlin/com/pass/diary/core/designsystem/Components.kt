@@ -446,10 +446,13 @@ fun DayLightStrip(marks: List<DayMark>, modifier: Modifier = Modifier, height: D
         if (labels && pts.isNotEmpty()) {
             androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 6.dp).height(34.dp)) {
                 val w = maxWidth
-                pts.forEach { (x, m) ->
+                // Records close in time would print their labels on top of each other: the newest one keeps its label.
+                var nextX = Float.MAX_VALUE
+                val shown = pts.reversed().filter { (x, _) -> ((nextX - x) * w.value >= 60f).also { if (it) nextX = x } }
+                shown.forEach { (x, m) ->
                     val names = m.emotions.sortedByDescending { it.intensity }.joinToString("·") { it.key.label }
                     Column(
-                        Modifier.offset(x = (w * x) - 50.dp).width(100.dp),
+                        Modifier.offset(x = ((w * x) - 50.dp).coerceIn(0.dp, maxOf(0.dp, w - 100.dp))).width(100.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(names, style = OdType.caption2.copy(fontWeight = FontWeight.Bold), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)

@@ -16,12 +16,17 @@ import kotlinx.coroutines.launch
  * Debug only: one entry with a given body (Korean can't be typed through `adb input`), to check the 답장 flow.
  *   adb shell am broadcast -n com.pass.diary/.DebugAiReceiver --es id g1-joy --es body '오늘 ...' [--es emotion joy]
  *   adb shell am start -n com.pass.diary/.MainActivity --es nav reply:g1-joy
+ * Or just put Korean on the clipboard to paste into a real field: --es clip '오늘 ...'
  */
 @AndroidEntryPoint
 class DebugAiReceiver : BroadcastReceiver() {
     @Inject lateinit var entries: EntryRepository
 
     override fun onReceive(context: Context, intent: Intent) {
+        intent.getStringExtra("clip")?.let {
+            context.getSystemService(android.content.ClipboardManager::class.java).setPrimaryClip(android.content.ClipData.newPlainText("debug", it))
+            return
+        }
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
