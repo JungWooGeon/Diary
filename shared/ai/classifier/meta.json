@@ -1,7 +1,7 @@
 {
  "version": 1,
  "base": "monologg/koelectra-small-v3-discriminator (Apache-2.0)",
- "train": "KOTE (MIT) + diary_train (self-written)",
+ "train": "KOTE (MIT) + diary_train (self-written) + distill (Gemma 4 E4B generated+labeled, Apache-2.0)",
  "maxLen": 192,
  "inputs": [
   "input_ids",
@@ -10,26 +10,26 @@
  "output": "logits[21] -> sigmoid",
  "thresholds": {
   "joy": 0.35,
-  "proud": 0.225,
-  "excited": 0.375,
-  "grateful": 0.35,
+  "proud": 0.325,
+  "excited": 0.325,
+  "grateful": 0.325,
   "comfy": 0.3,
-  "serene": 0.325,
-  "relieved": 0.35,
+  "serene": 0.25,
+  "relieved": 0.325,
   "light": 0.3,
-  "flutter": 0.375,
-  "love": 0.375,
-  "hope": 0.375,
-  "miss": 0.375,
-  "sad": 0.4,
-  "down": 0.275,
-  "lonely": 0.275,
-  "hurt": 0.35,
-  "tired": 0.25,
-  "anxious": 0.275,
-  "annoyed": 0.325,
-  "angry": 0.275,
-  "unsure": 0.35
+  "flutter": 0.3,
+  "love": 0.25,
+  "hope": 0.325,
+  "miss": 0.45,
+  "sad": 0.3,
+  "down": 0.45,
+  "lonely": 0.325,
+  "hurt": 0.475,
+  "tired": 0.35,
+  "anxious": 0.4,
+  "annoyed": 0.525,
+  "angry": 0.225,
+  "unsure": 0.3
  },
  "unsureFloor": 0.1,
  "lexicon": {
@@ -68,16 +68,16 @@
  "decision": "after lexicon boost: if max emotion p < unsureFloor or p(unsure) > max emotion p -> [unsure]; else the top emotion plus every other key with p >= thresholds[key], sorted by p, max 3",
  "eval": {
   "n": 330,
-  "top1GroupAcc_2fold": 0.561,
+  "top1GroupAcc_2fold": 0.664,
   "groupF1_2fold": {
-   "bright": 0.564,
-   "calm": 0.558,
-   "flutter": 0.636,
-   "low": 0.578,
-   "worn": 0.593,
-   "unsure": 0.362
+   "bright": 0.625,
+   "calm": 0.677,
+   "flutter": 0.655,
+   "low": 0.652,
+   "worn": 0.686,
+   "unsure": 0.313
   },
-  "intensityMAE_2fold": 0.72,
-  "intensityWithin1_2fold": 0.884
+  "intensityMAE_2fold": 0.66,
+  "intensityWithin1_2fold": 0.913
  }
 }
