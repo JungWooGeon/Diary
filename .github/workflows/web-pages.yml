@@ -1,4 +1,3 @@
-# Copy to .github/workflows/web-pages.yml (pushing it needs a token with the `workflow` scope).
 name: Web (GitHub Pages)
 
 on:
