@@ -105,24 +105,30 @@ fun interface ClassifierModel {
 }
 
 /**
- * LiteRT (TFLite) model.tflite, signature "classify": int32 input_ids + attention_mask [1, maxLen] -> output_0 [1, 21].
+ * LiteRT (TFLite) model.tflite, signature "classify": int32 input_ids + attention_mask [1, maxLen] -> logits [1, 21] + embedding [1, 256].
  * The graph has one fixed length, so ids are right-padded with 0 and masked out (tools/classifier/export_tflite.py).
+ * One run gives both outputs; [SentenceEmbedder] shares this instance (one Interpreter, one copy of the weights).
  */
-class LiteRtClassifierModel(modelBytes: ByteArray) : ClassifierModel, AutoCloseable {
+class LiteRtClassifierModel(modelBytes: ByteArray) : ClassifierModel, EmbeddingModel, AutoCloseable {
     private val interpreter = Interpreter(
         ByteBuffer.allocateDirect(modelBytes.size).order(ByteOrder.nativeOrder()).put(modelBytes).apply { rewind() },
     )
     private val len = interpreter.getInputTensorFromSignature("input_ids", SIGNATURE).shape()[1]
-    private val output = interpreter.getSignatureOutputs(SIGNATURE).single()
+    private val outputs = interpreter.getSignatureOutputs(SIGNATURE).toList()
+    private val logitsName = if ("logits" in outputs) "logits" else outputs.single() // pre-embedding model: one "output_0"
+    val hasEmbedding get() = "embedding" in outputs
 
     @Synchronized // one Interpreter = one set of buffers
-    override fun logits(inputIds: LongArray): FloatArray {
+    private fun run(inputIds: LongArray): Map<String, FloatArray> {
         val ids = IntArray(len); val mask = IntArray(len)
         for (i in 0 until minOf(len, inputIds.size)) { ids[i] = inputIds[i].toInt(); mask[i] = 1 }
-        val out = arrayOf(FloatArray(interpreter.getOutputTensorFromSignature(output, SIGNATURE).shape()[1]))
-        interpreter.runSignature(mapOf("input_ids" to arrayOf(ids), "attention_mask" to arrayOf(mask)), mapOf(output to out), SIGNATURE)
-        return out[0]
+        val out = outputs.associateWith { arrayOf(FloatArray(interpreter.getOutputTensorFromSignature(it, SIGNATURE).shape()[1])) }
+        interpreter.runSignature(mapOf("input_ids" to arrayOf(ids), "attention_mask" to arrayOf(mask)), out, SIGNATURE)
+        return out.mapValues { it.value[0] }
     }
+
+    override fun logits(inputIds: LongArray): FloatArray = run(inputIds).getValue(logitsName)
+    override fun embedding(inputIds: LongArray): FloatArray = run(inputIds).getValue("embedding")
 
     override fun close() = interpreter.close()
 
@@ -134,9 +140,9 @@ class LiteRtClassifierModel(modelBytes: ByteArray) : ClassifierModel, AutoClosea
  * If the model files are missing (or LiteRT fails to load), falls back to [KeywordEmotionHeuristic].
  */
 class EmotionClassifier(
-    private val model: ClassifierModel?,
-    private val tokenizer: WordPieceTokenizer?,
-    private val labels: List<String>,
+    internal val model: ClassifierModel?,
+    internal val tokenizer: WordPieceTokenizer?,
+    internal val labels: List<String>,
     meta: JsonObject?,
     private val fallback: KeywordEmotionHeuristic = KeywordEmotionHeuristic(),
 ) {

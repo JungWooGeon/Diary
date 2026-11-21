@@ -9,7 +9,12 @@
 | AI Hub 감성 대화 등 | aihub.or.kr | 약관 미확인 | — | ❌ 사용 안 함 |
 | diary_train.jsonl, eval/diary_val.jsonl | 직접 작성 | 자체 | — | ✅ |
 | Gemma 4 E4B (google, GGUF) 생성 일기 + 감정 라벨 `data_src/distill.jsonl` | ai.google.dev/gemma, huggingface.co/google | **Apache-2.0** (Gemma 4) — 출력물 사용 제한 없음 | 가능 | ✅ 증류 학습 데이터 (교사 모델 출력, 2026-11-21 생성). EXAONE·HyperCLOVA 출력은 쓰지 않음 |
-| tools/model-eval/data/diaries.json (30편) | 직접 작성 | 자체 | — | ✅ 검증셋에 포함 (m01–m30) |
+| tools/model-eval/data/diaries.json (30편) | 직접 작성 | 자체 | — | ✅ 검증셋에 포함 (m01–m30), 임베딩 검색 확인용 문서 |
+| data_src/embed_check.json (쌍 40 + 질의 25) | 직접 작성 | 자체 | — | ✅ 문장 임베딩 품질 확인 (2026-11-22) |
+| 문장 임베딩 출력 (model.tflite `embedding`) | 위 KoELECTRA 미세조정 모델의 중간층 | Apache-2.0 (KoELECTRA) | 가능 | ✅ 새 가중치·새 데이터 없음 → 고지 추가 없음 |
+| intfloat/multilingual-e5-small | huggingface.co/intfloat/multilingual-e5-small | **MIT** (HF 태그, 2026-11-22) | 가능 | ⏸ 조사만 (임베딩 대안 후보, 받지 않음) |
+| sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 | huggingface.co/sentence-transformers | Apache-2.0 (HF 태그) | 가능 | ⏸ 조사만 |
+| BM-K/KoMiniLM, bongsoo/albert-small-kor-sbert-v1.1 | huggingface.co | **표기 없음** (HF API license 태그 없음, 2026-11-22) | 불명 | ❌ 라이선스 불명확 |
 
 앱 고지(오픈소스 라이선스 화면)에 넣을 것:
 - KOTE: MIT 전문 + "Copyright (c) 2022 Jeon Duyoung"

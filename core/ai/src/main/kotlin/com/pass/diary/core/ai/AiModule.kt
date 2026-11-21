@@ -14,6 +14,7 @@ object AiModule {
     @Provides @Singleton fun assets(@ApplicationContext c: Context): AssetSource = AndroidAssets(c)
     @Provides @Singleton fun crisis(a: AssetSource) = CrisisDetector(a.json("ai/crisis.json")!!.obj)
     @Provides @Singleton fun classifier(a: AssetSource) = EmotionClassifier.load(a)
+    @Provides @Singleton fun embedder(c: EmotionClassifier) = SentenceEmbedder.of(c)
     @Provides @Singleton fun tags(a: AssetSource) = TagExtractor(a.json("ai/tags.json")!!.obj)
     @Provides @Singleton fun template(a: AssetSource) =
         TemplateReplyEngine(a.json("library/replies.json")!!.arr, a.json("library/questions.json")?.arr)

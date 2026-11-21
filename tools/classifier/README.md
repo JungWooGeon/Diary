@@ -13,7 +13,38 @@ cp -r out/model out/model_stage1
 .venv/bin/python -I export.py && .venv-tfl/bin/python -I export_tflite.py   # meta.json에 조정값 반영, 참조 테스트 다시 생성
 .venv-tfl/bin/python -I infer.py "오늘 너무 피곤했다"   # 참조 추론 (Kotlin이 따라 할 것)
 python3 test_crisis.py              # 위기 감지 참조 구현 + 테스트
+.venv-tfl/bin/python -I embed_check.py tflite   # 문장 임베딩 품질 (아래 표). 인자 없이 돌리면 PyTorch 층별 비교
 ```
+
+## 문장 임베딩 (model.tflite 두 번째 출력 `embedding[256]`)
+
+같은 그래프·같은 실행에서 logits와 함께 나온다: 4~6층 은닉 상태를 마스크 평균 → L2 정규화 (가중치 추가 없음).
+모델 15,748,704 → 15,750,704 바이트(+2KB). 기존 logits는 검증셋 330편에서 옛 모델과 **비트 단위로 같다**(max diff 0.0), `classifier_reference.json` 변화 없음.
+
+마지막 층(12층)은 감정만 안다: 같은 감정·다른 상황 쌍을 못 가른다(hardAUC 0.50). 그래서 중간층을 쓴다.
+`embed_check.py` (직접 쓴 쌍 40개: 비슷 20 / 다름 20 중 같은 감정·다른 상황 10, 질의 25개 → model-eval 일기 30편):
+
+| 방법 | 쌍 AUC | hardAUC | 비슷/다름 평균 cos | 검색 hit@3 (단어 겹침 질의 15 / 바꿔 말한 질의 10) | MRR |
+|---|---|---|---|---|---|
+| tflite int8 임베딩 | 0.892 | 0.785 | 0.76 / 0.55 | 0.47 / 0.70 (전체 0.56) | 0.37 |
+| 임베딩 0.6 + 글자 bigram 겹침 0.4 (앱 `searchScore`) | — | — | — | 0.80 / 0.70 (전체 0.76) | 0.73 |
+| bigram 겹침만 | — | — | — | 0.80 / 0.30 (전체 0.60) | 0.60 |
+| (참고) PyTorch 12층 mean (질의 15개 때) | 0.718 | 0.500 | 0.67 / 0.42 | 0.27 | 0.29 |
+
+- 비슷했던 날(일기↔일기): 임베딩만으로 쓸 만함 (AUC 0.89).
+- 뜻으로 검색: 임베딩만은 약하고(짧은 질의가 짧은 일기 d15·d16 쪽으로 쏠림), bigram 겹침과 섞어야 한다. 섞으면 두 종류 질의 모두 7~8/10 (가중치 0.3이면 0.73 / 0.80).
+- 못 찾는 예: "엄마랑 싸운 날" → d10(엄마가 사촌언니랑 비교, '싸움' 단어 없음)은 어느 방법도 top-3 밖.
+
+더 좋은 임베딩이 필요해지면 (조사만, 받지 않음 — 원본이 수백 MB):
+
+| 후보 | 라이선스 | 크기 | 메모 |
+|---|---|---|---|
+| intfloat/multilingual-e5-small | MIT | 118M 파라미터(대부분 25만 어휘 임베딩), int8 ~118MB | 한국어 어휘만 남기면(~3만) ~33M → int8 ~33MB. 30MB 목표에 걸침, 별도 모델이라 앱 +33MB |
+| sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 | Apache-2.0 | 같은 구조 118M | 위와 같은 가지치기 필요, e5보다 검색 품질 낮다는 평이 많음 |
+| BM-K/KoMiniLM (23M) | HF에 라이선스 표기 없음 | int8 ~23MB | 문장 임베딩 학습 전 인코더 + KLUE-BERT 증류 → 라이선스 불명확, 제외 |
+| bongsoo/albert-small-kor-sbert, jhgan/ko-sbert-nli 등 | 표기 없음 / KorNLI(CC BY-SA) 학습 | | 제외 |
+
+권장: 지금은 내장 임베딩 + bigram 혼합으로 출시하고, 실제 검색 실패 로그(기기 안)에서 부족하면 e5-small 어휘 가지치기 int8을 별도 실험.
 
 ## KOTE 44 → 우리 21 키 (`kote_map.json`)
 

@@ -8,6 +8,7 @@
   "attention_mask"
  ],
  "output": "logits[21] -> sigmoid",
+ "embedding": "embedding[256]: masked mean of hidden layers 4-6, L2-normalised (cosine = dot); same graph/run as logits",
  "thresholds": {
   "joy": 0.35,
   "proud": 0.325,
