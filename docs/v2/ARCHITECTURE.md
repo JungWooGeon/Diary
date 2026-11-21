@@ -14,7 +14,6 @@
  │   ├ 위기 감지 규칙 + 분류기                        │
  │   ├ 태그 추출 (형태소 + 사전)               PC 웹 (나중)
  │   └ 답장·질문·회고 문구 라이브러리
- ├ 대화형 AI (선택 다운로드, ~2.6GB): Gemma 4 E2B on LiteRT-LM
  ├ 음성 인식: Android 기기 내 인식기
  ├ Play Billing (일회성 premium) · AdMob
  └ Firebase 무료 기능만: Crashlytics · Remote Config · (Analytics 최소)
@@ -24,7 +23,7 @@
 - 일기와 사진은 사용자 본인 드라이브 용량에 저장된다.
 - AI는 폰 안에서 돈다.
 - Firebase는 무료 제품만 쓴다.
-- 모델 파일은 Hugging Face 공개 저장소나 Play Asset Delivery로 내려준다 (§5.4).
+- 내려받는 AI 모델이 없다. 필요한 AI 파일은 모두 앱에 들어 있다.
 
 ### 1.1 기술 선택과 이유
 
@@ -32,7 +31,7 @@
 |---|---|---|
 | 저장 | **Room을 원본으로 (로컬 우선)** | Firestore 단독 저장: 무료 한도를 넘으면 과금되고, 사진 저장에는 Storage(유료 요금제)가 필요함 |
 | 백업·동기화 | **Google 드라이브 appDataFolder** | 우리 서버 없이 무제한으로 확장되고, "내 일기는 내 드라이브에만"이라 개인정보 측면에서도 장점. 웹도 브라우저에서 Drive API로 같은 폴더에 접근 가능. 실시간 동기화는 아니지만 일기 앱에는 충분함 |
-| 생성형 AI | **Gemma 4 E2B + LiteRT-LM (선택 다운로드)** | Gemini Nano(ML Kit GenAI): 약관상 18세 미만이 쓸 수 있는 앱에서 사용 금지, Galaxy A·S24 이하 미지원. EXAONE: 비상업 라이선스. 1B 이하 모델: 한국어 공감 답장이 어색함. Gemma 4 E2B는 Apache 2.0이고 Android와 웹(LiteRT-LM Web)을 모두 지원 |
+| 생성형 AI | **쓰지 않는다. 답장·질문은 준비된 문장 라이브러리(§5.2)** | Gemma 4 E2B + LiteRT-LM(약 2.6GB 선택 다운로드)을 붙였다가 2026-11-22에 뺐다: 수 GB 다운로드는 사용자가 받지 않는다. Gemini Nano(ML Kit GenAI): 약관상 18세 미만이 쓸 수 있는 앱에서 사용 금지, Galaxy A·S24 이하 미지원. 1B 이하 모델: 한국어 공감 답장이 어색함 |
 | 감정 분류 | **소형 인코더(KoELECTRA-small/KcELECTRA) 파인튜닝 → LiteRT(TFLite) int8** | LLM으로 분류하면 느리고 저사양 폰에서 못 돌림. Android는 LiteRT 인터프리터(arm64 4.5MB)로 실행: ONNX Runtime(arm64 36MB)을 빼서 APK가 약 30MB 줄었다. 같은 학습 결과에서 ONNX도 계속 뽑아 둔다(`tools/classifier/export.py`) — 웹은 onnxruntime-web(검증됨)과 LiteRT.js 중 v2.2 때 고른다 |
 | 위기 감지 | **규칙(사전·변형·초성) + 분류기, 놓치지 않는 쪽으로** | LLM에만 맡기면 놓치거나 출력이 막힘 |
 | 음성 인식 | **기기 내 인식기 (`createOnDeviceSpeechRecognizer`, API 31+)**, 지원하지 않으면 시스템 인식기 | Whisper는 140MB 이상 추가. 시스템 인식기가 없는 기기가 많다고 확인되면 v2.1에 선택 다운로드로 추가 |
@@ -49,7 +48,7 @@ entry        id(UUID), date('2026-11-21'), time('22:41'), createdAt, updatedAt, 
 entry_emotion entryId, emotionKey('joy','calm',…,'unsure'), intensity(1..5)
 entry_tag    entryId, kind('person'|'place'|'activity'|'free'), value, auto(bool)
 photo        id, entryId, localPath, w, h, driveFileId?
-reply        entryId, text, source('template'|'llm'), templateId?, createdAt, reported(bool)
+reply        entryId, text, source('template'|'llm'), templateId?, createdAt, reported(bool)   # 'llm'은 예전 데이터 읽기용, 새로 쓰지 않음
 chat_message entryId, role, text, at
 emotion_def  key, name, groupKey, colorHex, order, custom(bool)     ← 사용자가 이름·색 수정 가능
 collection   itemKey, unlockedAt                                    ← 빛 팔레트·소품
@@ -107,11 +106,10 @@ appDataFolder/
 
 ```
 본문 저장
- → ① 위기 감지 (규칙 → 분류기)  ── 걸리면: 답장 생성 중단, 안내 카드(109 · 1577-0199) 표시, 끝
+ → ① 위기 감지 (규칙 → 분류기)  ── 걸리면: 답장 중단, 안내 카드(109 · 1577-0199) 표시, 끝
  → ② 감정 분류기: 감정·강도 추천 (사용자가 직접 고른 감정이 있으면 그것을 우선)
  → ③ 태그 추출: 사람·장소·활동 후보 → 칩으로 제안
  → ④ 답장
-      ├ 대화형 AI가 있고 기기 여유가 있으면 → LLM 답장 (§5.3) → 후처리 검사 실패 시 ↓
       └ 문구 라이브러리 답장 (§5.2)
 ```
 
@@ -129,40 +127,11 @@ appDataFolder/
 - 답장 라이브러리는 개발할 때 한 번 대량으로 쓰고, 사람이 직접 검수해서 앱에 넣는다. 운영비는 0원이다. 말투 규칙은 온이 README를 따른다(다정한 반말, 진단·충고 금지).
 - 라이선스 확인 후 사용: KOTE 데이터, 인코더 모델, 형태소 분석기(LGPL이면 동적 링크 조건 확인). AI Hub 데이터는 약관을 확인하기 전에는 쓰지 않는다.
 
-### 5.3 대화형 AI ("온이 깨우기", 선택)
+### 5.3 대화형 AI (없앰)
 
-- **모델** (한국어 비교 실험 결과: `tools/model-eval/REPORT.md`, 10개 모델·일기 30편)
-  - **기본**: Gemma 4 E2B (Apache 2.0)
-    - 2B급 중 한국어 자연스러움 1위(4.73/5), 답장 4.40/5
-    - 폰 예상 속도는 답장 하나에 3~5초
-  - **고급 온이**: Gemma 4 E4B (Apache 2.0)
-    - 전 과제 1위, 답장 4.70/5
-    - RAM 12GB 이상 플래그십용, 약 5GB, 답장 하나에 5~9초(스트리밍)
-  - 탈락한 모델
-    - 한국어 특화 Kanana 1.5: 훈계형 답장, 상황 오독
-    - HCX SEED: 자체 라이선스 의무, JSON이 약함
-    - EXAONE: 비상업 라이선스
-    - 소형 Qwen: 외국어가 섞임
-- **조건**: 기본 모델은 RAM 8GB 이상, 고급 모델은 12GB 이상이 필요하다. 여유 공간도 확인한다. 조건이 안 맞는 폰에는 메뉴를 보여 주지 않고 기본 AI만 쓴다.
-- **받기**: 마이 → 온이 깨우기 → "약 2.6GB, Wi-Fi 권장". 진행률, 이어받기, 저장 공간 사전 확인을 둔다. 받는 동안에도 앱은 정상 동작한다. 지우기 버튼도 둔다.
-- **쓰는 곳**: 답장, 말로 쓰기 정리, 대화로 쓰기, 개인화 질문, 회고 글, 요약 제목
-- **긴 기간 회고**: 일기를 저장할 때 한 줄 요약을 만들어 두고, 회고 때는 그 요약들만 넣는다. 컨텍스트 한도와 속도 때문이다.
-- **품질 장치**:
-  - 프롬프트 설정: 시스템 지시 + 좋은 답장 예시 5개, 낮은 temperature, 출력 길이 제한
-    - 실험에서 드러난 약점 세 가지(반어 오독, 조언형 끝맺음, 주어 혼동)에 대한 규칙과 예시를 넣는다
-  - 감정 JSON: 문법을 강제해 디코딩하고, 목록에 없는 감정은 바꿔 준다(걱정→불안, 감동→감사)
-  - 후처리 검사: 존댓말 섞임, 반복, 일기에 없는 사람 이름, 진단·충고 표현, 길이를 확인한다. 하나라도 걸리면 라이브러리 답장으로 바꾼다.
-  - 출시 전에 실제 일기 100건 이상으로 답장을 직접 검수한다. 기준에 못 미치면 v2.0에서는 대화형 AI를 "베타"로 표시한다.
-  - 여유가 되면 반말 공감 말투로 LoRA 미세조정을 한다(Apache 2.0이라 허용).
-- **포그라운드 전용**: 저장 직후 답장 화면에서 생성하고, 생성 중에는 온이가 "답장 쓰는 중" 애니메이션을 보인다. 목표는 중급기 기준 10초 안팎이며, 실측해야 한다.
-
-### 5.4 모델 배포
-
-- **1순위**: Hugging Face LiteRT Community의 공개 파일을 앱이 직접 받는다. 우리 호스팅 비용이 없다.
-  - 위험: 파일 경로가 바뀔 수 있다. 그래서 URL과 체크섬을 Remote Config로 관리한다.
-- **2순위**: Play Asset Delivery on-demand 팩. 팩 하나 1.5GB 한도라 2개로 나눈다.
-  - Play가 배포하므로 안정적이다. 다만 앱 업데이트와 묶이는 점을 검토해야 한다.
-- 분류기와 사전 같은 기본 AI는 앱에 포함한다(+30MB 안팎).
+- Gemma 4 E2B/E4B를 LiteRT-LM으로 돌리는 "온이 깨우기"(약 2.6GB 선택 다운로드)를 만들었다가 2026-11-22에 뺐다. 수 GB 다운로드는 하지 않는다.
+- 그래서 답장, 대화로 쓰기 질문, 제목은 모두 기기 안의 규칙·라이브러리로 만든다. 말로 쓰기는 받아쓴 문장을 그대로 넣는다(AI 다듬기 없음).
+- 실험 기록은 `tools/model-eval/`에 남아 있다(REPORT.md, REPORT_v2.md).
 
 ## 6. 음성 인식
 
@@ -199,7 +168,6 @@ appDataFolder/
 - 데이터는 드라이브 JSON 스키마(§2.2)를 단일 기준으로 삼는다. Android 전용 형식을 만들지 않는다.
 - 빛 섞기 공식과 감정 정의는 플랫폼 중립 명세로 두고, 테스트 벡터 JSON을 함께 둔다.
 - 감정 분류기: 앱은 LiteRT(`model.tflite`), 웹용으로 ONNX(`tools/classifier/export.py` → `out/model_int8.onnx`, onnxruntime-web 호환)도 같은 체크포인트에서 뽑는다. 웹에서 LiteRT.js(TF.js 후속)를 쓰면 같은 `.tflite`를 그대로 쓸 수 있어 v2.2 때 크기·속도를 비교해 고른다.
-- 대화형 AI는 LiteRT-LM 형식을 쓴다(LiteRT-LM Web은 WebGPU로 Gemma 4 E2B를 지원하고, 아직 미리보기 단계).
 - 답장·질문 라이브러리는 JSON 리소스로 둔다. Kotlin 코드 안에 넣지 않는다.
 - 참고: Chrome 내장 AI는 한국어를 지원하지 않아 쓰지 않는다.
 
@@ -212,7 +180,7 @@ app/              셸(하단 탭), 내비게이션, 잠금 게이트, 강제 업
 core/model        Entry, Emotion, Light, Reply …
 core/data         Room, 설정(DataStore), 레포지토리
 core/sync         Drive appData 업·다운로드, WorkManager, 검증
-core/ai           위기 감지, 감정 분류기(LiteRT), 태그, 답장 라이브러리, LLM 런타임(LiteRT-LM), 모델 다운로드
+core/ai           위기 감지, 감정 분류기(LiteRT), 태그, 답장 라이브러리
 core/light        LightMixer(OKLab), 감정 정의, 색 토큰
 core/designsystem 테마, 온이 캐릭터(Compose 렌더 + 애니메이션), 컴포넌트
 core/billing-ads  퍼스널컬러 core/ads 이식
@@ -223,7 +191,7 @@ shared/           schema/*.json, light-test-vectors.json, reply-library/*.json  
 tools/            classifier/(학습·변환 스크립트), reply-library/(작성·검수 도구)
 ```
 
-- 기술 스택: Kotlin 2.x, Compose, Hilt(KSP), Room, WorkManager, LiteRT(TFLite 인터프리터), LiteRT-LM, Credential Manager, Google Drive REST, AdMob, Play Billing, targetSdk 36, edge-to-edge.
+- 기술 스택: Kotlin 2.x, Compose, Hilt(KSP), Room, WorkManager, LiteRT(TFLite 인터프리터), Credential Manager, Google Drive REST, AdMob, Play Billing, targetSdk 36, edge-to-edge.
 
 ## 11. 개인정보·안전
 
@@ -231,7 +199,7 @@ tools/            classifier/(학습·변환 스크립트), reply-library/(작�
   - 그래서 개인정보 국외 이전·처리위탁 이슈가 클라우드 AI 방식보다 훨씬 작다. Google 드라이브는 사용자 본인 계정이다.
 - Play 데이터 보안 양식: 수집 없음에 가깝다. 다만 광고 SDK(AdMob)가 기기 식별자를 수집하므로 그 부분은 신고한다.
 - 만 14세 이상만 가입하도록 온보딩에서 확인한다.
-- AI 결과 표시, 신고 버튼, 위기 안내, 의료 아님 고지를 둔다.
+- 답장 신고 버튼, 위기 안내, 의료 아님 고지를 둔다. 답장은 생성물이 아니라 준비된 문장이라 "AI" 표기는 하지 않는다("온이의 한마디").
 
 ## 12. 개발 순서 (병렬)
 
@@ -240,7 +208,7 @@ tools/            classifier/(학습·변환 스크립트), reply-library/(작�
 | A. 앱 뼈대 | 새 코드베이스(같은 앱 ID), Room, 기록·캘린더·잠금 | 오프라인으로 쓰고 다시 열어도 그대로 |
 | B. 이전·백업 | v1 이전, 드라이브 동기화 + 검증 | 실제 v1.1 기기에서 업데이트 후 데이터 보존, 폰 2대 동기화 |
 | C. 기본 AI | 분류기 학습·변환, 위기 사전, 답장 라이브러리 400개 | 일기체 검증셋 정확도, 위기 문장 테스트 100% 감지 |
-| D. 대화형 AI | LiteRT-LM 통합, 다운로드, 프롬프트, 후처리 | **개발폰(갤럭시 노트20, RAM 8GB)에서 속도·품질 실측** |
+| D. 대화형 AI | (2026-11-22 없앰) | — |
 | E. 캐릭터·디자인 | 온이 최종안, 화면 시안 → 구현 | 폰 스크린샷 직접 검수 |
 | F. 수익 | 결제·광고 이식 | 테스트 카드 구매, 재설치 후 복원 |
 
@@ -249,6 +217,6 @@ tools/            classifier/(학습·변환 스크립트), reply-library/(작�
 - [ ] v1 업로드 키 보유 여부
 - [ ] `drive.appdata` 범위가 OAuth 검증 대상인지
 - [ ] KOTE 데이터, 인코더 모델, 형태소 분석기 라이선스 원문
-- [x] Gemma 4 E2B 실측 (2026-11-21, 노트20 SD865·8GB): GPU 모델 로드 14초, 첫 글자 1.9초, 답장 5.0초(p90 5.5초), 17 tok/s, 최대 메모리 2.1GB, 30편 연속 발열 저하 없음, 필터 통과 30/30. CPU는 답장 12.5초 → GPU 기본, CPU 대체. 남은 확인: A 시리즈 중급기
+- [x] ~~Gemma 4 E2B 실측~~ (대화형 AI를 없애 해당 없음. 기록: 2026-11-21, 노트20 SD865·8GB): GPU 모델 로드 14초, 첫 글자 1.9초, 답장 5.0초(p90 5.5초), 17 tok/s, 최대 메모리 2.1GB, 30편 연속 발열 저하 없음, 필터 통과 30/30. CPU는 답장 12.5초 → GPU 기본, CPU 대체. 남은 확인: A 시리즈 중급기
 - [ ] 한국어 기기 내 음성 인식 지원 비율 (삼성 기기)
-- [ ] Play AI 생성 콘텐츠 정책 요건 (신고 기능 등)
+- [x] Play AI 생성 콘텐츠 정책: 생성형 AI가 없어 해당 없음 (신고 기능은 그대로 둠)

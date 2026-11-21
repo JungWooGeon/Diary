@@ -14,7 +14,6 @@
 | 날씨 (선택) | `core/data` `WeatherRepository` → `https://api.open-meteo.com`, `archive-api.open-meteo.com` | 위도·경도를 소수 첫째 자리(약 10km)로 줄인 값과 날짜. 사용자가 날씨를 누를 때만 보내요. |
 | AdMob + UMP | `core/billing-ads` `AdManager`, `AdSlots` | SDK가 직접 수집해요 (아래 표). |
 | Play 결제 | `core/billing-ads` `Billing` | 상품 `premium` 구매 조회와 확정. Google Play가 처리해요. |
-| 대화형 AI 모델 다운로드 (선택) | `core/ai`, `https://huggingface.co/litert-community/` | 파일 요청만 보내요. 사용자 데이터는 보내지 않아요. 상대 서버에는 IP가 보여요. |
 
 **v2에는 없는 것**
 - Firebase(Crashlytics·Analytics·Remote Config)는 v2 빌드에 없어요. `_v1`에만 있어요.
@@ -85,7 +84,7 @@
 
 | 항목 | 판정 | 근거 |
 |---|---|---|
-| 일기 본문의 AI 처리 | 수집 안 함 | 감정 분류(LiteRT), 위기 감지, 태그, 답장(Gemma 4 E2B, LiteRT-LM)이 모두 기기 안에서 돌아요. 서버 AI API가 없어요. |
+| 일기 본문의 AI 처리 | 수집 안 함 | 감정 분류(LiteRT), 위기 감지, 태그, 답장(준비된 문장 라이브러리)이 모두 기기 안에서 돌아요. 서버 AI API도, 내려받는 AI 모델도 없어요. |
 | 오디오 (말로 쓰기) | 수집 안 함 ⚠️ | 기본은 `createOnDeviceSpeechRecognizer`(API 31+)예요. 지원하지 않는 기기에서는 시스템 음성 인식기를 써요. 시스템 인식기(예: Google)는 음성을 자기 서버로 보낼 수 있어요. 다만 그건 OS 서비스가 처리하는 것이고, 앱이 받는 것은 텍스트뿐이에요. 방침에 이 내용을 적어 두었어요. |
 | 사진 선택 | — | Photo Picker를 써서 `READ_MEDIA_*` 권한이 없어요. 사진은 기기에 압축해 저장해요. 드라이브 백업 몫은 위 표에 넣었어요. |
 | 답장 신고 | 수집 안 함 | 신고 내용은 기기에만 남아요 (`ReplyScreen.kt`). |
@@ -110,6 +109,6 @@
    - `CheckRow`가 link 화살표를 그리지만, 눌러도 문서가 열리지 않아요.
    - 방침 URL(`privacy_policy.html`을 올린 주소)을 열도록 연결하고, 마이 화면에도 '개인정보 처리방침' 줄을 추가하세요.
 4. *(정책)* **답장 신고가 기기에만 남아요.**
-   - Play AI 생성 콘텐츠 정책은 앱을 떠나지 않고 신고할 수 있으면 돼요. 지금 구조로도 요건은 충족해요.
+   - 답장은 준비된 문장이라 Play AI 생성 콘텐츠 정책 대상은 아니에요. 신고 버튼은 안전하게 그대로 둬요.
    - 다만 Google은 신고를 받아 필터를 개선하라고 권해요.
    - 원하면 신고 후 "개발자에게도 보내기(이메일, 선택)"를 추가하세요. 이때 일기 본문은 빼고 답장 문구만 보내야 해요.

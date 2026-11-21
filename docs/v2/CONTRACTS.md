@@ -49,8 +49,7 @@ shared/ai/tags.json                    # {people:[...], places:[...], activities
 shared/library/replies.json            # [{id, group, minIntensity, maxIntensity, tags:[...]?, text}]  text 슬롯: {person} {place} {activity}
 shared/library/questions.json          # [{id, group?, tags?, text}]
 shared/library/retro.json              # 회고 문장 템플릿 [{id, kind:'weekly'|'monthly', condition, text}]
-shared/ai/llm/prompts.json             # D가 확정: {version, reply:{system, fewshot[]}, emotions:{...}, tidy:{...}, chat:{...}, title:{...}}
-shared/ai/llm/models.json              # D가 확정: [{id:'e2b'|'e4b', url, sha256, sizeBytes, minRamGb, premium}]
+# shared/ai/llm/{prompts,filters}.json: 앱은 읽지 않는다(2026-11-22 LLM 제거). tools/model-eval, tools/classifier/distill(라벨링)만 쓴다.
 ```
 
 말투: 온이는 다정한 반말, 진단·훈계·조언형 끝맺음 금지, 일기 속 구체적 디테일 1개 언급, 질문은 최대 1개 (`JWG/release/일기장_캐릭터_시안/README.md` 참고).
