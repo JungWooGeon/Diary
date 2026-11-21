@@ -196,7 +196,7 @@ class DebugSeedReceiver : BroadcastReceiver() {
             "oni" to "머리가 맑아지니까 일이 풀린 거네. 그 보고서, 결국 어떻게 됐어?",
         ).forEachIndexed { i, (role, text) -> chat.insert(com.pass.diary.core.data.db.ChatMessageEntity(entryId = "seed-today-3", role = role, text = text, at = i.toLong())) }
         // An untitled draft with no feeling picked: write:seed-draft shows the light following the text and title chips.
-        if (withToday) put(today, "23:10", emptyList(), body = "오늘 민지랑 성수에서 전시 보고 카페 갔다. 사람은 많았는데 그림이 너무 예뻐서 계속 사진 찍었다.\n" +
+        if (withToday) put(today, "23:10", emptyList(), body = "오늘 민지랑 성수에서 전시 구경하고 골목 카페에 갔다. 그림이 너무 예뻐서 한참 서 있었다.\n" +
             "다음 달에 또 가자고 약속했다. 벌써 기다려진다!", id = "seed-draft")
         if (crisis) put(today.minusDays(1), "23:50", listOf(e(DOWN, 5)), body = "요즘 너무 힘들다. 그냥 다 그만두고 죽고 싶다는 생각이 든다.", id = "seed-crisis")
         android.util.Log.i("DebugSeed", "seeded $n entries")

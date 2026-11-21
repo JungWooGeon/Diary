@@ -68,23 +68,29 @@ SHOT_CSS = """
   color:#F4EFE8;background:rgba(28,24,48,.82);box-shadow:0 0 0 1px rgba(255,255,255,.1) inset,0 8px 24px rgba(0,0,0,.35);backdrop-filter:blur(6px)}
 """
 
-# (capture, eyebrow, glow, headline, sub, note)
+# (capture, eyebrow, glow, headline, sub, note, floats). AI eyebrows only on screens where a model does the work (AI_GROWTH §1).
+# A float is a real crop from captures/ laid over the phone: (capture, left, top, width, rotate_deg), CSS px on the 540x960 page.
 SHOTS = [
-    ('phone_01_today', '오늘', '#F5A957', '기분이 빛이 되는 일기장', '무드등 온이가 오늘 마음의 색으로 켜져요', None),
-    ('phone_02_widgets', '1탭 기분', '#EE8BA5', '톡 한 번이면 기록 끝', '홈 화면 위젯에서 1초 만에 남겨요', None),
-    ('phone_03_emotions', '감정 + 강도', '#F4C23E', '마음은 한 가지가 아니니까', '감정 20가지를 골라 강도까지, 빛이 섞여요', None),
-    ('phone_04_reply', '온이의 답장', '#F4C23E', '온이가 답장을 써 줘요', '일기는 폰 안의 AI만 읽어요, 서버 전송 없이', None),
-    ('phone_05_calendar', '무드 캘린더', '#7FC08F', '한 달이 빛으로 물들어요', '날짜마다 그날의 빛, 하루의 흐름까지', None),
-    ('phone_06_report', '리포트', '#7FC08F', '내 마음의 패턴을 알아요', '자주 느낀 감정부터 기분을 바꾼 활동까지', None),
-    ('phone_07_chat', '대화로 쓰기', '#A595CF', '말하듯 쓰는 일기', '온이가 묻고 내가 답하면 한 편의 일기로', None),
-    ('phone_08_lock', '잠금 · 백업', '#F5A957', '내 일기는 나만 봐요', 'PIN·지문 잠금, 내 Google 드라이브에 자동 백업', None),
+    ('phone_01_today', '무드등 온이', '#F5A957', '기분이 빛이 되는 일기장', '글에서 AI가 마음의 색을 읽고, 온이가 그 빛으로 켜져요', None, []),
+    ('phone_02_write', 'AI · 쓰는 동안', '#EE8BA5', '쓰는 동안 빛이 변해요', 'AI가 글에서 마음의 색을 읽고 감정·제목을 추천해요',
+     '감정 AI는 폰 안에서만 돌아요', [('phone_02_ai_row', 22, 652, 496, 0)]),
+    ('phone_03_view', 'AI · 문장 밑줄 · 비슷했던 날', '#7FC08F', '그때는 이렇게 지나갔어', '감정이 진한 문장엔 빛 밑줄, 결이 비슷한 날을 찾아 줘요', None, []),
+    ('phone_04_letter', '주간 온이 편지', '#A595CF', '일요일 밤, 온이의 편지', '이번 주의 빛과 자주 느낀 감정을 편지로 받아요', None, []),
+    ('phone_05_calendar', '무드 캘린더 · AI 검색', '#7FC08F', '한 달이 빛으로 물들어요', '단어가 달라도 뜻이 비슷한 일기를 찾아요',
+     None, [('phone_05_search_card', 46, 612, 448, 0)]),
+    ('phone_06_report', '월간 리포트', '#F4C23E', '내 마음의 패턴을 알아요', 'AI가 고른 이번 달의 한 줄, 기분이 달라진 흐름까지',
+     None, [('phone_06_causes_card', 50, 626, 440, 0)]),
+    ('phone_07_scan', 'AI · 종이 일기 옮기기', '#F5A957', '종이 일기도 옮겨 와요', '찍으면 한국어 글자로 옮기고, 고친 뒤 넣어요',
+     None, [('phone_07_scan_page', 92, 600, 356, -3)]),
+    ('phone_08_lock', '잠금 · 백업', '#F5A957', '내 일기는 나만 봐요', 'PIN·지문 잠금, 내 Google 드라이브에 자동 백업',
+     None, [('phone_08_backup_card', 34, 822, 472, 0)]),
 ]
 
 TABLET = [
     ('tablet_01_today', '오늘', '#F5A957', '넓은 화면에서도 온이와 함께', '오늘의 빛, 하루의 흐름, 1년 전 오늘까지 한눈에'),
-    ('tablet_02_calendar', '무드 캘린더', '#EE8BA5', '달력 옆에 그날의 이야기', '날짜를 누르면 일기와 답장이 바로 옆에 펼쳐져요'),
-    ('tablet_03_report', '리포트', '#7FC08F', '내 마음의 패턴을 한 화면에', '자주 느낀 감정, 기분을 바꾼 활동, 요일·시간대'),
-    ('tablet_04_write', '쓰기', '#F4C23E', '감정과 글을 나란히', '왼쪽에서 마음의 색을 고르고, 오른쪽에 하루를 적어요'),
+    ('tablet_02_calendar', '무드 캘린더', '#EE8BA5', '달력 옆에 그날의 이야기', '날짜를 누르면 일기와 온이의 한마디가 바로 옆에 펼쳐져요'),
+    ('tablet_03_report', '리포트', '#7FC08F', '내 마음의 패턴을 한 화면에', 'AI가 고른 이번 달의 한 줄, 감정 원인, 자주 나온 이야기'),
+    ('tablet_04_write', 'AI · 쓰기', '#EE8BA5', '쓰는 동안 빛이 변해요', '글에 비친 마음의 색으로 온이가 물들고, AI가 감정·제목·태그를 추천해요'),
 ]
 
 
@@ -92,13 +98,12 @@ def cap(name):
     return (CAPS / f'{name}.png').as_uri()
 
 
-def shot_html(name, eb, glow, hd, sub, note):
+def shot_html(name, eb, glow, hd, sub, note, floats):
     pools = (f'<div class="pool" style="left:-60px;top:330px;width:660px;height:560px;background:{hx(glow, .30)}"></div>'
              f'<div class="pool" style="left:150px;top:150px;width:240px;height:200px;background:{hx(glow, .16)}"></div>'
              f'<div class="pool" style="left:-120px;top:880px;width:780px;height:220px;background:{hx("#F5A957", .10)}"></div>')
-    extra = ''
-    if name == 'phone_08_lock':  # 잠금 + the 마이 › 자동 백업 card floating over it
-        extra = f'<img class="float" src="{cap("phone_08_backup_card")}" style="left:34px;top:740px;width:472px;border-radius:26px">'
+    extra = ''.join(f'<img class="float" src="{cap(f)}" style="left:{x}px;top:{y}px;width:{w}px;border-radius:22px;transform:rotate({r}deg)">'
+                    for f, x, y, w, r in floats)
     nt = f'<div class="note"><span>{note}</span></div>' if note else ''
     body = (f'<div class="room"></div>{pools}<div class="grain"></div>'
             f'<div class="cap"><div class="eb"><i style="background:{glow};box-shadow:0 0 10px {glow}"></i>{eb}</div>'
@@ -159,7 +164,7 @@ def feature_html():
             f'<div class="grain"></div>{orbs}<img class="oni" src="{oni}">'
             f'<div class="copy"><div class="brand"><img src="{icon}">온이 일기</div>'
             '<div class="t">오늘 기분,<br><b>무슨 색</b>이었어요?</div>'
-            '<div class="v">탭 한 번에 기분이 빛으로 켜지고<br>온이(AI)가 답장해 주는 감정일기</div></div>')
+            '<div class="v">쓰는 동안 마음의 색을 읽어 주는<br>AI 감정일기</div></div>')
     return page(1024, 500, body, FG_CSS, blur=50)
 
 
