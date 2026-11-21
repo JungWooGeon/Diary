@@ -156,6 +156,8 @@ class MyViewModel @Inject constructor(
     fun setPin(pin: String) = viewModelScope.launch { lock.setPin(pin) }
     fun setAiReply(on: Boolean) = viewModelScope.launch { settingsRepo.setAiReply(on) }
     fun setAiSuggest(on: Boolean) = viewModelScope.launch { settingsRepo.setAiSuggest(on) }
+    fun setAiHighlight(on: Boolean) = viewModelScope.launch { settingsRepo.setAiHighlight(on) }
+    fun setAiRecall(on: Boolean) = viewModelScope.launch { settingsRepo.setAiRecall(on) }
     fun setHideWidget(on: Boolean) = viewModelScope.launch { settingsRepo.setHideWidgetContent(on) }
 
     /** A different Google account than the one this phone backed up to before: the user decides, never a silent merge. */
@@ -340,7 +342,7 @@ private fun WipeDialog(vm: MyViewModel, onDismiss: () -> Unit) {
     )
 }
 
-private fun aiValue(s: Settings) = listOf(s.aiReply, s.aiSuggest).count { it }.let { if (it == 2) "켜짐" else if (it == 0) "꺼짐" else "일부 켜짐" }
+private fun aiValue(s: Settings) = listOf(s.aiReply, s.aiSuggest, s.aiHighlight, s.aiRecall).let { l -> l.count { it }.let { if (it == l.size) "켜짐" else if (it == 0) "꺼짐" else "일부 켜짐" } }
 
 private fun themeName(m: ThemeMode) = when (m) { ThemeMode.SYSTEM -> "시스템"; ThemeMode.LIGHT -> "라이트"; ThemeMode.DARK -> "다크"; ThemeMode.PAPER -> "종이" }
 
@@ -565,7 +567,7 @@ fun AiSettingsScreen(onBack: () -> Unit, vm: MyViewModel = hiltViewModel()) {
             OdTopBar(title = "AI 기능", left = { IconBtn(OdIcon.Back, onBack, "뒤로") })
             Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OniFigure(null, if (s.aiReply || s.aiSuggest) OniExpression.DEFAULT else OniExpression.SLEEP, 96.dp)
+                    OniFigure(null, if (s.aiReply || s.aiSuggest || s.aiHighlight || s.aiRecall) OniExpression.DEFAULT else OniExpression.SLEEP, 96.dp)
                     Column(Modifier.weight(1f)) {
                         Text("온이가 얼마나\n도와줄지 정해요", style = OdType.title2)
                         Text("모두 끄면 순수한 일기장이 돼요. 모든 AI는 이 폰 안에서만 돌아요.", style = OdType.caption1, color = c.ink2, modifier = Modifier.padding(top = 4.dp))
@@ -574,7 +576,11 @@ fun AiSettingsScreen(onBack: () -> Unit, vm: MyViewModel = hiltViewModel()) {
                 OdCard(padding = PaddingValues(horizontal = 18.dp, vertical = 6.dp)) {
                     AiToggle("온이 답장", "저장하면 온이가 준비된 한마디를 골라 답해 줘요", s.aiReply, vm::setAiReply)
                     Divider()
-                    AiToggle("감정·태그 추천", "쓰는 동안 감정과 사람·장소 태그를 골라 보여 줘요", s.aiSuggest, vm::setAiSuggest)
+                    AiToggle("감정·태그·제목 추천", "쓰는 동안 글에서 느껴지는 빛을 비추고, 감정·태그·제목을 골라 보여 줘요", s.aiSuggest, vm::setAiSuggest)
+                    Divider()
+                    AiToggle("문장별 감정 밑줄", "일기를 볼 때 감정이 진한 문장에 그 빛으로 밑줄을 그어요", s.aiHighlight, vm::setAiHighlight)
+                    Divider()
+                    AiToggle("비슷했던 날 · 뜻으로 찾기", "결이 비슷한 지난 일기를 보여 주고, 단어가 달라도 비슷한 내용을 찾아요", s.aiRecall, vm::setAiRecall)
                 }
                 OdCard(flat = true, padding = PaddingValues(horizontal = 18.dp, vertical = 16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

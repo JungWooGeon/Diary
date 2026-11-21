@@ -10,6 +10,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -98,6 +99,7 @@ import com.pass.diary.core.light.LightMixer
 import com.pass.diary.core.model.EmotionGroup
 import com.pass.diary.core.model.EmotionKey
 import com.pass.diary.core.model.Entry
+import com.pass.diary.core.model.EntryEmotion
 import com.pass.diary.core.model.EntrySource
 import com.pass.diary.core.model.Template
 import java.io.File
@@ -117,7 +119,7 @@ fun WriteScreen(onDone: () -> Unit, onSaved: (String) -> Unit, onChat: (String) 
             Box(Modifier.weight(0.9f)) {
                 EmotionPicker(
                     entry, state.focus, vm::toggleEmotion, vm::setIntensity, vm::setDate, vm::setTime,
-                    onClose = leave, onMoodOnly = { vm.flush(onDone) }, onContinue = {}, embedded = true,
+                    onClose = leave, onMoodOnly = { vm.flush(onDone) }, onContinue = {}, embedded = true, hint = state.suggestedEmotions,
                 )
             }
             PaneDivider()
@@ -133,7 +135,7 @@ fun WriteScreen(onDone: () -> Unit, onSaved: (String) -> Unit, onChat: (String) 
         when (step) {
             WriteStep.PICK -> EmotionPicker(
                 entry, state.focus, vm::toggleEmotion, vm::setIntensity, vm::setDate, vm::setTime,
-                onClose = leave, onMoodOnly = { vm.flush(onDone) }, onContinue = { vm.goTo(WriteStep.EDIT) },
+                onClose = leave, onMoodOnly = { vm.flush(onDone) }, onContinue = { vm.goTo(WriteStep.EDIT) }, hint = state.suggestedEmotions,
             )
             WriteStep.EDIT -> Editor(state, vm, onBack = leave, onSave = { vm.finish(onSaved) }, onChat = { vm.flush { onChat(entry.id) } }, onDeleted = onDone)
         }
@@ -156,17 +158,21 @@ private fun EmotionPicker(
     onContinue: () -> Unit,
     /** Beside the editor (two panes): no close button and no bottom buttons; the editor has them. */
     embedded: Boolean = false,
+    /** E1: the feeling read from the text so far; Oni glows with it until the user picks one. */
+    hint: List<EntryEmotion> = emptyList(),
 ) {
     val c = Od.c
-    val lit = entry.emotions.filter { it.key != EmotionKey.UNSURE }
-    val light = if (entry.emotions.isEmpty()) null else LightMixer.mix(entry.emotions)
+    val shown = entry.emotions.ifEmpty { hint }
+    val lit = shown.filter { it.key != EmotionKey.UNSURE }
+    val light = if (shown.isEmpty()) null else LightMixer.mix(shown)
     val face = when {
-        entry.emotions.isEmpty() -> OniExpression.DEFAULT
+        shown.isEmpty() -> OniExpression.DEFAULT
         lit.isEmpty() -> OniExpression.THINK
         else -> OniExpression.forGroup(LightMixer.dominantGroup(lit))
     }
     val context = LocalContext.current
-    Box(Modifier.fillMaxSize().background(c.bg).ambient(light?.let { rgb(it.glow) } ?: OdColors.BrandGlow, 1f, 150.dp + 32.dp, 380.dp)) {
+    val ambientGlow by animateColorAsState(light?.let { rgb(it.glow) } ?: OdColors.BrandGlow, tween(LIGHT_MS), label = "ambient")
+    Box(Modifier.fillMaxSize().background(c.bg).ambient(ambientGlow, 1f, 150.dp + 32.dp, 380.dp)) {
         Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = if (embedded) 24.dp else 110.dp).then(if (embedded) Modifier.navigationBarsPadding() else Modifier)) {
             Box(Modifier.fillMaxWidth().height(52.dp)) {
                 if (!embedded) OdTopBar(left = { IconBtn(OdIcon.Close, onClose, "닫기") })
@@ -286,8 +292,10 @@ private fun Editor(state: WriteState, vm: WriteViewModel, onBack: () -> Unit, on
     val c = Od.c
     val entry = state.entry ?: return
     val context = LocalContext.current
-    val light = LightMixer.mix(entry.emotions)
-    val glow = if (entry.emotions.isEmpty()) OdColors.BrandGlow else rgb(light.glow)
+    // E1: until the user picks, the light follows the feeling read from the text (after a 1 s pause), fading over.
+    val preview = state.previewEmotions
+    val light = LightMixer.mix(preview)
+    val glow by animateColorAsState(if (preview.isEmpty()) OdColors.BrandGlow else rgb(light.glow), tween(LIGHT_MS), label = "glow")
     var confirmDelete by remember { mutableStateOf(false) }
     var addingTag by rememberSaveable { mutableStateOf(false) }
 
@@ -316,11 +324,17 @@ private fun Editor(state: WriteState, vm: WriteViewModel, onBack: () -> Unit, on
                     .clickable { vm.goTo(WriteStep.PICK) }.padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                // 온이 glows with the light (its own 0.56 s cross-fade follows the change).
+                com.pass.diary.core.designsystem.Oni(
+                    preview.takeIf { it.isNotEmpty() }?.let { light },
+                    if (preview.none { it.key != EmotionKey.UNSURE }) OniExpression.DEFAULT else OniExpression.forGroup(LightMixer.dominantGroup(preview.filter { it.key != EmotionKey.UNSURE })),
+                    Modifier.size(30.dp),
+                )
                 if (entry.emotions.isEmpty()) {
-                    LightOrb(OdColors.BrandLight, OdColors.BrandGlow, 22.dp)
-                    Text("감정 고르기", style = OdType.caption1.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
+                    Text("감정 고르기", style = OdType.caption1.copy(fontWeight = FontWeight.SemiBold))
+                    if (preview.isNotEmpty()) Text("글에서 ${preview.first().key.label}의 빛이 비쳐요", style = OdType.caption2, color = c.ink2, maxLines = 1)
+                    Spacer(Modifier.weight(1f))
                 } else {
-                    LightOrb(light, 22.dp)
                     Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         entry.emotions.forEach { e ->
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -336,7 +350,7 @@ private fun Editor(state: WriteState, vm: WriteViewModel, onBack: () -> Unit, on
             if (state.suggestedEmotions.isNotEmpty()) Row(
                 Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                OdIcon(OdIcon.Sparkle, size = 13.dp, stroke = 2f, tint = c.ink2)
+                com.pass.diary.core.designsystem.AiMark()
                 Text("온이가 느낀 감정", style = OdType.caption2.copy(fontWeight = FontWeight.SemiBold), color = c.ink2)
                 state.suggestedEmotions.forEach { e ->
                     Row(
@@ -353,17 +367,25 @@ private fun Editor(state: WriteState, vm: WriteViewModel, onBack: () -> Unit, on
                 Template.entries.forEach { t -> OdChip(t.label, selected = entry.template == t, height = 32.dp, style = OdType.chip.copy(fontSize = 13.sp)) { vm.setTemplate(t) } }
             }
             // 제목
-            val suggested = state.suggestedTitle
             Box(Modifier.padding(top = 20.dp)) {
-                if (entry.title.isEmpty()) Text(suggested ?: "제목", style = OdType.title1, color = if (suggested != null) c.ink else c.ink3.copy(alpha = 0.6f))
+                if (entry.title.isEmpty()) Text("제목", style = OdType.title1, color = c.ink3.copy(alpha = 0.6f))
                 BasicTextField(
                     entry.title, vm::setTitle, Modifier.fillMaxWidth(), textStyle = OdType.title1.copy(color = c.ink),
                     cursorBrush = SolidColor(glow), singleLine = true,
                 )
             }
-            if (entry.title.isEmpty() && suggested != null) Row(Modifier.padding(top = 2.dp).clickable { vm.setTitle(suggested) }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                OdIcon(OdIcon.Sparkle, size = 12.dp, stroke = 2f, tint = c.ink2)
-                Text("온이가 붙인 제목 · 눌러서 바꾸기", style = OdType.caption2, color = c.ink2)
+            // E6: title chips, only while the title is empty; nothing is applied without a tap.
+            if (entry.title.isEmpty() && state.suggestedTitles.isNotEmpty()) FlowRow(
+                Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("제목 제안", style = OdType.caption2.copy(fontWeight = FontWeight.SemiBold), color = c.ink2)
+                state.suggestedTitles.forEach { t ->
+                    Box(
+                        Modifier.height(30.dp).dashedBorder(glow, 15.dp).clip(RoundedCornerShape(15.dp)).clickable { vm.setTitle(t.removeSuffix("…")) }.padding(horizontal = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(t, style = OdType.chip.copy(fontSize = 13.sp), maxLines = 1) }
+                }
             }
             // 본문
             Box(Modifier.padding(top = 14.dp)) {
@@ -479,6 +501,9 @@ private fun ToolItem(icon: OdIcon, label: String, onClick: () -> Unit) {
 }
 
 // ============================================================ helpers
+
+/** E1: how slowly the light turns to the feeling read from the text. */
+private const val LIGHT_MS = 1_200
 
 internal fun koDate(date: String): String = LocalDate.parse(date).let { "${it.monthValue}월 ${it.dayOfMonth}일" }
 

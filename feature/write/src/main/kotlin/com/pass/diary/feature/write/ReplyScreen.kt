@@ -67,6 +67,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.pass.diary.core.data.DiaryInsights
 import com.pass.diary.core.data.EntryRepository
 import com.pass.diary.core.data.ReplyReports
 import com.pass.diary.core.data.db.ReplyDao
@@ -87,6 +88,7 @@ import com.pass.diary.core.designsystem.OdTopBar
 import com.pass.diary.core.designsystem.OdType
 import com.pass.diary.core.designsystem.OniExpression
 import com.pass.diary.core.designsystem.OniFigure
+import com.pass.diary.core.designsystem.SimilarDays
 import com.pass.diary.core.designsystem.ambient
 import com.pass.diary.core.designsystem.rgb
 import com.pass.diary.core.light.Light
@@ -115,7 +117,7 @@ sealed interface ReplyUi {
     data object Saved : ReplyUi
 }
 
-data class ReplyState(val entry: Entry? = null, val ui: ReplyUi = ReplyUi.Writing, val thanked: Boolean = false)
+data class ReplyState(val entry: Entry? = null, val ui: ReplyUi = ReplyUi.Writing, val thanked: Boolean = false, val similar: List<Entry> = emptyList())
 
 @HiltViewModel
 class ReplyViewModel @Inject constructor(
@@ -124,6 +126,7 @@ class ReplyViewModel @Inject constructor(
     private val replies: ReplyDao,
     private val provider: ReplyProvider,
     private val reports: ReplyReports,
+    private val insights: DiaryInsights,
 ) : ViewModel() {
     private val id = savedStateHandle.toRoute<ReplyRoute>().entryId
     val state = MutableStateFlow(ReplyState())
@@ -139,6 +142,8 @@ class ReplyViewModel @Inject constructor(
                 state.update { it.copy(ui = ReplyUi.Crisis) }
                 return@launch
             }
+            // E4 under the letter. Not on a crisis day (returned above); similarDays also skips crisis-worded entries.
+            launch { runCatching { insights.similarDays(id) }.getOrNull()?.let { s -> state.update { it.copy(similar = s) } } }
             replies.get(id)?.let { r ->
                 state.update { it.copy(ui = ReplyUi.Arrived(r.text, r.createdAt, r.reported)) }
                 return@launch
@@ -185,7 +190,7 @@ class ReplyViewModel @Inject constructor(
 private val CrisisLight = Light(0xD3E2F6, 0x9DB2D8, 0.8f, off = false)
 
 @Composable
-fun ReplyScreen(onClose: () -> Unit, onOpenEntry: (String) -> Unit, onLetters: () -> Unit, vm: ReplyViewModel = hiltViewModel()) {
+fun ReplyScreen(onClose: () -> Unit, onOpenEntry: (String) -> Unit, onLetters: () -> Unit, onOpenSimilar: (String) -> Unit = onOpenEntry, vm: ReplyViewModel = hiltViewModel()) {
     val c = Od.c
     val s by vm.state.collectAsStateWithLifecycle()
     val entry = s.entry
@@ -240,6 +245,7 @@ fun ReplyScreen(onClose: () -> Unit, onOpenEntry: (String) -> Unit, onLetters: (
                         ReplyUi.Saved -> SavedCard()
                     }
                 }
+                if (ui is ReplyUi.Arrived || ui is ReplyUi.Saved) SimilarDays(s.similar, onOpenSimilar, Modifier.padding(top = 16.dp))
             }
             if (short) Box(Modifier.readableWidth(560.dp).navigationBarsPadding().padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 12.dp)) { buttons() }
         }

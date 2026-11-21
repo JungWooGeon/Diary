@@ -71,6 +71,8 @@ import com.pass.diary.core.designsystem.OdType
 import com.pass.diary.core.designsystem.OniMono
 import com.pass.diary.feature.calendar.CalendarRoute
 import com.pass.diary.feature.calendar.CalendarScreen
+import com.pass.diary.feature.calendar.EntryViewRoute
+import com.pass.diary.feature.calendar.EntryViewScreen
 import com.pass.diary.feature.calendar.SearchRoute
 import com.pass.diary.feature.calendar.SearchScreen
 import com.pass.diary.feature.my.AiSettingsRoute
@@ -132,7 +134,7 @@ fun DiaryApp(
                 "calendar" -> CalendarRoute; "search" -> SearchRoute(arg); "report" -> ReportRoute; "year" -> YearLightRoute; "letters" -> LettersRoute
                 "my" -> MyRoute; "premium" -> PremiumRoute; "lock" -> LockSettingsRoute; "decorate" -> DecorateRoute; "licenses" -> LicensesRoute; "ai" -> AiSettingsRoute; "reminder" -> ReminderSettingsRoute
                 "trash" -> TrashRoute; "export" -> ExportRoute
-                "write" -> WriteRoute(entryId = arg); "question" -> WriteRoute(question = arg); "chat" -> ChatRoute(arg); "reply" -> ReplyRoute(arg!!)
+                "write" -> WriteRoute(entryId = arg); "view" -> EntryViewRoute(arg!!); "question" -> WriteRoute(question = arg); "chat" -> ChatRoute(arg); "reply" -> ReplyRoute(arg!!)
                 else -> TodayRoute
             },
         ) { if (r == "today") { popUpTo(nav.graph.findStartDestination().id); launchSingleTop = true } }
@@ -178,9 +180,15 @@ fun DiaryApp(
                     onOpen = { nav.navigate(WriteRoute(entryId = it)) },
                     onWriteOn = { nav.navigate(WriteRoute(date = it)) },
                     onSearch = { nav.navigate(SearchRoute()) },
+                    onRead = { nav.navigate(EntryViewRoute(it)) },
                 )
             }
-            composable<SearchRoute> { SearchScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(WriteRoute(entryId = it)) }) }
+            composable<SearchRoute> {
+                SearchScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(WriteRoute(entryId = it)) }, onRead = { nav.navigate(EntryViewRoute(it)) })
+            }
+            composable<EntryViewRoute> {
+                Readable { EntryViewScreen(onBack = { nav.popBackStack() }, onEdit = { nav.navigate(WriteRoute(entryId = it)) }, onRead = { nav.navigate(EntryViewRoute(it)) }) }
+            }
             composable<ReportRoute>(enterTransition = { EnterTransition.None }, exitTransition = { ExitTransition.None }) {
                 ReportScreen(onLetters = { nav.navigate(LettersRoute) }, onYear = { nav.navigate(YearLightRoute) })
             }
@@ -227,6 +235,7 @@ fun DiaryApp(
                     onClose = { nav.popBackStack() },
                     onOpenEntry = { id -> nav.navigate(WriteRoute(entryId = id)) { popUpTo<ReplyRoute> { inclusive = true } } },
                     onLetters = { nav.navigate(LettersRoute) { popUpTo<ReplyRoute> { inclusive = true } } },
+                    onOpenSimilar = { id -> nav.navigate(EntryViewRoute(id)) },
                 )
             }
         }

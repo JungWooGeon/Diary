@@ -80,6 +80,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 import java.time.YearMonth
@@ -92,18 +93,30 @@ data class SearchFilter(val group: EmotionGroup? = null, val tag: String? = null
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
-class SearchViewModel @Inject constructor(repository: EntryRepository, savedStateHandle: androidx.lifecycle.SavedStateHandle, replyDao: com.pass.diary.core.data.db.ReplyDao) : ViewModel() {
+class SearchViewModel @Inject constructor(
+    repository: EntryRepository,
+    savedStateHandle: androidx.lifecycle.SavedStateHandle,
+    replyDao: com.pass.diary.core.data.db.ReplyDao,
+    insights: com.pass.diary.core.data.DiaryInsights,
+) : ViewModel() {
     val query = MutableStateFlow(runCatching { savedStateHandle.toRoute<SearchRoute>().q }.getOrNull().orEmpty())
     val filter = MutableStateFlow(SearchFilter())
 
+    private fun SearchFilter.keeps(e: Entry): Boolean {
+        val since = months?.let { LocalDate.now().minusMonths(it.toLong()).toString() }
+        return (group == null || e.emotions.any { it.key.group == group }) && (tag == null || e.tags.any { it.value == tag }) && (since == null || e.date >= since)
+    }
+
     val results = combine(query.debounce(200).flatMapLatest { repository.search(it, null) }, filter) { list, f ->
-        val since = f.months?.let { LocalDate.now().minusMonths(it.toLong()).toString() }
-        list.filter { e ->
-            (f.group == null || e.emotions.any { it.key.group == f.group }) &&
-                (f.tag == null || e.tags.any { it.value == f.tag }) &&
-                (since == null || e.date >= since)
-        }.let { if (f.newestFirst) it else it.reversed() }
+        list.filter { f.keeps(it) }.let { if (f.newestFirst) it else it.reversed() }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** E5 "비슷한 내용": by meaning + shared words (best first), minus what the word search already found. */
+    val similar = combine(
+        query.debounce(450).mapLatest { q -> if (q.isBlank()) emptyList() else runCatching { insights.searchByMeaning(q) }.getOrDefault(emptyList()).mapNotNull { repository.get(it) } },
+        results, filter,
+    ) { found, literal, f -> literal.map { it.id }.toSet().let { have -> found.filter { it.id !in have && !it.deleted && f.keeps(it) } } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val tags = repository.search("", null).map { l -> l.flatMap { e -> e.tags.map { it.value } }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.map { it.key } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -116,18 +129,19 @@ class SearchViewModel @Inject constructor(repository: EntryRepository, savedStat
 }
 
 @Composable
-fun SearchScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: SearchViewModel = hiltViewModel()) {
+fun SearchScreen(onBack: () -> Unit, onOpen: (String) -> Unit, onRead: (String) -> Unit = onOpen, vm: SearchViewModel = hiltViewModel()) {
     val c = Od.c
     val q by vm.query.collectAsStateWithLifecycle()
     val f by vm.filter.collectAsStateWithLifecycle()
     val results by vm.results.collectAsStateWithLifecycle()
+    val similar by vm.similar.collectAsStateWithLifecycle()
     val tags by vm.tags.collectAsStateWithLifecycle()
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
     val pane = Od.layout.twoPane
     // Tablets / landscape: results on the left, the chosen one read in full on the right (first result to start with).
     var picked by rememberSaveable { mutableStateOf<String?>(null) }
-    val shown = results.firstOrNull { it.id == picked } ?: results.firstOrNull()
+    val shown = (results + similar).firstOrNull { it.id == picked } ?: results.firstOrNull() ?: similar.firstOrNull()
     Row(Modifier.fillMaxSize()) {
     Column(Modifier.weight(1f).fillMaxHeight().then(if (pane) Modifier else Modifier.readableWidth(720.dp)).statusBarsPadding().imePadding()) {
         Row(Modifier.fillMaxWidth().height(52.dp).padding(start = 8.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -184,7 +198,15 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: SearchViewMod
             }
         }
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp)) {
-            items(results, key = { it.id }) { e -> ResultRow(e, q.trim(), pane && e.id == shown?.id) { if (pane) picked = e.id else onOpen(e.id) } }
+            items(results, key = { it.id }) { e -> ResultRow(e, q.trim(), pane && e.id == shown?.id) { if (pane) picked = e.id else onRead(e.id) } }
+            if (similar.isNotEmpty()) item(key = "similar") {
+                Row(Modifier.padding(top = 22.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("비슷한 내용", style = OdType.title3)
+                    com.pass.diary.core.designsystem.AiMark()
+                    Text("단어가 달라도 뜻이 가까운 일기예요", style = OdType.caption2, color = c.ink2)
+                }
+            }
+            items(similar, key = { "s" + it.id }) { e -> ResultRow(e, q.trim(), pane && e.id == shown?.id) { if (pane) picked = e.id else onRead(e.id) } }
             item { Box(Modifier.navigationBarsPadding()) }
         }
     }
@@ -195,7 +217,7 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: SearchViewMod
             if (shown == null) Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 OniFigure(null, OniExpression.THINK, 140.dp)
                 Text(if (q.isBlank()) "단어나 태그를 넣으면 여기에서 바로 읽을 수 있어요" else "찾은 일기가 없어요", style = OdType.body2, color = c.ink2, modifier = Modifier.padding(top = 12.dp))
-            } else DayDetail(LocalDate.parse(shown.date), listOf(shown), replies, onOpen, onWriteOn = {}, single = true)
+            } else DayDetail(LocalDate.parse(shown.date), listOf(shown), replies, onOpen, onWriteOn = {}, single = true, onOpenSimilar = onRead)
         }
     }
     }

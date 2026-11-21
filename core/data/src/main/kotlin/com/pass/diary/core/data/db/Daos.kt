@@ -109,6 +109,10 @@ interface EntryDao {
     @Query("DELETE FROM entry WHERE deleted = 1 AND trashedAt IS NULL AND updatedAt < :before AND id IN (SELECT entityId FROM sync_state WHERE remoteVersion = entry.updatedAt)")
     suspend fun purgeDeleted(before: Long)
 
+    /** Live entries' text only (no trash, no tombstones): the sentence index follows this (app EmbeddingStore). */
+    @Query("SELECT id, date, title, body FROM entry WHERE deleted = 0")
+    fun observeTexts(): Flow<List<EntryText>>
+
     /** Emits whenever any entry is written; drives "back up after save". */
     @Query("SELECT MAX(updatedAt) FROM entry") fun observeLastChange(): Flow<Long?>
 
@@ -123,6 +127,8 @@ interface EntryDao {
     @Query("SELECT * FROM photo WHERE id NOT IN (SELECT entityId FROM sync_state WHERE remoteFileId IS NOT NULL)")
     suspend fun unsyncedPhotos(): List<PhotoEntity>
 }
+
+data class EntryText(val id: String, val date: String, val title: String, val body: String)
 
 @Dao
 interface ReplyDao {

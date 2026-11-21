@@ -16,9 +16,12 @@ import java.io.OutputStream
  */
 class EmbeddingIndex {
     private val vectors = LinkedHashMap<String, FloatArray>()
+    private val stamps = HashMap<String, Int>()
 
-    @Synchronized fun put(id: String, v: FloatArray) { vectors[id] = v }
-    @Synchronized fun remove(id: String) { vectors.remove(id) }
+    /** [stamp] = what the vector was made from (e.g. the text's hash), so a caller can tell a stale one. */
+    @Synchronized fun put(id: String, v: FloatArray, stamp: Int = 0) { vectors[id] = v; stamps[id] = stamp }
+    @Synchronized fun remove(id: String) { vectors.remove(id); stamps.remove(id) }
+    @Synchronized fun stamp(id: String): Int? = stamps[id]
     @Synchronized operator fun get(id: String): FloatArray? = vectors[id]
     @Synchronized fun ids(): Set<String> = vectors.keys.toSet()
     val size: Int @Synchronized get() = vectors.size
@@ -35,18 +38,18 @@ class EmbeddingIndex {
             .map { (id, v) -> id to score(id, dot(query, v)) }
             .sortedByDescending { it.second }.take(k).toList()
 
-    /** [VERSION], count, then (id UTF, dim, floats). */
+    /** [VERSION], count, then (id UTF, stamp, dim, floats). */
     @Synchronized
     fun write(out: OutputStream) {
         val d = DataOutputStream(out.buffered())
         d.writeInt(VERSION); d.writeInt(vectors.size)
-        for ((id, v) in vectors) { d.writeUTF(id); d.writeInt(v.size); v.forEach(d::writeFloat) }
+        for ((id, v) in vectors) { d.writeUTF(id); d.writeInt(stamps[id] ?: 0); d.writeInt(v.size); v.forEach(d::writeFloat) }
         d.flush()
     }
 
     companion object {
-        /** Bump when model.tflite's embedding changes: old files then read as null -> rebuild. */
-        const val VERSION = 1
+        /** Bump when model.tflite's embedding (or this format) changes: old files then read as null -> rebuild. 2: stamps. */
+        const val VERSION = 2
         /** Weight of [bigramOverlap] in 뜻으로 검색 (tools/classifier/embed_check.py: 0.3–0.5 best on 25 queries). */
         const val LEXICAL_WEIGHT = 0.4f
 
@@ -54,7 +57,7 @@ class EmbeddingIndex {
         fun read(input: InputStream): EmbeddingIndex? = runCatching {
             val d = DataInputStream(input.buffered())
             if (d.readInt() != VERSION) return null
-            EmbeddingIndex().apply { repeat(d.readInt()) { put(d.readUTF(), FloatArray(d.readInt()) { d.readFloat() }) } }
+            EmbeddingIndex().apply { repeat(d.readInt()) { val id = d.readUTF(); val st = d.readInt(); put(id, FloatArray(d.readInt()) { d.readFloat() }, st) } }
         }.getOrNull()
 
         fun dot(a: FloatArray, b: FloatArray): Float {

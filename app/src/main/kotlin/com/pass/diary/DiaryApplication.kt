@@ -50,6 +50,7 @@ class Startup @Inject constructor(
     private val syncStore: SyncLocalStore,
     private val settings: com.pass.diary.core.data.SettingsRepository,
     private val billing: com.pass.diary.core.billing.Billing,
+    private val embeddings: EmbeddingStore,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
@@ -62,6 +63,7 @@ class Startup @Inject constructor(
         // v1 stored the lock password in plain text; v2 never reads it (new PIN required) -> remove it.
         File(context.filesDir, "datastore/password_settings.preferences_pb").delete()
         done = true
+        embeddings.start()
         scope.launch {
             // The on-device LLM is gone (versionCode 202): free a model downloaded by an earlier build (~2.6 GB).
             File(context.filesDir, "models").deleteRecursively()

@@ -120,8 +120,12 @@ data class Settings(
     // 설정 › AI (this phone only). Crisis detection runs regardless: it is a safety rule, not an AI feature.
     /** 온이 답장 after saving. Off = no reply (no classifier). */
     val aiReply: Boolean = true,
-    /** 감정·태그 추천 chips in the editor. */
+    /** 감정·태그 추천 chips in the editor, the light that follows the text (E1), title chips (E6). */
     val aiSuggest: Boolean = true,
+    /** 문장별 감정 하이라이트 when reading an entry (E3). */
+    val aiHighlight: Boolean = true,
+    /** 비슷했던 날 (E4) and 뜻으로 찾기 (E5): the on-device sentence index. */
+    val aiRecall: Boolean = true,
     /** Widgets show no emotion names / colors (also forced while the app lock is on). */
     val hideWidgetContent: Boolean = false,
 ) {

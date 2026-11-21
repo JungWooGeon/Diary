@@ -60,11 +60,12 @@ class EmbeddingTest {
     }
 
     @Test fun indexRoundTripsAndRejectsOtherVersion() {
-        val idx = EmbeddingIndex().apply { put("2026-11-22 일기", unit(0.3f, -0.4f, 0.5f)); put("x", unit(1f, 2f, 3f)) }
+        val idx = EmbeddingIndex().apply { put("2026-11-22 일기", unit(0.3f, -0.4f, 0.5f)); put("x", unit(1f, 2f, 3f), stamp = -7) }
         val bytes = ByteArrayOutputStream().also { idx.write(it) }.toByteArray()
         val back = EmbeddingIndex.read(ByteArrayInputStream(bytes))!!
         assertEquals(idx.ids(), back.ids())
         assertArrayEquals(idx["x"], back["x"], 0f)
+        assertEquals(-7, back.stamp("x")); assertEquals(0, back.stamp("2026-11-22 일기"))
         bytes[3] = (EmbeddingIndex.VERSION + 1).toByte()
         assertNull(EmbeddingIndex.read(ByteArrayInputStream(bytes)))
         assertNull(EmbeddingIndex.read(ByteArrayInputStream(byteArrayOf(0, 0))))

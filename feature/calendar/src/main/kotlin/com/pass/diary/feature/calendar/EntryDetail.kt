@@ -59,6 +59,8 @@ internal fun DayDetail(
     future: Boolean = day.isAfter(LocalDate.now()),
     /** One search result: no day strip, no "write another". */
     single: Boolean = false,
+    /** E4: a day with one record shows its 비슷했던 날; tapping one reads it ([EntryViewRoute]). null = not here. */
+    onOpenSimilar: ((String) -> Unit)? = null,
 ) {
     val c = Od.c
     val glow = entries.flatMap { it.emotions }.takeIf { it.isNotEmpty() }?.let { rgb(LightMixer.mix(it).glow) }
@@ -81,6 +83,7 @@ internal fun DayDetail(
                         DayLightStrip(entries.map { DayMark(it.time, it.emotions) })
                     }
                     entries.forEach { e -> EntryDetailCard(e, replies[e.id]) { onOpen(e.id) } }
+                    if (onOpenSimilar != null && entries.size == 1) SimilarDaysFor(entries.single(), onOpenSimilar, Modifier.padding(top = 4.dp))
                     if (!single) OdButton("이날 하나 더 쓰기", { onWriteOn(day.toString()) }, Modifier.align(Alignment.CenterHorizontally).padding(top = 4.dp), kind = ButtonKind.Ghost, small = true, icon = OdIcon.Pen)
                 }
                 else -> Column(Modifier.fillMaxWidth().padding(top = 48.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -109,7 +112,7 @@ internal fun EntryDetailCard(e: Entry, reply: String?, onOpen: () -> Unit) {
         }
         val title = e.title.ifBlank { e.emotions.joinToString(" · ") { it.key.label }.ifBlank { "기록" } }
         Text(title, style = OdType.title2, modifier = Modifier.padding(top = 8.dp))
-        if (e.body.isNotBlank()) Text(e.body.trim(), style = OdType.diary, modifier = Modifier.padding(top = 8.dp))
+        if (e.body.isNotBlank()) MarkedBody(e.body.trim(), OdType.diary, Modifier.padding(top = 8.dp))
         if (e.photos.isNotEmpty()) Row(Modifier.padding(top = 14.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             e.photos.forEach { PhotoThumb(it, 0, 132.dp, 12.dp) }
         }

@@ -78,7 +78,7 @@ class WriteFlowTest {
     private fun entry(body: String) = runBlocking { repo.save(EntryRepository.newEntry().copy(body = body)) }
     private fun reply(id: String) = runBlocking { db.replyDao().upsert(ReplyEntity(id, "옛 답장", "template", null, 1, false)) }
     private fun replyVm(id: String, p: ReplyProvider) =
-        ReplyViewModel(SavedStateHandle(mapOf("entryId" to id)), repo, db.replyDao(), p, ReplyReports(ctx))
+        ReplyViewModel(SavedStateHandle(mapOf("entryId" to id)), repo, db.replyDao(), p, ReplyReports(ctx), object : com.pass.diary.core.data.DiaryInsights {})
 
     // ---- #1 ----
 

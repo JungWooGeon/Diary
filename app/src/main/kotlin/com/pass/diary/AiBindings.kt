@@ -84,6 +84,7 @@ class AiWritingAssistant @Inject constructor(
     private val classifier: Lazy<EmotionClassifier>,
     private val tags: Lazy<TagExtractor>,
     private val settings: SettingsRepository,
+    private val embeddings: EmbeddingStore,
 ) : WritingAssistant {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -93,6 +94,11 @@ class AiWritingAssistant @Inject constructor(
 
     override suspend fun suggestTags(body: String): List<Tag> = withContext(Dispatchers.Default) {
         if (!settings.settings.first().aiSuggest) emptyList() else tags.get().extract(body, max = 5)
+    }
+
+    override suspend fun suggestTitles(body: String, tags: List<Tag>): List<String> = withContext(Dispatchers.Default) {
+        if (!settings.settings.first().aiSuggest) emptyList()
+        else com.pass.diary.core.ai.Insights.titles(body, tags, embeddings::embedSentence.takeIf { embeddings.canEmbed })
     }
 
     override fun warmUp() {

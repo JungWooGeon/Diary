@@ -131,6 +131,17 @@ class DebugSeedReceiver : BroadcastReceiver() {
         // ---- 1년 전 오늘 ----
         put(today.minusYears(1), "21:30", listOf(e(FLUTTER, 3)), body = "첫눈 온다고 해서 괜히 창밖만 보다가, 결국 민지랑 붕어빵 사 먹었다.", tags = listOf(person("민지")), photoKinds = listOf(2))
         put(LocalDate.of(today.year, 10, 27), "15:20", listOf(e(COMFY, 2)), "일요일 오후", "빨래 돌려 놓고 공원 산책. 아무것도 안 해도 되는 날.", listOf(act("산책")))
+        // Longer past diaries: 비슷했던 날 / 뜻으로 찾기 need real text to compare.
+        put(today.minusMonths(2).withDayOfMonth(9), "21:40", listOf(e(PROUD, 4)), "발표 끝",
+            "한 달 내내 붙잡고 있던 발표를 드디어 끝냈다. 퇴근길에 강변을 따라 좀 걸었는데 바람이 시원해서 머리가 비워졌다. 별거 아닌 일인데 스스로 대견했다.", listOf(act("산책")))
+        put(today.minusMonths(3).withDayOfMonth(4), "19:10", listOf(e(COMFY, 3), e(GRATEFUL, 2)),
+            body = "점심시간에 회사 근처 공원을 한 바퀴 돌았다. 햇빛 받으면서 걸으니까 오전 내내 꼬였던 생각이 조금 풀렸다. 오후 회의도 생각보다 잘 넘어갔다.", tags = listOf(act("산책")))
+        put(today.minusMonths(4).withDayOfMonth(17), "23:30", listOf(e(TIRED, 4), e(ANNOYED, 3)),
+            body = "또 야근. 팀장님이 퇴근 직전에 자료를 다시 만들라고 했다. 집에 오니 열두 시가 다 됐고 저녁도 못 먹었다. 진짜 지친다.", tags = listOf(act("야근")))
+        put(today.minusMonths(5).withDayOfMonth(2), "22:15", listOf(e(SAD, 3), e(HURT, 3)),
+            body = "민지랑 사소한 걸로 말다툼을 했다. 내가 먼저 말을 세게 한 것 같아서 계속 마음에 걸린다. 내일 먼저 연락해 봐야겠다.", tags = listOf(person("민지")))
+        put(today.minusMonths(6).withDayOfMonth(21), "20:00", listOf(e(JOY, 4), e(LOVE, 3)),
+            body = "엄마 생신이라 온 가족이 갈비집에 모였다. 동생이 몰래 케이크를 준비해 와서 엄마가 눈물을 글썽였다. 오랜만에 다 같이 웃었다.", tags = listOf(person("엄마"), person("동생")))
 
         // ---- this month, like 05_캘린더_1 ----
         val month = listOf(
@@ -184,6 +195,9 @@ class DebugSeedReceiver : BroadcastReceiver() {
             "oni" to "차가운 바람이었는데도 기억에 남았구나. 걸으면서 무슨 생각 했어?", "user" to "그냥 아무 생각 안 하려고 했는데 오히려 보고서 정리가 됐어 ㅋㅋ",
             "oni" to "머리가 맑아지니까 일이 풀린 거네. 그 보고서, 결국 어떻게 됐어?",
         ).forEachIndexed { i, (role, text) -> chat.insert(com.pass.diary.core.data.db.ChatMessageEntity(entryId = "seed-today-3", role = role, text = text, at = i.toLong())) }
+        // An untitled draft with no feeling picked: write:seed-draft shows the light following the text and title chips.
+        if (withToday) put(today, "23:10", emptyList(), body = "오늘 민지랑 성수에서 전시 보고 카페 갔다. 사람은 많았는데 그림이 너무 예뻐서 계속 사진 찍었다.\n" +
+            "다음 달에 또 가자고 약속했다. 벌써 기다려진다!", id = "seed-draft")
         if (crisis) put(today.minusDays(1), "23:50", listOf(e(DOWN, 5)), body = "요즘 너무 힘들다. 그냥 다 그만두고 죽고 싶다는 생각이 든다.", id = "seed-crisis")
         android.util.Log.i("DebugSeed", "seeded $n entries")
     }

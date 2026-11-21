@@ -140,7 +140,14 @@ internal fun dayGlows(entries: List<Entry>): List<Color> =
     entries.sortedBy { it.time }.map { rgb(LightMixer.mix(it.emotions).glow) }
 
 @Composable
-fun CalendarScreen(onOpen: (String) -> Unit, onWriteOn: (String) -> Unit, onSearch: () -> Unit, vm: CalendarViewModel = hiltViewModel()) {
+fun CalendarScreen(
+    onOpen: (String) -> Unit,
+    onWriteOn: (String) -> Unit,
+    onSearch: () -> Unit,
+    /** Tap on a record: read it ([EntryViewRoute]); [onOpen] edits. */
+    onRead: (String) -> Unit = onOpen,
+    vm: CalendarViewModel = hiltViewModel(),
+) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     val month by vm.month.collectAsStateWithLifecycle()
     val entries by vm.monthEntries.collectAsStateWithLifecycle()
@@ -153,9 +160,9 @@ fun CalendarScreen(onOpen: (String) -> Unit, onWriteOn: (String) -> Unit, onSear
                 MonthHeader(month, vm::setMonth, onSearch)
                 SegTabs(listOf("캘린더", "타임라인", "사진"), tab, { tab = it }, Modifier.readableWidth().padding(horizontal = 20.dp))
                 when (tab) {
-                    0 -> MonthTab(vm, entries, onOpen, onWriteOn, pane)
-                    1 -> TimelineTab(vm, entries, onOpen, pane)
-                    else -> PhotosTab(entries, onOpen)
+                    0 -> MonthTab(vm, entries, onRead, onWriteOn, pane)
+                    1 -> TimelineTab(vm, entries, onRead, pane)
+                    else -> PhotosTab(entries, onRead)
                 }
             }
             // Landscape phones: the banner follows the month (inline in MonthTab) instead of covering its last weeks.
@@ -167,7 +174,7 @@ fun CalendarScreen(onOpen: (String) -> Unit, onWriteOn: (String) -> Unit, onSear
             PaneDivider()
             DayDetail(
                 selected, entries.filter { it.date == selected.toString() }.sortedBy { it.time }, replies, onOpen, onWriteOn,
-                Modifier.weight(1f).statusBarsPadding(),
+                Modifier.weight(1f).statusBarsPadding(), onOpenSimilar = onRead,
             )
         }
     }

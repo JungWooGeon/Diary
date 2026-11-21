@@ -58,9 +58,13 @@ data class WriteState(
     val savedAt: Long? = null,
     val importingPhotos: Boolean = false,
     val suggestedTags: List<Tag> = emptyList(),
-    val suggestedTitle: String? = null,
+    /** E6: title chips while the title is empty (tap to use; never applied on save). */
+    val suggestedTitles: List<String> = emptyList(),
     val suggestedEmotions: List<EntryEmotion> = emptyList(),
-)
+) {
+    /** E1: what the light shows — the user's own pick wins; until then the feeling read from the text. */
+    val previewEmotions: List<EntryEmotion> get() = entry?.emotions.orEmpty().ifEmpty { suggestedEmotions }
+}
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
@@ -105,17 +109,18 @@ class WriteViewModel @Inject constructor(
                 }
             }
         }
-        // AI suggestions follow the body, 1.2 s after typing stops.
+        // AI suggestions follow the body, 1 s after typing stops. The feeling first: the light (E1) answers soonest.
         viewModelScope.launch {
-            _state.map { it.entry?.body }.filterNotNull().distinctUntilChanged().debounce(1_200).collect { body ->
-                if (body.isBlank()) return@collect
-                val tags = runCatching { assistant.suggestTags(body) }.getOrDefault(emptyList())
-                val title = runCatching { assistant.suggestTitle(body) }.getOrNull()
+            _state.map { it.entry?.body }.filterNotNull().distinctUntilChanged().debounce(1_000).collect { body ->
+                if (body.isBlank()) { _state.update { it.copy(suggestedEmotions = emptyList(), suggestedTitles = emptyList()) }; return@collect }
                 val emotions = runCatching { assistant.suggestEmotions(body) }.getOrDefault(emptyList())
+                _state.update { s -> s.copy(suggestedEmotions = emotions.filter { e -> s.entry?.emotions.orEmpty().none { it.key == e.key } }) }
+                val tags = runCatching { assistant.suggestTags(body) }.getOrDefault(emptyList())
+                val titles = if (_state.value.entry?.title.isNullOrBlank())
+                    runCatching { assistant.suggestTitles(body, _state.value.entry?.tags.orEmpty() + tags) }.getOrDefault(emptyList()) else emptyList()
                 _state.update { s ->
                     val have = s.entry?.tags.orEmpty().map { it.value }.toSet()
-                    val picked = s.entry?.emotions.orEmpty().map { it.key }.toSet()
-                    s.copy(suggestedTags = tags.filter { it.value !in have }, suggestedTitle = title, suggestedEmotions = emotions.filter { it.key !in picked })
+                    s.copy(suggestedTags = tags.filter { it.value !in have }, suggestedTitles = titles)
                 }
             }
         }
@@ -158,12 +163,10 @@ class WriteViewModel @Inject constructor(
         viewModelScope.launch { saveNow(); then() }
     }
 
-    /** "저장": an untitled entry takes Oni's title, then on to the reply. */
+    /** "저장", then on to the reply. An untitled entry stays untitled: title chips are only ever applied by a tap. */
     fun finish(then: (String) -> Unit) {
         pending?.cancel()
-        val s = _state.value
-        val e = s.entry ?: return
-        if (e.title.isBlank() && !s.suggestedTitle.isNullOrBlank() && e.hasContent()) _state.update { it.copy(entry = e.copy(title = s.suggestedTitle)) }
+        val e = _state.value.entry ?: return
         viewModelScope.launch { saveNow(); if (_state.value.persisted) then(e.id) }
     }
 

@@ -64,6 +64,7 @@ class SettingsRepositoryTest {
         repo.setHideWidgetContent(true)
         val s = repo.settings.first()
         assertEquals(listOf(false, true, true), listOf(s.aiReply, s.aiSuggest, s.hideWidgetContent))
+        assertEquals(listOf(false, false), listOf(s.aiHighlight, s.aiRecall))
         assertEquals(0L, s.updatedAt) // not in settings.json
         assertFalse(repo.toJson(s).contains("ai"))
     }

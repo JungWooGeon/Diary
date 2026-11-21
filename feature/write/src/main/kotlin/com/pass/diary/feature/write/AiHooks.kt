@@ -59,14 +59,14 @@ interface WritingAssistant {
     /** People / places / activities found in the body, shown as dashed "+ 민지" chips. */
     suspend fun suggestTags(body: String): List<Tag> = emptyList()
 
-    /** Auto title ("온이가 붙인 제목") while typing. null = none. */
-    suspend fun suggestTitle(body: String): String? = autoTitle(body)
+    /** Title chips for an untitled entry (E6), best first; never applied without a tap. [tags] = the entry's + found ones. */
+    suspend fun suggestTitles(body: String, tags: List<Tag>): List<String> = listOfNotNull(autoTitle(body))
 
     /** The editor opened: start loading the classifier so the reply after saving doesn't wait for it. */
     fun warmUp() {}
 }
 
-/** First phrase of the body, ≤16 chars: the title an untitled entry gets on save. */
+/** First phrase of the body, ≤16 chars: the title chip when there is no model. */
 fun autoTitle(body: String): String? {
     val first = body.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() && !it.startsWith("Q.") } ?: return null
     val sentence = first.split(Regex("(?<=[.!?])\\s")).first().trimEnd('.', '!', '?')
