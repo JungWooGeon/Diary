@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Web OAuth client id from Google Cloud Console (core/sync/README.md step 3). Blank = sign-in disabled. -->
-    <string name="google_web_client_id" translatable="false"></string>
+    <string name="google_web_client_id" translatable="false">171755888259-reqokhq030o547v33a0o8cmd9nrpgntk.apps.googleusercontent.com</string>
     <string name="my_premium">프리미엄</string>
     <string name="my_premium_desc">평생 3,300원 · 광고 제거, 올해의 빛, PDF 일기책 (준비 중)</string>
     <string name="my_backup">백업·계정</string>
