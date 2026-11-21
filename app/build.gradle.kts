@@ -3,6 +3,8 @@ import java.util.Properties
 plugins { id("od.android.application") }
 
 val localProps = Properties().apply { rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) } }
+// Upload key: keystore.properties (gitignored) = storeFile, storePassword, keyAlias, keyPassword. Missing -> unsigned release.
+val keyProps = rootProject.file("keystore.properties").takeIf { it.exists() }?.let { f -> Properties().apply { f.reader(Charsets.UTF_8).use { load(it) } } }
 
 android {
     namespace = "com.pass.diary"
@@ -17,8 +19,17 @@ android {
         // (core:billing-ads fails the release build when it is missing).
         manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
     }
+    keyProps?.let { k ->
+        signingConfigs.create("upload") {
+            storeFile = file(k.getProperty("storeFile"))
+            storePassword = k.getProperty("storePassword")
+            keyAlias = k.getProperty("keyAlias")
+            keyPassword = k.getProperty("keyPassword")
+        }
+    }
     buildTypes {
         release {
+            if (keyProps != null) signingConfig = signingConfigs.getByName("upload")
             manifestPlaceholders["admobAppId"] = localProps.getProperty("admob_app_id", "")
             isMinifyEnabled = true
             isShrinkResources = true

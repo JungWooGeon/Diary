@@ -47,3 +47,6 @@ gen-external-apklibs
 __pycache__/
 *.pyc
 .DS_Store
+
+keystore.properties
+keystore_candidates.txt
