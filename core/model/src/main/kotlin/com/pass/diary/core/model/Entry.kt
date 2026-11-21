@@ -12,6 +12,8 @@ data class Entry(
     val createdAt: Long,
     val updatedAt: Long,
     val deleted: Boolean = false,
+    /** 휴지통: set with deleted=true while the content is kept (30 days). deleted && trashedAt == null = content-less tombstone. */
+    val trashedAt: Long? = null,
     val title: String = "",
     val body: String = "",
     val template: Template = Template.FREE,

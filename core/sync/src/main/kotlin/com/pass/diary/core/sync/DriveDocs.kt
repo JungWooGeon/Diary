@@ -21,6 +21,8 @@ data class EntryDoc(
     val createdAt: Long,
     val updatedAt: Long,
     val deleted: Boolean = false,
+    /** 휴지통: deleted=true with content kept until trashedAt + 30 days. Omitted (null) on live entries and hard tombstones. */
+    val trashedAt: Long? = null,
     val title: String = "",
     val body: String = "",
     val template: String = "free",
@@ -32,6 +34,9 @@ data class EntryDoc(
     val reply: ReplyDoc? = null,
     val chat: List<ChatDoc> = emptyList(),
 ) {
+    /** Deleted for good (not in the 휴지통): nothing left to lose. */
+    val isTombstone: Boolean get() = deleted && trashedAt == null
+
     /** Logical Drive path (= file name in the flat appDataFolder, see manifest.schema.json). */
     val path: String get() = "entries/${date.substring(0, 4)}/${date.substring(5, 7)}/$id.json"
 }
@@ -48,7 +53,7 @@ data class EntryDoc(
 val DriveJson = Json { ignoreUnknownKeys = true; encodeDefaults = true; explicitNulls = false }
 
 fun Entry.toDoc(timeUnknown: Boolean = false, reply: ReplyDoc? = null, chat: List<ChatDoc> = emptyList()) = EntryDoc(
-    id = id, date = date, time = time, timeUnknown = timeUnknown, createdAt = createdAt, updatedAt = updatedAt, deleted = deleted,
+    id = id, date = date, time = time, timeUnknown = timeUnknown, createdAt = createdAt, updatedAt = updatedAt, deleted = deleted, trashedAt = trashedAt,
     title = title, body = body, template = template.key, source = source.key, weather = weather,
     emotions = emotions.map { EmotionDoc(it.key.key, it.intensity) },
     tags = tags.map { TagDoc(it.kind.key, it.value, it.auto) },
@@ -59,7 +64,7 @@ fun Entry.toDoc(timeUnknown: Boolean = false, reply: ReplyDoc? = null, chat: Lis
 /** [localPhotoPath] resolves where a photo lives (or will be downloaded to) on this device. */
 fun EntryDoc.toEntry(localPhotoPath: (String) -> String) = Entry(
     id = id, date = date, time = time, createdAt = createdAt, updatedAt = updatedAt, deleted = deleted,
-    title = title, body = body, template = Template.of(template), source = EntrySource.of(source), weather = weather,
+    trashedAt = trashedAt?.takeIf { deleted }, title = title, body = body, template = Template.of(template), source = EntrySource.of(source), weather = weather,
     // Unknown key (newer client) -> unsure rather than dropping the user's feeling; clamp out-of-range intensity.
     emotions = emotions.map { EntryEmotion(EmotionKey.of(it.key) ?: EmotionKey.UNSURE, it.intensity.coerceIn(1, 5)) }.distinctBy { it.key },
     tags = tags.map { Tag(TagKind.of(it.kind), it.value, it.auto) },

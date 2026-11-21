@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,7 +18,7 @@ import javax.inject.Singleton
         EntryEntity::class, EntryEmotionEntity::class, EntryTagEntity::class, PhotoEntity::class, ReplyEntity::class,
         ChatMessageEntity::class, EmotionDefEntity::class, CollectionEntity::class, SyncStateEntity::class, EntryConflictEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true, // core/data/schemas
 )
 abstract class DiaryDatabase : RoomDatabase() {
@@ -34,12 +36,18 @@ abstract class DiaryDatabase : RoomDatabase() {
     }
 }
 
+/** v2: 휴지통. Existing tombstones get trashedAt = NULL, i.e. they stay hard (content-less) tombstones. */
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) = db.execSQL("ALTER TABLE entry ADD COLUMN trashedAt INTEGER")
+}
+
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
     @Provides @Singleton
     fun database(@ApplicationContext context: Context): DiaryDatabase =
         Room.databaseBuilder(context, DiaryDatabase::class.java, DiaryDatabase.NAME)
+            .addMigrations(MIGRATION_1_2)
             .addCallback(object : RoomDatabase.Callback() {
                 override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) = SCRUB_DELETED.forEach(db::execSQL)
             })

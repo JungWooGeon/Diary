@@ -24,6 +24,8 @@ data class EntryEntity(
     val source: String,
     val weather: String?,
     val lightColor: String?,
+    /** 휴지통 (v2 of the schema): deleted = 1 with content kept until trashedAt + 30 days. */
+    val trashedAt: Long? = null,
 )
 
 @Entity(

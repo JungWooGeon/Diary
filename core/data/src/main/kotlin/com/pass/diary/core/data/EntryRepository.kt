@@ -18,6 +18,8 @@ import com.pass.diary.core.model.Tag
 import com.pass.diary.core.model.TagKind
 import com.pass.diary.core.model.Template
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.map
 import java.io.File
 import java.time.LocalDate
@@ -52,9 +54,10 @@ class EntryRepository @Inject constructor(private val db: DiaryDatabase, private
      * Writes entries that come from elsewhere (v1 migration, Drive) as they are: updatedAt is kept so they don't
      * look like local edits. One transaction.
      */
-    suspend fun saveExternal(entries: List<Entry>) = db.withTransaction {
-        entries.forEach { write(it) }
-        if (entries.any { it.deleted }) dao.scrubDeleted() // a tombstone from an older client may still carry text
+    suspend fun saveExternal(entries: List<Entry>) {
+        db.withTransaction { entries.forEach { write(it) } }
+        // A tombstone from an older client may still carry text; one that ends a local 휴지통 entry takes its photos along.
+        if (entries.any { it.deleted && it.trashedAt == null }) wipeTombstones()
     }
 
     private suspend fun write(entry: Entry): Entry {
@@ -72,11 +75,45 @@ class EntryRepository @Inject constructor(private val db: DiaryDatabase, private
     suspend fun quickMood(key: EmotionKey, now: Long = System.currentTimeMillis()): Entry =
         save(newEntry(now = now).copy(emotions = listOf(EntryEmotion(key))), now)
 
-    /** Soft delete: a tombstone for sync, with the content wiped (see [EntryDao.scrubDeleted]) and its photo files removed. */
+    /**
+     * Permanent delete (휴지통 › 영구 삭제, discarded drafts, quick-mood undo): a tombstone for sync, with the content
+     * wiped (see [EntryDao.scrubDeleted]) and its photo files removed.
+     */
     suspend fun delete(id: String, now: Long = System.currentTimeMillis()) {
-        val photos = db.withTransaction { dao.markDeleted(id, now); dao.deletedPhotoPaths().also { dao.scrubDeleted() } }
+        db.withTransaction { dao.markDeleted(id, now) }
+        wipeTombstones()
+    }
+
+    private suspend fun wipeTombstones() {
+        val photos = db.withTransaction { dao.deletedPhotoPaths().also { dao.scrubDeleted() } }
         photos.forEach { File(it).delete() }
     }
+
+    /** User-facing 지우기: into the 휴지통 for [TRASH_KEEP_MS], content and photos kept. [trashed] drives the undo snackbar. */
+    suspend fun trash(id: String, now: Long = System.currentTimeMillis()) {
+        dao.markTrashed(id, now)
+        _trashed.tryEmit(id)
+    }
+
+    suspend fun restore(id: String, now: Long = System.currentTimeMillis()) = dao.markRestored(id, now)
+
+    private val _trashed = MutableSharedFlow<String>(extraBufferCapacity = 4)
+    val trashed: SharedFlow<String> = _trashed
+
+    fun observeTrash(): Flow<List<Entry>> = dao.observeTrash().map { it.map(EntryWithDetails::toModel) }
+
+    /** 비우기. */
+    suspend fun emptyTrash(now: Long = System.currentTimeMillis()) {
+        dao.emptyTrash(now)
+        wipeTombstones()
+    }
+
+    /** Trash older than 30 days becomes a hard tombstone (app start). Returns how many expired. */
+    suspend fun purgeTrash(now: Long = System.currentTimeMillis()): Int =
+        db.withTransaction { dao.expireTrash(now, TRASH_KEEP_MS) }.also { if (it > 0) wipeTombstones() }
+
+    /** Every entry incl. trash and tombstones (내보내기). */
+    suspend fun allIds(): List<String> = dao.allIds()
 
     /** Only for 계정·데이터 삭제, right before the files are wiped and the process restarts. */
     fun closeDatabase() = db.close()
@@ -84,6 +121,7 @@ class EntryRepository @Inject constructor(private val db: DiaryDatabase, private
     companion object {
         val DATE: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
         val TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+        const val TRASH_KEEP_MS = 30L * 24 * 60 * 60 * 1000
         fun today(): String = LocalDate.now().format(DATE)
 
         fun newEntry(date: String = today(), now: Long = System.currentTimeMillis()) =
@@ -93,7 +131,7 @@ class EntryRepository @Inject constructor(private val db: DiaryDatabase, private
 
 internal fun EntryWithDetails.toModel() = Entry(
     id = entry.id, date = entry.date, time = entry.time, timeUnknown = entry.timeUnknown, createdAt = entry.createdAt, updatedAt = entry.updatedAt,
-    deleted = entry.deleted, title = entry.title, body = entry.body, template = Template.of(entry.template),
+    deleted = entry.deleted, trashedAt = entry.trashedAt, title = entry.title, body = entry.body, template = Template.of(entry.template),
     source = EntrySource.of(entry.source), weather = entry.weather, lightColor = entry.lightColor,
     // Unknown keys (e.g. from a newer app via sync) are skipped rather than crashing.
     emotions = emotions.mapNotNull { e -> EmotionKey.of(e.emotionKey)?.let { EntryEmotion(it, e.intensity.coerceIn(1, 5)) } },
@@ -102,5 +140,5 @@ internal fun EntryWithDetails.toModel() = Entry(
 )
 
 internal fun Entry.toEntity() = EntryEntity(
-    id, date, time, timeUnknown, createdAt, updatedAt, deleted, title, body, template.key, source.key, weather, lightColor,
+    id, date, time, timeUnknown, createdAt, updatedAt, deleted, title, body, template.key, source.key, weather, lightColor, trashedAt,
 )

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://pass.diary/schema/entry.schema.json",
   "title": "Diary entry (Drive appDataFolder: entries/YYYY/MM/<id>.json)",
-  "description": "One file per entry. Writers MUST bump updatedAt on every change; conflicts resolve by highest updatedAt (last write wins). Deletion = tombstone: deleted=true, content fields may be emptied, the file is kept. Readers MUST ignore unknown fields.",
+  "description": "One file per entry. Writers MUST bump updatedAt on every change; conflicts resolve by highest updatedAt (last write wins). Deletion: deleted=true hides the entry everywhere. With trashedAt set it is in the 휴지통: content is kept and it can be restored (deleted=false, trashedAt removed) until trashedAt + 30 days. Without trashedAt it is a tombstone: content fields are emptied, the file is kept. Readers MUST ignore unknown fields. Examples: shared/fixtures/.",
   "type": "object",
   "required": ["id", "date", "time", "createdAt", "updatedAt", "deleted"],
   "properties": {
@@ -13,6 +13,7 @@
     "createdAt": { "type": "integer", "minimum": 0, "description": "epoch millis" },
     "updatedAt": { "type": "integer", "minimum": 0, "description": "epoch millis, conflict key" },
     "deleted": { "type": "boolean" },
+    "trashedAt": { "type": ["integer", "null"], "minimum": 0, "description": "epoch millis the entry went to the 휴지통 (only with deleted=true). Older readers see a plain tombstone." },
     "title": { "type": "string", "default": "" },
     "body": { "type": "string", "default": "" },
     "template": { "enum": ["free", "three_lines", "gratitude", "question"], "default": "free" },

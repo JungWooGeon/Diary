@@ -96,6 +96,7 @@ class RoomSyncLocalStore @Inject constructor(
     }
 
     override suspend fun entry(id: String): EntryDoc? = docOf(id)
+    override suspend fun allEntries(): List<EntryDoc> = repository.allIds().mapNotNull { docOf(it) }
 
     private suspend fun docOf(id: String): EntryDoc? {
         val e = repository.get(id) ?: return null
@@ -107,7 +108,7 @@ class RoomSyncLocalStore @Inject constructor(
         val entry: Entry = doc.toEntry { photoFile(it).absolutePath }.copy(timeUnknown = doc.timeUnknown)
         repository.saveExternal(listOf(entry)) // keeps updatedAt -> not pending
         replies.delete(doc.id)
-        if (doc.deleted) return // saveExternal already wiped the tombstone; don't bring its reply/chat back
+        if (doc.deleted && doc.trashedAt == null) return // saveExternal already wiped the tombstone; don't bring its reply/chat back
         doc.reply?.let { replies.upsert(ReplyEntity(doc.id, it.text, it.source, it.templateId, it.createdAt, it.reported)) }
         chat.clear(doc.id)
         doc.chat.forEach { chat.insert(ChatMessageEntity(entryId = doc.id, role = it.role, text = it.text, at = it.at)) }

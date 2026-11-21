@@ -44,6 +44,8 @@ interface SyncLocalStore {
     suspend fun clearSyncState()
 
     suspend fun entry(id: String): EntryDoc?
+    /** Every entry incl. 휴지통 and tombstones, oldest date first (내보내기). */
+    suspend fun allEntries(): List<EntryDoc>
     /** Write a remote version locally (including tombstones). Must not make the entry pending. */
     suspend fun applyRemoteEntry(doc: EntryDoc)
     /** "다른 기기에서 고친 내용": keep the losing side of a conflict until [keepUntil] (epoch millis). */
@@ -246,6 +248,7 @@ class SyncEngine @Inject constructor(
             remote.updatedAt == state?.syncedUpdatedAt -> Unit // our own upload echoing back, or nothing new
             // Only the remote side changed: take it even if its clock is behind ours, otherwise devices diverge.
             local.updatedAt == state?.syncedUpdatedAt -> applyEntry(f, remote)
+            local.isTombstone && remote.isTombstone -> applyEntry(f, remote) // same deletion from two devices: no conflict copy
             local == remote -> store.setSyncState(remote.id, SyncState(f.id, remote.updatedAt))
             else -> { // both sides changed since the last sync
                 val keepUntil = now() + LOSER_KEEP_MS

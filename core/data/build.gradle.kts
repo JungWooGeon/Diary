@@ -20,4 +20,5 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.exifinterface)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric) // in-memory Room (휴지통, migration)
 }

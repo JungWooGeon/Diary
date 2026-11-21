@@ -46,6 +46,7 @@ class Startup @Inject constructor(
     @ApplicationContext private val context: Context,
     private val migrator: LegacyMigrator,
     private val entries: EntryDao,
+    private val repository: com.pass.diary.core.data.EntryRepository,
     private val conflicts: EntryConflictDao,
     private val syncStore: SyncLocalStore,
     private val settings: com.pass.diary.core.data.SettingsRepository,
@@ -69,7 +70,7 @@ class Startup @Inject constructor(
         }
         scope.launch {
             val now = System.currentTimeMillis()
-            runCatching { entries.purgeDeleted(now - THIRTY_DAYS); conflicts.purge(now) }
+            runCatching { repository.purgeTrash(now); entries.purgeDeleted(now - THIRTY_DAYS); conflicts.purge(now) }
             if (syncStore.meta(DriveAuth.META_ACCOUNT) != null) SyncScheduler.onAppOpen(context)
             runCatching { com.pass.diary.core.reminder.Reminders.reschedule(context) } // force-stop / restore drop alarms
             backUpAfterSaves()

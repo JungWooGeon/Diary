@@ -86,6 +86,7 @@ class FakeStore : SyncLocalStore {
     override suspend fun setSyncState(entityId: String, state: SyncState) { states[entityId] = state }
     override suspend fun clearSyncState() { states.clear(); metas.keys.removeAll { it.startsWith("sync.") } }
     override suspend fun entry(id: String) = entries[id]
+    override suspend fun allEntries() = entries.values.sortedBy { it.date + it.time }
     override suspend fun applyRemoteEntry(doc: EntryDoc) { entries[doc.id] = doc }
     override suspend fun keepConflictLoser(doc: EntryDoc, keepUntil: Long) { losers += doc to keepUntil }
     override suspend fun docUpdatedAt(name: DocName) = docAt[name]
@@ -94,7 +95,7 @@ class FakeStore : SyncLocalStore {
         docAt[name] = Regex("\"updatedAt\":(\\d+)").find(json)!!.groupValues[1].toLong()
     }
     override suspend fun hasPhoto(id: String) = id in photos
-    override suspend fun missingPhotos() = entries.values.filterNot { it.deleted }.flatMap { it.photos }.map { it.id }.filterNot { it in photos }
+    override suspend fun missingPhotos() = entries.values.filter { !it.deleted || it.trashedAt != null }.flatMap { it.photos }.map { it.id }.filterNot { it in photos }
     override suspend fun photoBytes(id: String) = photos.getValue(id)
     override suspend fun savePhoto(id: String, bytes: ByteArray) { photos[id] = bytes }
     override suspend fun meta(key: String) = metas[key]

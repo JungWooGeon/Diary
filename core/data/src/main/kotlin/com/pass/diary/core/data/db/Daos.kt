@@ -60,14 +60,39 @@ interface EntryDao {
         insertEmotions(emotions); insertTags(tags); insertPhotos(photos)
     }
 
-    @Query("UPDATE entry SET deleted = 1, updatedAt = :now WHERE id = :id")
+    /** Hard delete (also 휴지통 › 영구 삭제): a content-less tombstone once [scrubDeleted] ran. */
+    @Query("UPDATE entry SET deleted = 1, trashedAt = NULL, updatedAt = :now WHERE id = :id")
     suspend fun markDeleted(id: String, now: Long)
 
-    @Query("SELECT photo.localPath FROM photo JOIN entry ON entry.id = photo.entryId WHERE entry.deleted = 1")
-    suspend fun deletedPhotoPaths(): List<String>
+    /** 휴지통: hidden everywhere (deleted = 1) but the content stays until [purgeTrash]. */
+    @Query("UPDATE entry SET deleted = 1, trashedAt = :now, updatedAt = :now WHERE id = :id AND deleted = 0")
+    suspend fun markTrashed(id: String, now: Long)
+
+    @Query("UPDATE entry SET deleted = 0, trashedAt = NULL, updatedAt = :now WHERE id = :id AND trashedAt IS NOT NULL")
+    suspend fun markRestored(id: String, now: Long)
+
+    @Transaction
+    @Query("SELECT * FROM entry WHERE trashedAt IS NOT NULL ORDER BY trashedAt DESC")
+    fun observeTrash(): Flow<List<EntryWithDetails>>
 
     /**
-     * Tombstones keep only what sync needs (id, date, time, createdAt, updatedAt, deleted): the diary text, feelings,
+     * Trash older than 30 days becomes a hard tombstone. updatedAt = trashedAt + 30 days (not "now"), so two devices
+     * purging the same entry write the identical file instead of a sync conflict.
+     */
+    @Query("UPDATE entry SET trashedAt = NULL, updatedAt = MAX(updatedAt + 1, trashedAt + :keepMs) WHERE trashedAt IS NOT NULL AND trashedAt + :keepMs <= :now")
+    suspend fun expireTrash(now: Long, keepMs: Long): Int
+
+    @Query("UPDATE entry SET trashedAt = NULL, updatedAt = :now WHERE trashedAt IS NOT NULL")
+    suspend fun emptyTrash(now: Long)
+
+    @Query("SELECT photo.localPath FROM photo JOIN entry ON entry.id = photo.entryId WHERE entry.deleted = 1 AND entry.trashedAt IS NULL")
+    suspend fun deletedPhotoPaths(): List<String>
+
+    /** Every entry id incl. trash and tombstones (내보내기). */
+    @Query("SELECT id FROM entry ORDER BY date, time") suspend fun allIds(): List<String>
+
+    /**
+     * Hard tombstones keep only what sync needs (id, date, time, createdAt, updatedAt, deleted): the diary text, feelings,
      * tags, photos, reply and chat are wiped. Covers every tombstone, so ones written before this rule get cleaned too.
      */
     @Query(SCRUB_ENTRY) suspend fun scrubEntries()
@@ -81,7 +106,7 @@ interface EntryDao {
     suspend fun scrubDeleted() { scrubEntries(); scrubEmotions(); scrubTags(); scrubPhotos(); scrubReplies(); scrubChat() }
 
     /** Hard delete of tombstones older than [before] that Drive already has (§2.1: 30 days after sync). */
-    @Query("DELETE FROM entry WHERE deleted = 1 AND updatedAt < :before AND id IN (SELECT entityId FROM sync_state WHERE remoteVersion = entry.updatedAt)")
+    @Query("DELETE FROM entry WHERE deleted = 1 AND trashedAt IS NULL AND updatedAt < :before AND id IN (SELECT entityId FROM sync_state WHERE remoteVersion = entry.updatedAt)")
     suspend fun purgeDeleted(before: Long)
 
     /** Emits whenever any entry is written; drives "back up after save". */
@@ -92,7 +117,7 @@ interface EntryDao {
     @Query("SELECT * FROM entry WHERE id NOT IN (SELECT entityId FROM sync_state WHERE remoteVersion = entry.updatedAt)")
     suspend fun unsynced(): List<EntryWithDetails>
 
-    @Query("SELECT photo.id FROM photo JOIN entry ON entry.id = photo.entryId WHERE entry.deleted = 0")
+    @Query("SELECT photo.id FROM photo JOIN entry ON entry.id = photo.entryId WHERE entry.deleted = 0 OR entry.trashedAt IS NOT NULL")
     suspend fun livePhotoIds(): List<String>
 
     @Query("SELECT * FROM photo WHERE id NOT IN (SELECT entityId FROM sync_state WHERE remoteFileId IS NOT NULL)")
@@ -144,9 +169,10 @@ interface EntryConflictDao {
 }
 
 // See [EntryDao.scrubDeleted]. DatabaseModule also runs these on open, for tombstones from older builds.
-private const val OF_DELETED = "entryId IN (SELECT id FROM entry WHERE deleted = 1)"
+// Only hard tombstones (trashedAt IS NULL): 휴지통 entries keep everything until they expire or are deleted for good.
+private const val OF_DELETED = "entryId IN (SELECT id FROM entry WHERE deleted = 1 AND trashedAt IS NULL)"
 internal const val SCRUB_ENTRY = "UPDATE entry SET title = '', body = '', weather = NULL, lightColor = NULL " +
-    "WHERE deleted = 1 AND (title != '' OR body != '' OR weather IS NOT NULL OR lightColor IS NOT NULL)"
+    "WHERE deleted = 1 AND trashedAt IS NULL AND (title != '' OR body != '' OR weather IS NOT NULL OR lightColor IS NOT NULL)"
 internal const val SCRUB_EMOTIONS = "DELETE FROM entry_emotion WHERE $OF_DELETED"
 internal const val SCRUB_TAGS = "DELETE FROM entry_tag WHERE $OF_DELETED"
 internal const val SCRUB_PHOTOS = "DELETE FROM photo WHERE $OF_DELETED"
