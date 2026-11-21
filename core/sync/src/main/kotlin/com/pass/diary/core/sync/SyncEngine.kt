@@ -296,7 +296,7 @@ class SyncEngine @Inject constructor(
             try {
                 when (p) {
                     is Pending.Entry -> upload(p.entityId, p.doc.path, "entry", JSON, DriveJson.encodeToString(EntryDoc.serializer(), p.doc).encodeToByteArray(), p.doc.updatedAt)
-                    is Pending.Photo -> upload(p.entityId, "photos/${p.entityId}.jpg", "photo", JPEG, store.photoBytes(p.entityId), 0)
+                    is Pending.Photo -> store.photoBytes(p.entityId).let { b -> upload(p.entityId, "photos/${p.entityId}.jpg", "photo", imageMime(b), b, 0) }
                     is Pending.Doc -> upload(p.entityId, p.name.path, p.name.id, JSON, p.json.encodeToByteArray(), p.updatedAt)
                 }
             } catch (e: DriveHttpException) {
@@ -368,7 +368,14 @@ class SyncEngine @Inject constructor(
         const val LOSER_KEEP_MS = 30L * 24 * 60 * 60 * 1000
         private const val MANIFEST = "manifest"
         private const val JSON = "application/json"
-        private const val JPEG = "image/jpeg"
+
+        /**
+         * 사진 스티커 are PNG (transparent) under the same photos/<id>.jpg name as every photo (PhotoStore): the name stays
+         * for the web and 내보내기, the Drive MIME follows the bytes so a browser shows the cut-out as what it is.
+         */
+        internal fun imageMime(bytes: ByteArray) =
+            if (bytes.size >= 8 && bytes.copyOfRange(0, 8).contentEquals(PNG_MAGIC)) "image/png" else "image/jpeg"
+        private val PNG_MAGIC = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
 
         fun md5(bytes: ByteArray): String = MessageDigest.getInstance("MD5").digest(bytes).joinToString("") { "%02x".format(it) }
     }

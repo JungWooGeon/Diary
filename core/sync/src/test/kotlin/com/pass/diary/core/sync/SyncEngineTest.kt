@@ -42,6 +42,13 @@ class SyncEngineTest {
         assertEquals(emptyList<Pending>(), store.pending())
     }
 
+    @Test fun stickerPngUploadsAsPngUnderTheSameJpgName() {
+        val png = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0)
+        assertEquals("image/png", SyncEngine.imageMime(png))
+        assertEquals("image/jpeg", SyncEngine.imageMime(byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xE0.toByte())))
+        assertEquals("image/jpeg", SyncEngine.imageMime(byteArrayOf(1, 2, 3)))
+    }
+
     @Test fun incrementalUploadsOnlyTheChangeAndRenamesOnDateChange() = runTest {
         val (store, engine) = device()
         store.save(doc("a", 10)); store.save(doc("b", 10))
