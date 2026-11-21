@@ -192,7 +192,7 @@ fun ReportScreen(onLetters: () -> Unit, onYear: () -> Unit, vm: ReportViewModel 
                 OniFigure(if (r.entries == 0) LightMixer.OFF else u.light, if (r.entries == 0) OniExpression.SLEEP else OniExpression.forGroup(dom ?: EmotionGroup.CALM), 96.dp)
                 Column(Modifier.weight(1f).odCard(RoundedCornerShape(18.dp)).padding(horizontal = 15.dp, vertical = 12.dp)) {
                     Text(if (r.entries == 0) "이 기간엔 아직 켜진 빛이 없어. 오늘 하나 켜 볼까?" else u.retro, style = OdType.say.copy(fontSize = 15.sp, lineHeight = 23.sp))
-                    Text("온이(AI) 한마디", style = OdType.caption2, color = c.ink2, modifier = Modifier.padding(top = 6.dp))
+                    Text("온이의 한마디", style = OdType.caption2, color = c.ink2, modifier = Modifier.padding(top = 6.dp))
                 }
             }
             if (r.entries > 0 && wide) {

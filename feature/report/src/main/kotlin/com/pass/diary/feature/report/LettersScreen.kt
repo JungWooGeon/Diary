@@ -88,7 +88,7 @@ fun LettersScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: LettersViewM
                 Oni(null, OniExpression.LETTER, Modifier.width(76.dp))
                 Column {
                     Text("받은 답장 ${all?.size ?: 0}통", style = OdType.title2)
-                    Text("온이(AI)가 쓴 답장을 모아 뒀어요", style = OdType.caption1, color = c.ink2)
+                    Text("온이의 한마디를 모아 뒀어요", style = OdType.caption1, color = c.ink2)
                 }
             }
         }

@@ -202,17 +202,9 @@ class WriteViewModel @Inject constructor(
     }
     fun setWeather(w: String) = edit { it.copy(weather = w) }
 
-    /**
-     * 말로 쓰기: the raw transcript goes in at once; if the on-device LLM tidies it (numbers, spacing), the tidied text
-     * replaces that raw piece, unless the user already edited it.
-     */
+    /** 말로 쓰기: the transcript goes in as-is. */
     fun dictated(raw: String) {
-        if (raw.isBlank()) return
-        appendBody(raw, EntrySource.VOICE)
-        viewModelScope.launch {
-            val tidy = runCatching { assistant.tidy(raw) }.getOrDefault(raw)
-            if (tidy.isNotBlank() && tidy != raw) edit { e -> if (raw in e.body) e.copy(body = e.body.replaceFirst(raw, tidy)) else e }
-        }
+        if (raw.isNotBlank()) appendBody(raw, EntrySource.VOICE)
     }
 
     fun setDate(date: String) = edit { it.copy(date = date) }

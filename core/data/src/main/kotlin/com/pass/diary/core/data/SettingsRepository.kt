@@ -44,7 +44,6 @@ class SettingsRepository(private val store: DataStore<Preferences>, private val 
     private val updated = longPreferencesKey("updated_at")
     private val aiReply = booleanPreferencesKey("ai_reply")
     private val aiSuggest = booleanPreferencesKey("ai_suggest")
-    private val aiChat = booleanPreferencesKey("ai_chat")
     private val hideWidget = booleanPreferencesKey("hide_widget_content")
 
     val settings: Flow<Settings> = store.data.map { p ->
@@ -60,7 +59,6 @@ class SettingsRepository(private val store: DataStore<Preferences>, private val 
             updatedAt = p[updated] ?: 0,
             aiReply = p[aiReply] ?: true,
             aiSuggest = p[aiSuggest] ?: true,
-            aiChat = p[aiChat] ?: true,
             hideWidgetContent = p[hideWidget] ?: false,
         )
     }
@@ -78,9 +76,8 @@ class SettingsRepository(private val store: DataStore<Preferences>, private val 
     // AI and widget privacy are this phone's choice: not in settings.json.
     suspend fun setAiReply(on: Boolean) = store.edit { it[aiReply] = on }
     suspend fun setAiSuggest(on: Boolean) = store.edit { it[aiSuggest] = on }
-    suspend fun setAiChat(on: Boolean) = store.edit { it[aiChat] = on }
-    /** Onboarding's AI choice: all three at once. */
-    suspend fun setAiAll(on: Boolean) = store.edit { it[aiReply] = on; it[aiSuggest] = on; it[aiChat] = on }
+    /** Onboarding's AI choice: both at once. */
+    suspend fun setAiAll(on: Boolean) = store.edit { it[aiReply] = on; it[aiSuggest] = on }
     suspend fun setHideWidgetContent(on: Boolean) = store.edit { it[hideWidget] = on }
     suspend fun setTextSize(step: Int) = editSynced { it[textSize] = step.coerceIn(0, Settings.TEXT_SCALES.lastIndex) }
 

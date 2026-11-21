@@ -12,10 +12,10 @@ import kotlinx.coroutines.flow.Flow
  */
 
 sealed interface ReplyResult {
-    /** Oni's letter, already checked (LLM: filtered + retried, else the library reply). The UI types it out. Always shown with the "온이(AI)가 쓴 답장" label. */
+    /** Oni's letter from the reply library. The UI types it out under the "온이의 한마디" label. */
     data class Letter(val text: String, val source: ReplySource, val templateId: String? = null) : ReplyResult
 
-    /** Crisis wording detected: show the 109 / 1577-0199 card instead of a reply (always wins over any LLM reply). */
+    /** Crisis wording detected: show the 109 / 1577-0199 card instead of a reply (always wins over a reply). */
     data object Crisis : ReplyResult
 
     /** 설정 › AI › 온이 답장 is off (crisis detection still ran and found nothing). */
@@ -38,9 +38,6 @@ interface ChatResponder {
     /** Max questions Oni asks (the progress bar). */
     val maxQuestions: Int get() = 5
 
-    /** false = no on-device LLM: library questions + the user's answers joined (show the "온이 깨우기" hint). */
-    val llmReady: Boolean get() = true
-
     /** ① on one user answer; checked on every turn before [next] / [compose]. A hit ends the chat with the help card. */
     suspend fun isCrisis(text: String): Boolean
 
@@ -50,7 +47,7 @@ interface ChatResponder {
     /** Quick replies shown under Oni's last question (may be empty). */
     fun suggestions(history: List<ChatTurn>): List<String> = emptyList()
 
-    /** Turns the conversation into a diary body (the user's words kept; AI only tidies). */
+    /** Turns the conversation into a diary body (the user's answers joined). */
     suspend fun compose(history: List<ChatTurn>): String
 }
 
@@ -65,13 +62,7 @@ interface WritingAssistant {
     /** Auto title ("온이가 붙인 제목") while typing. null = none. */
     suspend fun suggestTitle(body: String): String? = autoTitle(body)
 
-    /** Better title from the LLM once the reply is done (null = keep the auto one). Last step of §5.1. */
-    suspend fun refineTitle(body: String): String? = null
-
-    /** 말로 쓰기 정리 (LLM only; the transcript unchanged without one or if the result fails the checks). */
-    suspend fun tidy(transcript: String): String = transcript
-
-    /** The editor opened: start loading the LLM so the reply after saving doesn't wait for it (no-op without one). */
+    /** The editor opened: start loading the classifier so the reply after saving doesn't wait for it. */
     fun warmUp() {}
 }
 

@@ -86,7 +86,7 @@ import javax.inject.Inject
 /** [entryId] = continue that entry (from the editor); null = a new entry today. */
 @Serializable data class ChatRoute(val entryId: String? = null)
 
-/** [crisis] = an answer hit crisis detection: the chat stops (no question, no compose, no LLM) and shows the help card. */
+/** [crisis] = an answer hit crisis detection: the chat stops (no question, no compose) and shows the help card. */
 data class ChatState(
     val turns: List<ChatTurn> = emptyList(), val thinking: Boolean = false, val light: Light? = null, val done: Boolean = false,
     val crisis: Boolean = false,
@@ -138,7 +138,7 @@ class ChatViewModel @Inject constructor(
         state.update { it.copy(turns = it.turns + ChatTurn(false, t), thinking = true) }
         viewModelScope.launch {
             saveTurns() // on disk before anything else runs: relock / back / process death never loses it
-            // ① on every answer, before the LLM sees it (ARCHITECTURE §5.1).
+            // ① on every answer (ARCHITECTURE §5.1).
             if (responder.isCrisis(t)) { state.update { it.copy(thinking = false, crisis = true) }; return@launch }
             if (questionsAsked < responder.maxQuestions) ask() else state.update { it.copy(thinking = false, done = true) }
         }
@@ -204,7 +204,7 @@ class ChatViewModel @Inject constructor(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ChatScreen(onBack: () -> Unit, onComposed: (String) -> Unit, onWake: () -> Unit = {}, vm: ChatViewModel = hiltViewModel()) {
+fun ChatScreen(onBack: () -> Unit, onComposed: (String) -> Unit, vm: ChatViewModel = hiltViewModel()) {
     val c = Od.c
     val s by vm.state.collectAsStateWithLifecycle()
     var askLeave by remember { mutableStateOf(false) }
@@ -222,7 +222,7 @@ fun ChatScreen(onBack: () -> Unit, onComposed: (String) -> Unit, onWake: () -> U
     Box(Modifier.fillMaxSize().background(c.bg).ambient(glow, 0.6f, 80.dp + 32.dp, 360.dp)) {
         Column(Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
             OdTopBar(
-                title = "온이와 대화로 쓰기", subtitle = "온이(AI) · 이 폰 안에서만 대화해요",
+                title = "온이와 대화로 쓰기", subtitle = "이 폰 안에서만 대화해요",
                 left = { IconBtn(OdIcon.Back, back, "뒤로") },
             )
             Row(Modifier.readableWidth(ChatWidth).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -234,16 +234,6 @@ fun ChatScreen(onBack: () -> Unit, onComposed: (String) -> Unit, onWake: () -> U
                         "질문 ${asked.coerceAtLeast(1)} / $max · 언제든 일기로 만들 수 있어요", style = OdType.caption2, color = c.ink2,
                         textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
                     )
-                    // No on-device LLM: Oni still asks library questions; a quiet hint where a real conversation lives.
-                    if (!vm.responder.llmReady) Row(
-                        Modifier.padding(top = 12.dp).fillMaxWidth().odCard(RoundedCornerShape(14.dp)).clickable(onClick = onWake)
-                            .padding(horizontal = 14.dp, vertical = 11.dp),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        OdIcon(OdIcon.Sparkle, size = 16.dp, stroke = 2f, tint = c.ink2)
-                        Text("지금은 준비된 질문으로 물어볼게. 온이를 깨우면 네 답을 듣고 이어서 물어봐.", style = OdType.caption1, color = c.ink2, modifier = Modifier.weight(1f))
-                        Text("깨우기", style = OdType.caption1.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold))
-                    }
                 }
                 itemsIndexed(s.turns) { i, t -> if (t.fromOni) OniBubble(t.text, light, first = i == 0) else MyBubble(t.text, glow) }
                 if (s.crisis) item {

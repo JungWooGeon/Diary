@@ -10,14 +10,14 @@
     <queries>
         <intent><action android:name="android.speech.RecognitionService" /></intent>
     </queries>
-    <!-- 온이 깨우기: Wi-Fi-only model download + its foreground (dataSync) worker and progress notification. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- WorkManager adds this for foreground workers; the app has none (sync runs as normal background work). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
+    <!-- 알림 (core:reminder) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Drive (core:sync) is the real backup; Android Auto Backup is a free safety net for people who never sign in.
-         Only the diary DB + small settings (res/xml/*_rules.xml): no photos over quota, no AI models, no v1 DB, no PIN. -->
+         Only the diary DB + small settings (res/xml/*_rules.xml): no photos over quota, no v1 DB, no PIN. -->
     <application
         android:name=".DiaryApplication"
         android:allowBackup="true"
@@ -52,15 +52,6 @@
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_month" />
         </receiver>
-
-        <!-- LiteRT-LM GPU backend (core/ai/DEPS.md); without them it falls back to CPU. -->
-        <uses-native-library android:name="libvndksupport.so" android:required="false" />
-        <uses-native-library android:name="libOpenCL.so" android:required="false" />
-
-        <service
-            android:name="androidx.work.impl.foreground.SystemForegroundService"
-            android:foregroundServiceType="dataSync"
-            tools:node="merge" />
 
         <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="${admobAppId}" />
         <!-- Hide Google's "native ad validator" overlay that test ads show in debug builds. -->

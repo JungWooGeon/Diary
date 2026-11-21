@@ -91,8 +91,6 @@ import com.pass.diary.feature.my.PremiumRoute
 import com.pass.diary.feature.my.PremiumScreen
 import com.pass.diary.feature.my.ReminderSettingsRoute
 import com.pass.diary.feature.my.ReminderSettingsScreen
-import com.pass.diary.feature.my.WakeRoute
-import com.pass.diary.feature.my.WakeScreen
 import com.pass.diary.feature.report.LettersRoute
 import com.pass.diary.feature.report.LettersScreen
 import com.pass.diary.feature.report.ReportRoute
@@ -132,7 +130,7 @@ fun DiaryApp(
         nav.navigate(
             when (r) {
                 "calendar" -> CalendarRoute; "search" -> SearchRoute(arg); "report" -> ReportRoute; "year" -> YearLightRoute; "letters" -> LettersRoute
-                "my" -> MyRoute; "premium" -> PremiumRoute; "wake" -> WakeRoute; "lock" -> LockSettingsRoute; "decorate" -> DecorateRoute; "licenses" -> LicensesRoute; "ai" -> AiSettingsRoute; "reminder" -> ReminderSettingsRoute
+                "my" -> MyRoute; "premium" -> PremiumRoute; "lock" -> LockSettingsRoute; "decorate" -> DecorateRoute; "licenses" -> LicensesRoute; "ai" -> AiSettingsRoute; "reminder" -> ReminderSettingsRoute
                 "trash" -> TrashRoute; "export" -> ExportRoute
                 "write" -> WriteRoute(entryId = arg); "question" -> WriteRoute(question = arg); "chat" -> ChatRoute(arg); "reply" -> ReplyRoute(arg!!)
                 else -> TodayRoute
@@ -191,7 +189,7 @@ fun DiaryApp(
             composable<MyRoute>(enterTransition = { EnterTransition.None }, exitTransition = { ExitTransition.None }) {
                 if (layout.twoPane) MyTwoPane(nav)
                 else MyScreen(
-                    onPremium = { nav.navigate(PremiumRoute) }, onWake = { nav.navigate(WakeRoute) },
+                    onPremium = { nav.navigate(PremiumRoute) },
                     onLock = { nav.navigate(LockSettingsRoute) }, onDecorate = { nav.navigate(DecorateRoute) },
                     onLicenses = { nav.navigate(LicensesRoute) }, onAi = { nav.navigate(AiSettingsRoute) },
                     onReminder = { nav.navigate(ReminderSettingsRoute) },
@@ -199,14 +197,13 @@ fun DiaryApp(
                 )
             }
             composable<PremiumRoute> { Readable { PremiumScreen(onClose = { nav.popBackStack() }) } }
-            composable<WakeRoute> { Readable { WakeScreen(onBack = { nav.popBackStack() }) } }
             composable<LockSettingsRoute> { Readable { LockSettingsScreen(onBack = { nav.popBackStack() }) } }
             composable<DecorateRoute> { Readable { DecorateScreen(onBack = { nav.popBackStack() }, onPremium = { nav.navigate(PremiumRoute) }) } }
             composable<LicensesRoute> { Readable { LicensesScreen(onBack = { nav.popBackStack() }) } }
             composable<ReminderSettingsRoute> { Readable { ReminderSettingsScreen(onBack = { nav.popBackStack() }) } }
             composable<TrashRoute> { Readable { TrashScreen(onBack = { nav.popBackStack() }) } }
             composable<ExportRoute> { Readable { ExportScreen(onBack = { nav.popBackStack() }) } }
-            composable<AiSettingsRoute> { Readable { AiSettingsScreen(onBack = { nav.popBackStack() }, onWake = { nav.navigate(WakeRoute) }) } }
+            composable<AiSettingsRoute> { Readable { AiSettingsScreen(onBack = { nav.popBackStack() }) } }
             composable<WriteRoute> {
                 WriteScreen(
                     onDone = { nav.popBackStack() },
@@ -223,7 +220,6 @@ fun DiaryApp(
                         if (nav.currentBackStackEntry?.destination?.hasRoute<WriteRoute>() == true) nav.popBackStack()
                         nav.navigate(WriteRoute(entryId = id))
                     },
-                    onWake = { nav.navigate(WakeRoute) },
                 )
             }
             composable<ReplyRoute> {
@@ -268,17 +264,17 @@ private fun Readable(content: @Composable () -> Unit) {
     Box(Modifier.fillMaxSize().background(Od.c.bg)) { Box(Modifier.readableWidth(720.dp).fillMaxHeight()) { content() } }
 }
 
-private val myRows = mapOf("wake" to "온이 깨우기", "lock" to "잠금", "decorate" to "꾸미기", "ai" to "AI 기능", "reminder" to "알림", "export" to "내보내기", "trash" to "휴지통", "licenses" to "오픈소스 라이선스")
+private val myRows = mapOf("lock" to "잠금", "decorate" to "꾸미기", "ai" to "AI 기능", "reminder" to "알림", "export" to "내보내기", "trash" to "휴지통", "licenses" to "오픈소스 라이선스")
 
 /** 마이 on a wide screen: settings list on the left, the chosen page on the right (its row highlighted). */
 @Composable
 private fun MyTwoPane(nav: NavHostController) {
-    var sel by rememberSaveable { mutableStateOf<String?>("wake") }
+    var sel by rememberSaveable { mutableStateOf<String?>("lock") }
     Row(Modifier.fillMaxSize()) {
         Box(Modifier.weight(0.42f)) {
             CompositionLocalProvider(LocalSelectedRow provides myRows[sel]) {
                 MyScreen(
-                    onPremium = { nav.navigate(PremiumRoute) }, onWake = { sel = "wake" }, onLock = { sel = "lock" },
+                    onPremium = { nav.navigate(PremiumRoute) }, onLock = { sel = "lock" },
                     onDecorate = { sel = "decorate" }, onLicenses = { sel = "licenses" }, onAi = { sel = "ai" }, onReminder = { sel = "reminder" },
                     onTrash = { sel = "trash" }, onExport = { sel = "export" },
                 )
@@ -288,10 +284,9 @@ private fun MyTwoPane(nav: NavHostController) {
         Box(Modifier.weight(0.58f)) {
             val close = { sel = null }
             when (sel) {
-                "wake" -> WakeScreen(onBack = close)
                 "lock" -> LockSettingsScreen(onBack = close)
                 "decorate" -> DecorateScreen(onBack = close, onPremium = { nav.navigate(PremiumRoute) })
-                "ai" -> AiSettingsScreen(onBack = close, onWake = { sel = "wake" })
+                "ai" -> AiSettingsScreen(onBack = close)
                 "licenses" -> LicensesScreen(onBack = close)
                 "reminder" -> ReminderSettingsScreen(onBack = close)
                 "trash" -> TrashScreen(onBack = close)

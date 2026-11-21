@@ -125,7 +125,7 @@ private class Dictation(
 /**
  * "말로 쓰기": returns the action for the editor's button. Handles the mic permission, the one-time "인터넷을 쓸 수
  * 있어요" notice and the live panel. [onTranscript] receives the raw stitched transcript when the user taps 넣기; the
- * editor inserts it as-is (PLAN §3.2 기본 AI: 원문 그대로) — that callback is also the hook for AI tidy-up.
+ * editor inserts it as-is (PLAN §3.2 기본 AI: 원문 그대로).
  */
 @Composable
 fun rememberDictation(onTranscript: (String) -> Unit): () -> Unit {

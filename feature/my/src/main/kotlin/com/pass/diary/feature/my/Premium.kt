@@ -122,7 +122,6 @@ fun PremiumScreen(onClose: () -> Unit, vm: PremiumViewModel = hiltViewModel()) {
                         listOf(
                             "광고 영구 제거" to "캘린더·리포트 하단 배너까지 모두 사라져요", "올해의 빛" to "365일 빛 모자이크와 공유 카드",
                             "PDF 일기책" to "한 달 일기를 책처럼 묶어 저장 (다음 업데이트에서 열려요)", "특별 빛 팔레트 · 소품 · 테마 · 폰트" to "온이를 내 취향대로 꾸미기",
-                            "고급 온이" to "RAM 12GB 이상 폰에서 더 섬세한 답장",
                         ).forEachIndexed { i, (a, b) ->
                             Row(Modifier.padding(top = if (i == 0) 0.dp else 14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Box(Modifier.padding(top = 1.dp).size(22.dp).clip(CircleShape).background(OdColors.BrandGlow.copy(alpha = 0.25f)), contentAlignment = Alignment.Center) {
@@ -136,7 +135,7 @@ fun PremiumScreen(onClose: () -> Unit, vm: PremiumViewModel = hiltViewModel()) {
                         }
                     }
                     Text(
-                        "감정 20종 · 통계 · 백업 · 온이 AI는 지금처럼 전부 무료예요.", style = OdType.caption2, color = c.ink2,
+                        "감정 20종 · 통계 · 백업 · 온이 답장은 지금처럼 전부 무료예요.", style = OdType.caption2, color = c.ink2,
                         textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 16.dp),
                     )
                 }

@@ -58,12 +58,12 @@ class SettingsRepositoryTest {
     @Test fun aiSwitchesAndWidgetPrivacyPersistLocally() = runTest {
         val file = tmp.newFile("a.preferences_pb").apply { delete() }
         val repo = SettingsRepository(PreferenceDataStoreFactory.create(scope = backgroundScope) { file }) { 7 }
-        repo.settings.first().let { assertTrue(it.aiReply && it.aiSuggest && it.aiChat && !it.hideWidgetContent) }
+        repo.settings.first().let { assertTrue(it.aiReply && it.aiSuggest && !it.hideWidgetContent) }
         repo.setAiAll(false) // onboarding "AI 안 쓸래요"
         repo.setAiSuggest(true)
         repo.setHideWidgetContent(true)
         val s = repo.settings.first()
-        assertEquals(listOf(false, true, false, true), listOf(s.aiReply, s.aiSuggest, s.aiChat, s.hideWidgetContent))
+        assertEquals(listOf(false, true, true), listOf(s.aiReply, s.aiSuggest, s.hideWidgetContent))
         assertEquals(0L, s.updatedAt) // not in settings.json
         assertFalse(repo.toJson(s).contains("ai"))
     }

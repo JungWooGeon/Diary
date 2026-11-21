@@ -4,7 +4,5 @@
     <application>
         <receiver android:name=".DebugSeedReceiver" android:exported="true" />
         <receiver android:name=".DebugAiReceiver" android:exported="true" />
-        <!-- LLM speed check on a real phone; see LlmBenchActivity.kt for the adb commands. -->
-        <activity android:name=".LlmBenchActivity" android:exported="true" android:theme="@android:style/Theme.DeviceDefault" />
     </application>
 </manifest>

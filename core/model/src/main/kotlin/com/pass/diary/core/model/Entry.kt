@@ -59,7 +59,9 @@ data class Photo(
 )
 
 enum class ReplySource(val key: String) {
-    TEMPLATE("template"), LLM("llm");
+    TEMPLATE("template"),
+    /** Legacy: replies stored by the removed on-device LLM (2026-11). Read only, never written now. */
+    LLM("llm");
 
     companion object { fun of(key: String) = entries.firstOrNull { it.key == key } ?: TEMPLATE }
 }
@@ -116,12 +118,10 @@ data class Settings(
     /** Last change of anything above (settings.json on Drive); 0 = never changed. */
     val updatedAt: Long = 0,
     // 설정 › AI (this phone only). Crisis detection runs regardless: it is a safety rule, not an AI feature.
-    /** 온이 답장 after saving. Off = no reply (no classifier, no LLM). */
+    /** 온이 답장 after saving. Off = no reply (no classifier). */
     val aiReply: Boolean = true,
     /** 감정·태그 추천 chips in the editor. */
     val aiSuggest: Boolean = true,
-    /** 대화형 AI (downloaded LLM) for replies, 말로 쓰기 정리, 대화로 쓰기, titles. Off = basic AI only. */
-    val aiChat: Boolean = true,
     /** Widgets show no emotion names / colors (also forced while the app lock is on). */
     val hideWidgetContent: Boolean = false,
 ) {

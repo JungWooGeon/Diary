@@ -7,7 +7,6 @@ plugins {
 android {
     namespace = "com.pass.diary.core.ai"
     // shared/ is packaged once, by core:data (two libraries adding the same asset dir = duplicate assets in the app).
-    defaultConfig { consumerProguardFiles("consumer-rules.pro") }
     testOptions { unitTests.isReturnDefaultValues = true }
 }
 dependencies {
@@ -15,6 +14,5 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.litert)
-    implementation(libs.litertlm.android)
     testImplementation(libs.kotlinx.coroutines.test)
 }

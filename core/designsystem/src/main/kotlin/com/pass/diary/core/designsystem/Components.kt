@@ -273,7 +273,7 @@ fun EmotionChip(key: EmotionKey, intensity: Int?, onClick: () -> Unit, modifier:
 }
 
 @Composable
-fun AiBadge(text: String = "온이(AI)", modifier: Modifier = Modifier, icon: Boolean = true) {
+fun AiBadge(text: String = "온이", modifier: Modifier = Modifier, icon: Boolean = true) {
     val c = Od.c
     Row(
         modifier.height(22.dp).clip(RoundedCornerShape(11.dp)).background(c.surface2).padding(horizontal = 8.dp),

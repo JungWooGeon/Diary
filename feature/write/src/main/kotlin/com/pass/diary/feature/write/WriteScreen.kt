@@ -298,7 +298,7 @@ private fun Editor(state: WriteState, vm: WriteViewModel, onBack: () -> Unit, on
         val req = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         if (room >= 2) pickMany.launch(req) else if (room == 1) pickOne.launch(req)
     }
-    // 말로 쓰기 (core:device, on-device recognizer) -> raw transcript, then the LLM tidy when installed.
+    // 말로 쓰기 (core:device, on-device recognizer) -> transcript, inserted as-is.
     val dictate = com.pass.diary.core.device.rememberDictation { vm.dictated(it) }
     val weather = com.pass.diary.core.device.rememberWeatherAction(entry.date, vm::setWeather)
 

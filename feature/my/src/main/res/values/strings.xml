@@ -29,8 +29,6 @@
     <string name="my_lock_relock_300">5분 뒤</string>
     <string name="my_lock_secure">최근 앱 화면 가리기</string>
     <string name="my_lock_secure_desc">최근 앱 목록에서 내용을 가리고 화면 캡처를 막아요</string>
-    <string name="my_ai">온이 깨우기</string>
-    <string name="my_ai_desc">대화형 AI 내려받기 (준비 중)</string>
     <string name="my_decorate">꾸미기</string>
     <string name="my_theme_system">시스템</string>
     <string name="my_theme_light">라이트</string>

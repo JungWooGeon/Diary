@@ -83,7 +83,7 @@ object OdColors {
     val BrandGlow = Color(0xFFF5A957)
     val OffLight = rgb(EmotionGroup.OFF_LIGHT)
     val OffGlow = rgb(EmotionGroup.OFF_GLOW)
-    /** Sleepy / no-light ambient (오늘 기록 없음, 잠금, 온이 깨우기). */
+    /** Sleepy / no-light ambient (오늘 기록 없음, 잠금). */
     val Dusk = Color(0xFF9A90B8)
     val PremiumFrom = Color(0xFFF7D98B)
     val PremiumTo = Color(0xFFF2B66C)

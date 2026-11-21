@@ -121,7 +121,7 @@ internal fun EntryDetailCard(e: Entry, reply: String?, onOpen: () -> Unit) {
         if (reply != null) Column(Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(c.surface2).padding(horizontal = 14.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Oni(light, OniExpression.forGroup(LightMixer.dominantGroup(e.emotions)).takeIf { !light.off } ?: OniExpression.DEFAULT, Modifier.size(28.dp), animate = false)
-                AiBadge("온이(AI)가 쓴 답장", icon = false)
+                AiBadge("온이의 한마디", icon = false)
             }
             Text(reply, style = OdType.body2, modifier = Modifier.padding(top = 8.dp))
         }

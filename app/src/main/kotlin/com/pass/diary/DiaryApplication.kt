@@ -21,7 +21,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -51,7 +50,6 @@ class Startup @Inject constructor(
     private val syncStore: SyncLocalStore,
     private val settings: com.pass.diary.core.data.SettingsRepository,
     private val billing: com.pass.diary.core.billing.Billing,
-    private val oni: dagger.Lazy<com.pass.diary.core.ai.OniLlm>,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
@@ -64,11 +62,11 @@ class Startup @Inject constructor(
         // v1 stored the lock password in plain text; v2 never reads it (new PIN required) -> remove it.
         File(context.filesDir, "datastore/password_settings.preferences_pb").delete()
         done = true
-        // 설정 › AI › 대화형 AI: OniLlm.engine() is null while off, for every caller (reply, tidy, title, chat).
-        scope.launch(Dispatchers.Default) {
-            settings.settings.map { it.aiChat }.distinctUntilChanged().collect { oni.get().setEnabled(it) }
-        }
         scope.launch {
+            // The on-device LLM is gone (versionCode 202): free a model downloaded by an earlier build (~2.6 GB).
+            File(context.filesDir, "models").deleteRecursively()
+            File(context.dataDir, "shared_prefs/oni_model.xml").delete()
+            runCatching { androidx.work.WorkManager.getInstance(context).cancelAllWorkByTag("oni-model") }
             val now = System.currentTimeMillis()
             runCatching { repository.purgeTrash(now); entries.purgeDeleted(now - THIRTY_DAYS); conflicts.purge(now) }
             if (syncStore.meta(DriveAuth.META_ACCOUNT) != null) SyncScheduler.onAppOpen(context)

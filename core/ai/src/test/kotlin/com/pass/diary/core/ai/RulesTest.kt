@@ -19,46 +19,6 @@ import org.junit.Test
 
 /** Rule components against the shared/ specs and their own test cases. */
 class RulesTest {
-    @Test fun cleanDropsEchoedSpeakerLabel() {
-        assertEquals("영화 보러 가기로 했구나!", LlmReplyEngine.clean("온이: 영화 보러 가기로 했구나!<end_of_turn>"))
-        assertEquals("영화 보러 가기로 했구나!", LlmReplyEngine.clean("\"온이 : 영화 보러 가기로 했구나!\""))
-        assertEquals("온이는 내 친구야", LlmReplyEngine.clean("온이는 내 친구야"))
-    }
-
-    @Test fun filtersSpecTestCases() {
-        val spec = TestAssets.json("ai/llm/filters.json")!!.obj
-        val f = OutputFilter(spec, people) // the app's wiring (AiModule): entities cases assume the tags.json people
-        val bad = spec.objects("testCases").filter { c ->
-            f.ok(c.str("rule")!!, c.str("text")!!, c.str("input") ?: "") != c.bool("pass")
-        }
-        assertTrue("failing filter cases: $bad", bad.isEmpty())
-        assertEquals("4.2", OutputFilter.sinoValue("사 점 이"))
-        assertEquals("2026", OutputFilter.sinoValue("이천이십육"))
-        assertEquals("10", OutputFilter.sinoValue("십"))
-    }
-
-    private val people = TestAssets.json("ai/tags.json")!!.obj.objects("people").map { listOf(it.str("tag")!!) + it.strings("aliases") }
-
-    @Test fun peopleDictionaryNamesMustBeInInput() {
-        val f = OutputFilter(TestAssets.json("ai/llm/filters.json")!!.obj, people = listOf(listOf("엄마", "어머니"), listOf("동생"), listOf("부장님", "부장")))
-        assertTrue(f.check(listOf("entities"), "엄마 말이 서운했겠다.", "엄마가 또 비교했다").isEmpty())
-        assertTrue(f.check(listOf("entities"), "어머니 말이 서운했겠다.", "엄마가 또 비교했다").isEmpty()) // same tag
-        assertEquals(listOf("entities"), f.check(listOf("entities"), "동생 때문에 속상했겠다.", "엄마가 또 비교했다"))
-        assertTrue(f.check(listOf("entities"), "부장님이 그랬구나.", "부장이 또 뭐라 했다").isEmpty())
-    }
-
-    /** Integration-report false rejects (REPORT_v2 raw outputs): adverbs, words inside words, honorific variants. */
-    @Test fun entitiesTolerateCommonWordsAndHonorifics() {
-        val f = OutputFilter(TestAssets.json("ai/llm/filters.json")!!.obj, people)
-        fun ok(out: String, inp: String) = f.check(listOf("entities"), out, inp).isEmpty()
-        assertTrue(ok("한강에서 콩이랑 같이 노을 보는 시간 정말 평화로웠겠다.", "퇴근하고 콩이랑 한강공원 산책했다."))
-        assertTrue(ok("그 마음 받아들여도 돼.", "요즘 아무것도 하기 싫다."))
-        assertTrue(ok("원장님께 울컥하며 섭섭함을 느낌.", "원장쌤이 끝나고 따로 불러서 고생했다고 하셨다."))
-        assertTrue(ok("버스를 30분이나 기다렸구나.", "버스를 삼십 분 기다렸다"))
-        assertFalse(ok("5년 동안 다닌 학원이구나.", "3년 다닌 학원 오늘 마지막 날")) // '오늘'의 '오' is not 5
-        assertFalse(ok("서연이랑 김치찌개 먹었구나.", "동기 지민이랑 김치찌개 먹었고"))
-    }
-
     @Test fun crisisSpecTestCases() {
         val cfg = TestAssets.json("ai/crisis.json")!!.obj
         val d = CrisisDetector(cfg)
@@ -179,11 +139,4 @@ class RulesTest {
         assertNotEquals("u1", e.reply("최고의 팀플이었다!", listOf(EntryEmotion(EmotionKey.JOY, 4)), emptyList())!!.id)
     }
 
-    @Test fun modelsJsonParses() {
-        val specs = ModelSpec.parse(TestAssets.json("ai/llm/models.json")!!.arr)
-        assertEquals(listOf("e2b", "e4b"), specs.map { it.id })
-        assertEquals(listOf(8, 12), specs.map { it.minRamGb })
-        assertEquals(listOf(false, true), specs.map { it.premium })
-        assertTrue(specs.all { it.url.startsWith("https://huggingface.co/litert-community/") && it.sha256!!.length == 64 && it.sizeBytes > 2e9 })
-    }
 }

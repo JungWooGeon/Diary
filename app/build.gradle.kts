@@ -10,9 +10,9 @@ android {
     namespace = "com.pass.diary"
     defaultConfig {
         applicationId = "com.pass.diary"
-        versionCode = 200
+        versionCode = 202
         versionName = "2.0.0"
-        // LiteRT + LiteRT-LM natives: 64-bit only (LiteRT-LM ships no 32-bit; 32-bit phones fail the 8GB gate anyway).
+        // LiteRT (classifier) natives: 64-bit only.
         // x86_64 keeps Intel emulators working.
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         // AdMob app id: Google's sample id for debug; 온이 일기's own from local.properties for release
@@ -46,8 +46,6 @@ android {
         }
     }
     androidResources { localeFilters += listOf("ko") }
-    // Debug-only LLM benchmark (LlmBenchActivity) reads the 30 eval diaries.
-    sourceSets["debug"].assets.srcDirs(rootProject.file("tools/model-eval/data"))
     buildFeatures { buildConfig = true }
     testOptions { unitTests.isReturnDefaultValues = true } // android.util.Log in JVM tests
 }

@@ -106,7 +106,7 @@ import javax.inject.Inject
 @Serializable data class ReplyRoute(val entryId: String)
 
 sealed interface ReplyUi {
-    /** "답장 쓰는 중": the whole reply is generated, checked and retried behind this; no draft text is ever shown. */
+    /** A short "reading" beat before the library reply appears. */
     data object Writing : ReplyUi
     /** [fresh] = just written: typed out once. A stored reply (revisit) shows at once. */
     data class Arrived(val text: String, val at: Long, val reported: Boolean, val fresh: Boolean = false) : ReplyUi
@@ -123,7 +123,6 @@ class ReplyViewModel @Inject constructor(
     private val entries: EntryRepository,
     private val replies: ReplyDao,
     private val provider: ReplyProvider,
-    private val assistant: WritingAssistant,
     private val reports: ReplyReports,
 ) : ViewModel() {
     private val id = savedStateHandle.toRoute<ReplyRoute>().entryId
@@ -158,12 +157,6 @@ class ReplyViewModel @Inject constructor(
                     val now = System.currentTimeMillis()
                     replies.upsert(ReplyEntity(id, r.text, r.source.key, r.templateId, now, reported = false))
                     state.update { it.copy(ui = ReplyUi.Arrived(r.text, now, false, fresh = true)) }
-                    // §5.1 last step: an auto-titled entry gets the LLM's title (a title the user typed is kept).
-                    if (entry.title.isBlank() || entry.title == autoTitle(entry.body)) {
-                        runCatching { assistant.refineTitle(entry.body) }.getOrNull()?.takeIf { it.isNotBlank() }?.let { t ->
-                            entries.save(entry.copy(title = t))
-                        }
-                    }
                 }
                 ReplyResult.Crisis -> state.update { it.copy(ui = ReplyUi.Crisis) }
                 ReplyResult.Off -> Unit // handled above
@@ -261,11 +254,9 @@ private fun WritingCard(glow: Color) {
     val x by t.animateFloat(-1f, 2f, infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Restart), label = "x")
     OdCard(padding = PaddingValues(start = 22.dp, end = 22.dp, top = 22.dp, bottom = 24.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            AiBadge("온이(AI)"); Spacer(Modifier.weight(1f))
-            Text("답장 쓰는 중", style = OdType.caption2, color = c.ink2)
+            AiBadge("온이", icon = false)
         }
-        Text("온이가 답장을 쓰고 있어요", style = OdType.title2, modifier = Modifier.padding(top = 14.dp))
-        Text("보통 몇 초면 돼요", style = OdType.caption1, color = c.ink2, modifier = Modifier.padding(top = 4.dp))
+        Text("온이가 일기를 읽고 있어요", style = OdType.title2, modifier = Modifier.padding(top = 14.dp))
         listOf(1f, 0.92f, 0.64f).forEachIndexed { i, w ->
             Box(
                 Modifier.padding(top = if (i == 0) 14.dp else 10.dp).fillMaxWidth(w).height(12.dp).clip(RoundedCornerShape(6.dp))
@@ -288,7 +279,7 @@ private fun LetterCard(u: ReplyUi.Arrived, thanked: Boolean, onThank: () -> Unit
     var reason by remember { mutableStateOf<String?>(null) }
     OdCard(padding = PaddingValues(start = 22.dp, end = 22.dp, top = 22.dp, bottom = 18.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            AiBadge("온이(AI)가 쓴 답장"); Spacer(Modifier.weight(1f))
+            AiBadge("온이의 한마디", icon = false); Spacer(Modifier.weight(1f))
             Text(koClock(u.at), style = OdType.caption2, color = c.ink2)
         }
         // A reported reply is hidden (kept only as the record that it was reported).

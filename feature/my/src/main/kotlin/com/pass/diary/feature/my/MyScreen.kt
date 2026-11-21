@@ -118,7 +118,6 @@ import kotlin.math.roundToInt
 
 @Serializable data object MyRoute
 @Serializable data object PremiumRoute
-@Serializable data object WakeRoute
 @Serializable data object LockSettingsRoute
 @Serializable data object DecorateRoute
 @Serializable data object AiSettingsRoute
@@ -131,7 +130,6 @@ class MyViewModel @Inject constructor(
     private val sync: SyncEngine,
     private val auth: DriveAuth,
     private val store: SyncLocalStore,
-    val models: ModelStateProvider,
     private val repository: EntryRepository,
 ) : ViewModel() {
     val settings = settingsRepo.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Settings())
@@ -158,7 +156,6 @@ class MyViewModel @Inject constructor(
     fun setPin(pin: String) = viewModelScope.launch { lock.setPin(pin) }
     fun setAiReply(on: Boolean) = viewModelScope.launch { settingsRepo.setAiReply(on) }
     fun setAiSuggest(on: Boolean) = viewModelScope.launch { settingsRepo.setAiSuggest(on) }
-    fun setAiChat(on: Boolean) = viewModelScope.launch { settingsRepo.setAiChat(on) }
     fun setHideWidget(on: Boolean) = viewModelScope.launch { settingsRepo.setHideWidgetContent(on) }
 
     /** A different Google account than the one this phone backed up to before: the user decides, never a silent merge. */
@@ -206,12 +203,12 @@ class MyViewModel @Inject constructor(
         if (ok) SyncScheduler.syncNow(context)
     }
 
-    /** Keeps AI models and sync_meta (the new account, its consent already given); on restart the full listing restores. */
+    /** Keeps sync_meta (the new account, its consent already given); on restart the full listing restores. */
     private suspend fun wipeForRestore() {
         SyncScheduler.cancelAll(context)
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             repository.closeDatabase()
-            com.pass.diary.core.data.AppDataWiper.wipe(context.dataDir, setOf("files/models", "shared_prefs/oni_model.xml", "files/datastore/sync_meta.preferences_pb"))
+            com.pass.diary.core.data.AppDataWiper.wipe(context.dataDir, setOf("files/datastore/sync_meta.preferences_pb"))
         }
         context.packageManager.getLaunchIntentForPackage(context.packageName)?.component?.let { context.startActivity(Intent.makeRestartActivityTask(it)) }
         Runtime.getRuntime().exit(0)
@@ -225,11 +222,11 @@ class MyViewModel @Inject constructor(
     val deleting = MutableStateFlow(false)
 
     /**
-     * 계정·데이터 삭제: Drive backup files (if signed in) → revoke Drive access & sign out → every local file
-     * (keeping the downloaded AI models when [keepModels]). [onWiped] must restart the process right away.
+     * 계정·데이터 삭제: Drive backup files (if signed in) → revoke Drive access & sign out → every local file.
+     * [onWiped] must restart the process right away.
      * If Drive can't be reached nothing is deleted, so the user can retry instead of losing the way to their backup.
      */
-    fun deleteEverything(keepModels: Boolean, onFailed: () -> Unit, onWiped: () -> Unit) = viewModelScope.launch {
+    fun deleteEverything(onFailed: () -> Unit, onWiped: () -> Unit) = viewModelScope.launch {
         deleting.value = true
         if (auth.isSignedIn()) {
             if (runCatching { sync.deleteRemote() }.isFailure) { deleting.value = false; onFailed(); return@launch }
@@ -238,7 +235,7 @@ class MyViewModel @Inject constructor(
         SyncScheduler.cancelAll(context)
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             repository.closeDatabase()
-            com.pass.diary.core.data.AppDataWiper.wipe(context.dataDir, if (keepModels) setOf("files/models", "shared_prefs/oni_model.xml") else emptySet())
+            com.pass.diary.core.data.AppDataWiper.wipe(context.dataDir)
         }
         onWiped()
     }
@@ -248,7 +245,7 @@ class MyViewModel @Inject constructor(
 
 @Composable
 fun MyScreen(
-    onPremium: () -> Unit, onWake: () -> Unit, onLock: () -> Unit, onDecorate: () -> Unit, onLicenses: () -> Unit, onAi: () -> Unit, onReminder: () -> Unit = {},
+    onPremium: () -> Unit, onLock: () -> Unit, onDecorate: () -> Unit, onLicenses: () -> Unit, onAi: () -> Unit, onReminder: () -> Unit = {},
     onTrash: () -> Unit = {}, onExport: () -> Unit = {},
     vm: MyViewModel = hiltViewModel(),
 ) {
@@ -258,7 +255,6 @@ fun MyScreen(
     val settings by vm.settings.collectAsStateWithLifecycle()
     val lockOn by vm.lock.enabled.collectAsStateWithLifecycle()
     val bio by vm.lock.biometricEnabled.collectAsStateWithLifecycle()
-    val models by vm.models.models.collectAsStateWithLifecycle()
     val trashCount by vm.trashCount.collectAsStateWithLifecycle()
     var confirmWipe by remember { mutableStateOf(false) }
     if (confirmWipe) WipeDialog(vm, onDismiss = { confirmWipe = false })
@@ -268,7 +264,6 @@ fun MyScreen(
             PremiumHero(onPremium)
             BackupCard(vm)
             OdCard(padding = PaddingValues(horizontal = 18.dp, vertical = 2.dp)) {
-                ListRow(OdIcon.Sparkle, "온이 깨우기", wakeValue(models), onWake)
                 ListRow(OdIcon.Lock, "잠금", if (!lockOn) "꺼짐" else if (bio) "PIN · 지문" else "PIN", onLock)
                 ListRow(OdIcon.Palette, "꾸미기", themeName(settings.themeMode), onDecorate)
                 ListRow(OdIcon.Bell, "알림", reminderValue(), onReminder)
@@ -310,7 +305,6 @@ private fun WipeDialog(vm: MyViewModel, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     val deleting by vm.deleting.collectAsStateWithLifecycle()
     var typed by remember { mutableStateOf("") }
-    var keepModels by remember { mutableStateOf(true) }
     val signedIn = vm.account.collectAsStateWithLifecycle().value != null
     androidx.compose.material3.AlertDialog(
         onDismissRequest = { if (!deleting) onDismiss() },
@@ -325,13 +319,6 @@ private fun WipeDialog(vm: MyViewModel, onDismiss: () -> Unit) {
                 )
                 Text("지우려면 아래에 \"${com.pass.diary.core.security.WIPE_PHRASE}\"를 입력해요", style = OdType.caption1.copy(fontWeight = FontWeight.SemiBold))
                 androidx.compose.material3.OutlinedTextField(typed, { typed = it }, singleLine = true, enabled = !deleting, placeholder = { Text(com.pass.diary.core.security.WIPE_PHRASE) })
-                Row(
-                    Modifier.fillMaxWidth().clickable(enabled = !deleting) { keepModels = !keepModels },
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    androidx.compose.material3.Checkbox(!keepModels, { keepModels = !it }, enabled = !deleting)
-                    Text("내려받은 AI 모델도 지우기", style = OdType.body2)
-                }
             }
         },
         confirmButton = {
@@ -339,7 +326,6 @@ private fun WipeDialog(vm: MyViewModel, onDismiss: () -> Unit) {
                 enabled = typed.trim() == com.pass.diary.core.security.WIPE_PHRASE && !deleting,
                 onClick = {
                     vm.deleteEverything(
-                        keepModels,
                         onFailed = { Toast.makeText(ctx, "드라이브 백업을 지우지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.", Toast.LENGTH_LONG).show() },
                         onWiped = {
                             ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)?.component?.let { ctx.startActivity(Intent.makeRestartActivityTask(it)) }
@@ -354,20 +340,10 @@ private fun WipeDialog(vm: MyViewModel, onDismiss: () -> Unit) {
     )
 }
 
-private fun aiValue(s: Settings) = listOf(s.aiReply, s.aiSuggest, s.aiChat).count { it }.let { if (it == 3) "켜짐" else if (it == 0) "꺼짐" else "일부 켜짐" }
+private fun aiValue(s: Settings) = listOf(s.aiReply, s.aiSuggest).count { it }.let { if (it == 2) "켜짐" else if (it == 0) "꺼짐" else "일부 켜짐" }
 
 private fun themeName(m: ThemeMode) = when (m) { ThemeMode.SYSTEM -> "시스템"; ThemeMode.LIGHT -> "라이트"; ThemeMode.DARK -> "다크"; ThemeMode.PAPER -> "종이" }
 
-private fun wakeValue(models: List<ModelCard>): String {
-    val s = models.map { it.state }
-    s.filterIsInstance<ModelState.Downloading>().firstOrNull()?.let { d ->
-        val m = models.first { it.state == d }
-        return "내려받는 중 ${percent(d.downloadedBytes, m.sizeBytes)}%"
-    }
-    return if (s.any { it == ModelState.Ready }) "깨어 있어요" else "자는 중"
-}
-
-private fun percent(done: Long, total: Long) = if (total <= 0) 0 else (done * 100 / total).toInt().coerceIn(0, 100)
 
 @Composable
 private fun PremiumHero(onPremium: () -> Unit) {
@@ -518,110 +494,6 @@ private fun AccountChangeDialog(change: MyViewModel.AccountChange, onMerge: () -
     )
 }
 
-// ======================================================================= 온이 깨우기
-
-private fun gb(bytes: Long) = "%.1fGB".format(bytes / 1e9)
-
-@Composable
-fun WakeScreen(onBack: () -> Unit, vm: MyViewModel = hiltViewModel()) {
-    val c = Od.c
-    val models by vm.models.models.collectAsStateWithLifecycle()
-    val wifi by vm.models.wifiOnly.collectAsStateWithLifecycle()
-    BackHandler(onBack = onBack)
-    // The download runs as a foreground job with a progress notification: ask for the notification permission once it starts.
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val askNotify = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
-    val downloading = models.any { (it.state as? ModelState.Downloading)?.paused == false }
-    androidx.compose.runtime.LaunchedEffect(downloading) {
-        val perm = android.Manifest.permission.POST_NOTIFICATIONS
-        if (downloading && android.os.Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(perm) != android.content.pm.PackageManager.PERMISSION_GRANTED) askNotify.launch(perm)
-    }
-    Box(Modifier.fillMaxSize().background(c.bg).ambient(OdColors.Dusk, 0.6f, centerY = 140.dp, radius = 380.dp)) {
-        Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())) {
-            OdTopBar(title = "온이 깨우기", left = { IconBtn(OdIcon.Back, onBack, "뒤로") })
-            Column(Modifier.padding(horizontal = 20.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OniFigure(null, OniExpression.SLEEP, 108.dp)
-                    Column(Modifier.weight(1f)) {
-                        Text("온이를 깨우면\n대화도 하고 답장도 써요", style = OdType.title2)
-                        Text("한 번만 내려받으면 인터넷 없이 돌아가요.", style = OdType.caption1, color = c.ink2, modifier = Modifier.padding(top = 4.dp))
-                    }
-                }
-                Spacer(Modifier.height(16.dp))
-                models.forEachIndexed { i, m ->
-                    ModelCardView(m, vm.models, if (i == 0) wifi else null, Modifier.padding(top = if (i == 0) 0.dp else 12.dp))
-                }
-                Row(Modifier.padding(top = 14.dp, start = 4.dp, end = 4.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OdIcon(OdIcon.Shield, size = 18.dp)
-                    Text("대화와 일기는 모두 이 폰 안에서만 처리돼요. 우리 서버로도 보내지 않아요.", style = OdType.caption2, color = c.ink2, modifier = Modifier.weight(1f))
-                }
-                Spacer(Modifier.navigationBarsPadding().height(24.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun ModelCardView(m: ModelCard, p: ModelStateProvider, wifi: Boolean?, modifier: Modifier) {
-    val c = Od.c
-    val st = m.state
-    val locked = st is ModelState.Unsupported || (m.premium && !Od.premium)
-    OdCard(modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(m.title, style = OdType.title3)
-            if (m.premium) { Spacer(Modifier.width(8.dp)); PremiumBadge() }
-            Spacer(Modifier.weight(1f))
-            Text(m.modelName, style = OdType.caption2, color = c.ink2)
-        }
-        val ok = st !is ModelState.Unsupported
-        Text(
-            "약 ${gb(m.sizeBytes)} · RAM ${m.minRamGb}GB 이상" + if (ok && !m.premium) " · 이 폰 RAM ${p.deviceRamGb}GB ✓" else "",
-            style = OdType.caption2, color = c.ink2, modifier = Modifier.padding(top = 2.dp),
-        )
-        when {
-            st is ModelState.Unsupported -> Text(
-                (if (m.premium) "더 길고 섬세하게 답장해요. " else "") + "이 폰(RAM ${st.deviceRamGb}GB)에서는 쓸 수 없어요. RAM ${m.minRamGb}GB 이상이 필요해요.",
-                style = OdType.body2, color = c.ink2, modifier = Modifier.padding(top = 10.dp),
-            )
-            locked -> {
-                Text("더 길고 섬세하게 답장해요. 프리미엄에서 깨울 수 있어요.", style = OdType.body2, color = c.ink2, modifier = Modifier.padding(top = 10.dp))
-            }
-            st is ModelState.Downloading -> {
-                val pct = percent(st.downloadedBytes, m.sizeBytes)
-                Box(Modifier.padding(top = 16.dp).fillMaxWidth().height(10.dp).clip(RoundedCornerShape(5.dp)).background(c.surface2)) {
-                    Box(Modifier.fillMaxWidth(pct / 100f).fillMaxHeight().clip(RoundedCornerShape(5.dp)).background(Brush.horizontalGradient(listOf(OdColors.BrandLight, OdColors.BrandGlow))))
-                }
-                Row(Modifier.padding(top = 8.dp).fillMaxWidth()) {
-                    Text("$pct% · ${gb(st.downloadedBytes)} / ${gb(m.sizeBytes)}", style = OdType.body2.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
-                    Text(
-                        if (st.paused) "일시정지됨" else st.etaSec?.let { "약 ${((it + 59) / 60).coerceAtLeast(1)}분 남음" } ?: "",
-                        style = OdType.caption2, color = c.ink2,
-                    )
-                }
-                Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (st.paused) OdButton("이어 받기", { p.download(m.id) }, Modifier.weight(1f), ButtonKind.Secondary, small = true)
-                    else OdButton("일시정지", { p.pause(m.id) }, Modifier.weight(1f), ButtonKind.Secondary, small = true, icon = OdIcon.Pause)
-                    OdButton("취소", { p.cancel(m.id) }, Modifier.weight(1f), ButtonKind.Ghost, small = true)
-                }
-            }
-            st == ModelState.Ready -> Row(Modifier.padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-                OdIcon(OdIcon.Check, size = 18.dp, stroke = 2.4f, tint = c.ok)
-                Text("깨어 있어요", style = OdType.body2.copy(fontWeight = FontWeight.Bold), color = c.ok, modifier = Modifier.padding(start = 6.dp).weight(1f))
-                OdButton("지우기", { p.delete(m.id) }, kind = ButtonKind.Ghost, small = true)
-            }
-            st is ModelState.Failed -> {
-                Text(st.message, style = OdType.caption1, color = c.ink2, modifier = Modifier.padding(top = 12.dp))
-                OdButton("다시 받기", { p.download(m.id) }, Modifier.padding(top = 12.dp).fillMaxWidth(), small = true)
-            }
-            else -> OdButton("내려받기", { p.download(m.id) }, Modifier.padding(top = 16.dp).fillMaxWidth(), small = true, icon = OdIcon.Download)
-        }
-        if (wifi != null && !locked) {
-            Divider(Modifier.padding(top = 14.dp, bottom = 4.dp))
-            ListRow(OdIcon.Wifi, "Wi-Fi에서만 받기", height = 46.dp, trailing = { OdToggle(wifi, p::setWifiOnly) })
-        }
-    }
-}
-
 // ======================================================================= 잠금 설정
 
 @Composable
@@ -684,7 +556,7 @@ fun LockSettingsScreen(onBack: () -> Unit, vm: MyViewModel = hiltViewModel()) {
 // ======================================================================= 설정 › AI
 
 @Composable
-fun AiSettingsScreen(onBack: () -> Unit, onWake: () -> Unit, vm: MyViewModel = hiltViewModel()) {
+fun AiSettingsScreen(onBack: () -> Unit, vm: MyViewModel = hiltViewModel()) {
     val c = Od.c
     val s by vm.settings.collectAsStateWithLifecycle()
     BackHandler(onBack = onBack)
@@ -693,20 +565,16 @@ fun AiSettingsScreen(onBack: () -> Unit, onWake: () -> Unit, vm: MyViewModel = h
             OdTopBar(title = "AI 기능", left = { IconBtn(OdIcon.Back, onBack, "뒤로") })
             Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OniFigure(null, if (s.aiReply || s.aiSuggest || s.aiChat) OniExpression.DEFAULT else OniExpression.SLEEP, 96.dp)
+                    OniFigure(null, if (s.aiReply || s.aiSuggest) OniExpression.DEFAULT else OniExpression.SLEEP, 96.dp)
                     Column(Modifier.weight(1f)) {
                         Text("온이가 얼마나\n도와줄지 정해요", style = OdType.title2)
                         Text("모두 끄면 순수한 일기장이 돼요. 모든 AI는 이 폰 안에서만 돌아요.", style = OdType.caption1, color = c.ink2, modifier = Modifier.padding(top = 4.dp))
                     }
                 }
                 OdCard(padding = PaddingValues(horizontal = 18.dp, vertical = 6.dp)) {
-                    AiToggle("온이 답장", "저장하면 온이(AI)가 짧은 답장을 써 줘요", s.aiReply, vm::setAiReply)
+                    AiToggle("온이 답장", "저장하면 온이가 준비된 한마디를 골라 답해 줘요", s.aiReply, vm::setAiReply)
                     Divider()
                     AiToggle("감정·태그 추천", "쓰는 동안 감정과 사람·장소 태그를 골라 보여 줘요", s.aiSuggest, vm::setAiSuggest)
-                    Divider()
-                    AiToggle("대화형 AI 사용", "깨운 온이가 답장·대화로 쓰기·말로 쓰기 정리를 맡아요. 끄면 준비된 문구로만 답해요", s.aiChat, vm::setAiChat)
-                    if (s.aiChat) Divider()
-                    if (s.aiChat) ListRow(null, "온이 깨우기 · 내려받기", null, onWake, height = 46.dp, trailing = { OdIcon(OdIcon.ChevR, size = 18.dp, tint = c.ink2) })
                 }
                 OdCard(flat = true, padding = PaddingValues(horizontal = 18.dp, vertical = 16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

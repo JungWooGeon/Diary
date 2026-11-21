@@ -301,7 +301,7 @@ fun TodayScreen(
             OdCard(onClick = onLetters) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("최근 답장", style = OdType.title3, modifier = Modifier.weight(1f))
-                    AiBadge("온이(AI)가 쓴 답장", icon = false)
+                    AiBadge("온이의 한마디", icon = false)
                 }
                 Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Oni(rl, OniExpression.forGroup(r.entry?.emotions?.let(LightMixer::dominantGroup)).takeUnless { it == OniExpression.SLEEP } ?: OniExpression.DEFAULT, Modifier.size(40.dp), animate = false)
