@@ -1,5 +1,5 @@
 // Port of 일기장_캐릭터_시안/_source/oni.py oni() → SVG markup for any mixed light. 512×512 box.
-import { mixHex as mix } from './light'
+import { mixHex as mix, dominantGroup, type Emo, type Light } from './light'
 
 const INK = '#2E2622'
 const FONT = "'Apple SD Gothic Neo','Pretendard',system-ui,sans-serif"
@@ -187,3 +187,18 @@ export function oniSvg(m: Mood, expr: Expr, u: string, chain = true): string {
   if (expr === 'sad') d.push(`<path d="M410 120 q14 -16 28 0 q14 -16 28 0" stroke="${deep}" stroke-opacity=".35" stroke-width="5" stroke-linecap="round" fill="none"/>`)
   return d.join('')
 }
+
+export function exprFor(emotions: Emo[], justSaved = false): Expr {
+  if (!emotions.length) return 'sleep'
+  const g = dominantGroup(emotions)
+  if (!g) return 'default'
+  if (justSaved && g === 'bright') return 'cheer'
+  if (justSaved && (g === 'low' || g === 'worn')) return 'comfort'
+  return ({ bright: 'happy', calm: 'calm', flutter: 'flutter', low: 'sad', worn: 'tired' } as const)[g]
+}
+export const moodOf = (light: Light | null, emotions: Emo[]) => {
+  if (!light) return BRAND
+  const g = dominantGroup(emotions)
+  return { light: light.light, glow: light.glow, blush: light.off ? OFF_BLUSH : g ? BLUSH[g] : BRAND.blush, off: light.off }
+}
+

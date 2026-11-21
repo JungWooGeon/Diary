@@ -12,7 +12,7 @@ export interface EntryDoc {
   trashedAt?: number | null
   title: string; body: string; template: string; source: string; weather?: string | null
   emotions: Emo[]; tags: Tag[]; photos: { id: string; w: number; h: number }[]
-  reply?: { text: string; source: 'template' | 'llm'; templateId?: string | null; createdAt: number; reported?: boolean } | null
+  reply?: { text: string; source: 'template' | 'llm'; engine?: string | null; templateId?: string | null; createdAt: number; reported?: boolean } | null
   chat: { role: string; text: string; at: number }[]
   [unknown: string]: unknown
 }

@@ -198,10 +198,10 @@ appDataFolder/
 
 - 데이터는 드라이브 JSON 스키마(§2.2)를 단일 기준으로 삼는다. Android 전용 형식을 만들지 않는다.
 - 빛 섞기 공식과 감정 정의는 플랫폼 중립 명세로 두고, 테스트 벡터 JSON을 함께 둔다.
-- 감정 분류기: 앱은 LiteRT(`model.tflite`), 웹용으로 ONNX(`tools/classifier/export.py` → `out/model_int8.onnx`, onnxruntime-web 호환)도 같은 체크포인트에서 뽑는다. 웹에서 LiteRT.js(TF.js 후속)를 쓰면 같은 `.tflite`를 그대로 쓸 수 있어 v2.2 때 크기·속도를 비교해 고른다.
-- 대화형 AI는 LiteRT-LM 형식을 쓴다(LiteRT-LM Web은 WebGPU로 Gemma 4 E2B를 지원하고, 아직 미리보기 단계).
+- 감정 분류기(웹, 결정 11/22): 앱과 같은 `shared/ai/classifier/model.tflite`를 **LiteRT.js(@litertjs/core)**로 Web Worker에서 돌린다. ONNX 변환 없이 같은 파일·같은 토크나이저를 쓰고, 참조 테스트(`classifier_reference.json`)로 토큰 id 일치·확률 오차 0.02 미만을 고정한다(`web/test/emotion.test.ts`). 크기 비교는 `web/README.md`.
+- 웹에는 다운로드형 LLM을 두지 않는다. 온이 AI 답장은 크롬 내장 AI가 이미 준비된 브라우저에서만 쓴다(`web/README.md` "크롬 내장 AI").
 - 답장·질문 라이브러리는 JSON 리소스로 둔다. Kotlin 코드 안에 넣지 않는다.
-- 참고: Chrome 내장 AI는 한국어를 지원하지 않아 쓰지 않는다.
+- 참고: Chrome 내장 AI(Prompt API)는 2026-11 현재 한국어(`ko`)를 지원 언어에 넣지 않았다. 웹은 `ko`로 가용성을 묻고 `available`일 때만 쓰므로, 지금은 자동으로 꺼져 있고 크롬이 한국어를 지원하면 별도 배포 없이 켜진다.
 
 ## 10. Android 모듈 구조
 

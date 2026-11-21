@@ -1,15 +1,21 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { GROUPS, GROUP_OF, DEFAULT_NAMES, QUICK_MOODS, UNSURE, mix, mixDay, dayGradient, dominantGroup, groupOf, mixHex, type Emo, type Light, type GroupKey } from './light'
-import { oniSvg, BRAND, BLUSH, OFF_BLUSH, type Expr } from './oni'
+import { oniSvg, BRAND, exprFor, moodOf, type Expr } from './oni'
 import { detectCrisis, reply as libraryReply, question, timeSlot, type Tag } from './ai'
 import { Store, SyncEngine, newEntry, VerifyError, TRASH_KEEP_MS, type EntryDoc } from './sync'
 import { driveApi, signIn, signOut, hasToken, accountEmail, AuthError, CLIENT_ID, photoUrl } from './drive'
 import { loadStore, clearDb } from './db'
 import { demoStore } from './demo'
 import { exportZip } from './archive'
+import { sentences, suggestTitle, nearest, central, type Analysis } from './emotion'
+import { useAnalysis, useAiState, setEmotionAi, FIRST_LOAD_MB } from './emotionAi'
+import { webAiAvailable, webAiReply } from './webAi'
+import { causes, keywords } from './insights'
+import { shareImage, todayCard, monthCard } from './share'
 
 // ---------- helpers ----------
 const BASE = import.meta.env.BASE_URL
+export const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.pass.diary'
 const iso = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
 const hhmm = (d: Date) => d.toTimeString().slice(0, 5)
 const WEEK = ['일', '월', '화', '수', '목', '금', '토']
@@ -18,20 +24,6 @@ const ago = (t?: number) => { if (!t) return '아직 없음'; const m = Math.rou
 const byTime = (a: EntryDoc, b: EntryDoc) => (a.date + a.time).localeCompare(b.date + b.time)
 const TAG_LABEL: Record<string, string> = { person: '사람', place: '장소', activity: '활동', free: '태그' }
 type Status = 'local' | 'syncing' | 'ok' | 'error' | 'verify' | 'needAuth' | 'offline' | 'demo'
-
-function exprFor(emotions: Emo[], justSaved = false): Expr {
-  if (!emotions.length) return 'sleep'
-  const g = dominantGroup(emotions)
-  if (!g) return 'default'
-  if (justSaved && g === 'bright') return 'cheer'
-  if (justSaved && (g === 'low' || g === 'worn')) return 'comfort'
-  return ({ bright: 'happy', calm: 'calm', flutter: 'flutter', low: 'sad', worn: 'tired' } as const)[g]
-}
-const moodOf = (light: Light | null, emotions: Emo[]) => {
-  if (!light) return BRAND
-  const g = dominantGroup(emotions)
-  return { light: light.light, glow: light.glow, blush: light.off ? OFF_BLUSH : g ? BLUSH[g] : BRAND.blush, off: light.off }
-}
 
 function Oni({ light, emotions, expr, className = '' }: { light: Light | null; emotions: Emo[]; expr?: Expr; className?: string }) {
   const u = useId().replace(/[^a-zA-Z0-9]/g, '')
@@ -70,14 +62,17 @@ export default function App() {
   const bump = useCallback(() => setV(v => v + 1), [])
   const [tab, setTab] = useState<'today' | 'calendar' | 'report' | 'settings'>(() => (new URLSearchParams(location.search).get('tab') as never) ?? 'today')
   const [write, setWrite] = useState<{ doc?: EntryDoc; date?: string; title?: string } | null>(() => (new URLSearchParams(location.search).has('write') ? {} : null))
-  const [replyFor, setReplyFor] = useState<{ id: string; crisis: boolean } | null>(null)
+  const [replyFor, setReplyFor] = useState<ReplyFor | null>(null)
+  const [webAi, setWebAi] = useState(false)
+  const [intro, setIntro] = useState(false)
   const [status, setStatus] = useState<Status>('local')
   const [toast, setToast] = useState<{ text: string; undo?: () => void } | null>(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') ?? 'system')
   const [authErr, setAuthErr] = useState('')
   const engine = useMemo(() => real && new SyncEngine(driveApi, real), [real])
 
-  useEffect(() => { loadStore().then(s => { s.purgeTrash(); setReal(s); setStatus(s.get('email') ? 'needAuth' : 'local') }) }, [])
+  useEffect(() => { loadStore().then(s => { s.purgeTrash(); setReal(s); setStatus(s.get('email') ? 'needAuth' : 'local'); setIntro(!s.get('introSeen') && !s.get('email') && !s.live().length) }) }, [])
+  useEffect(() => { webAiAvailable().then(setWebAi) }, []) // never triggers a model download (availability only)
   useEffect(() => {
     localStorage.setItem('theme', theme)
     if (theme === 'system') delete document.documentElement.dataset.theme
@@ -132,17 +127,28 @@ export default function App() {
 
   const persist = (doc: EntryDoc) => { const d = store.save(doc); bump(); doSync(); return d }
 
-  const saveEntry = (doc: EntryDoc) => {
+  const templateReply = (d: EntryDoc) => {
+    const since = Date.now() - 30 * 86400000
+    const recent = new Set(entries.filter(e => e.reply?.templateId && e.reply.createdAt > since).map(e => e.reply!.templateId!))
+    const r = libraryReply(d.body, d.emotions, d.tags, recent)
+    return r ? persist({ ...d, reply: { text: r.text, source: 'template', templateId: r.id, createdAt: Date.now(), reported: false } }) : d
+  }
+  const saveEntry = async (doc: EntryDoc) => {
     let d = persist(doc)
-    const crisis = detectCrisis(`${d.title}\n${d.body}`).crisis // always first: no reply when it fires
-    if (!crisis && d.body.trim() && !d.reply) {
-      const since = Date.now() - 30 * 86400000
-      const recent = new Set(entries.filter(e => e.reply?.templateId && e.reply.createdAt > since).map(e => e.reply!.templateId!))
-      const r = libraryReply(d.body, d.emotions, d.tags, recent)
-      if (r) d = persist({ ...d, reply: { text: r.text, source: 'template', templateId: r.id, createdAt: Date.now(), reported: false } })
-    }
     setWrite(null)
-    if (crisis || d.reply) setReplyFor({ id: d.id, crisis })
+    const crisis = detectCrisis(`${d.title}\n${d.body}`).crisis // always first: no reply (and no AI call) when it fires
+    if (crisis) return setReplyFor({ id: d.id, crisis })
+    if (!d.body.trim() || d.reply) return d.reply && setReplyFor({ id: d.id, crisis })
+    if (webAi && !demo) {
+      setReplyFor({ id: d.id, crisis, writing: true })
+      const text = await webAiReply(`${d.title}\n${d.body}`.trim(), d.emotions.map(e => names[e.key]).filter(Boolean))
+      d = store.entries.get(d.id)?.doc ?? d
+      if (text) d = persist({ ...d, reply: { text, source: 'llm', engine: 'chrome-builtin', templateId: null, createdAt: Date.now(), reported: false } })
+      else d = templateReply(d)
+      return setReplyFor({ id: d.id, crisis })
+    }
+    d = templateReply(d)
+    if (d.reply) setReplyFor({ id: d.id, crisis })
   }
 
   const quickMood = (key: string) => {
@@ -151,7 +157,10 @@ export default function App() {
     setToast({ text: `${names[key]}(으)로 기록했어요`, undo: () => { store.remove(d.id); bump(); doSync() } })
   }
 
-  const ctx: Ctx = { store, entries, names, premium, bump, persist, openWrite: setWrite, openReply: setReplyFor, notify: setToast, sync: doSync }
+  const ctx: Ctx = { store, entries, names, premium, bump, persist, openWrite: setWrite, openReply: setReplyFor, notify: setToast, sync: doSync, webAi }
+  const closeIntro = () => { store.set('introSeen', true); setIntro(false) }
+
+  if (intro) return <Landing onStart={() => { closeIntro(); setWrite({}) }} onDemo={() => { closeIntro(); setDemo(demoStore()); setTab('today') }} onClose={closeIntro} />
 
   return (
     <div className="app">
@@ -168,7 +177,7 @@ export default function App() {
         {tab === 'report' && <Report {...ctx} />}
         {tab === 'settings' && <Settings {...ctx} status={demo ? 'demo' : status} email={real?.get<string>('email')} lastBackup={real?.get<number>('lastBackupAt')} pending={real?.pending().length ?? 0}
           onConnect={connect} onDisconnect={disconnect} onSync={doSync} authErr={authErr} theme={theme} setTheme={setTheme}
-          demo={!!demo} setDemoOn={on => { setDemo(on ? demoStore() : null); setTab('today') }} />}
+          demo={!!demo} setDemoOn={on => { setDemo(on ? demoStore() : null); setTab('today') }} onIntro={() => setIntro(true)} />}
       </main>
       <nav className="tabbar">
         {NAV.slice(0, 2).map(n => <button key={n.id} className={tab === n.id ? 'on' : ''} onClick={() => setTab(n.id)}><Icon name={n.id} /><span>{n.label}</span></button>)}
@@ -182,11 +191,15 @@ export default function App() {
   )
 }
 
+type ReplyFor = { id: string; crisis: boolean; writing?: boolean }
 interface Ctx {
   store: Store; entries: EntryDoc[]; names: Record<string, string>; premium: boolean; bump: () => void
-  persist: (d: EntryDoc) => EntryDoc; openWrite: (w: { doc?: EntryDoc; date?: string; title?: string }) => void; openReply: (r: { id: string; crisis: boolean }) => void
-  notify: (t: { text: string; undo?: () => void }) => void; sync: () => void
+  persist: (d: EntryDoc) => EntryDoc; openWrite: (w: { doc?: EntryDoc; date?: string; title?: string }) => void; openReply: (r: ReplyFor) => void
+  notify: (t: { text: string; undo?: () => void }) => void; sync: () => void; webAi: boolean
 }
+
+/** 온이(AI) only for model-written replies; library replies are 온이의 한마디 (AI_GROWTH §1). */
+const ReplyBadge = ({ r }: { r: NonNullable<EntryDoc['reply']> }) => <span className="ai-badge">{r.source === 'llm' ? '온이(AI)' : '온이의 한마디'}</span>
 
 const NAV = [{ id: 'today', label: '오늘' }, { id: 'calendar', label: '캘린더' }, { id: 'report', label: '리포트' }, { id: 'settings', label: '마이' }] as const
 
@@ -214,7 +227,7 @@ function SyncBadge({ status, onConnect }: { status: Status; onConnect: () => voi
 }
 
 // ---------- 오늘 ----------
-function Today({ entries, names, openWrite, openReply, onQuick }: Ctx & { onQuick: (k: string) => void }) {
+function Today({ entries, names, premium, openWrite, openReply, onQuick }: Ctx & { onQuick: (k: string) => void }) {
   const now = new Date(), today = iso(now)
   const todays = entries.filter(e => e.date === today).sort(byTime)
   const emos = todays.flatMap(e => e.emotions)
@@ -231,6 +244,7 @@ function Today({ entries, names, openWrite, openReply, onQuick }: Ctx & { onQuic
         <section className="hero">
           <div className="bubble">{say}</div>
           <Oni light={light} emotions={emos} expr={todays.length ? undefined : 'sleep'} className="big" />
+          {todays.length > 0 && <button className="ghost share-btn" onClick={() => shareImage(todayCard(fmtDay(today), todays, names, !premium), `온이-오늘의빛-${today}.png`)}>오늘의 빛 카드 저장</button>}
         </section>
         <div className="stack">
           <section className="card">
@@ -249,7 +263,7 @@ function Today({ entries, names, openWrite, openReply, onQuick }: Ctx & { onQuic
             <button className="link" onClick={() => openWrite({ title: q.text })}>이 질문으로 쓰기 ›</button></section>}
           {yearAgo && <section className="card" onClick={() => openWrite({ doc: yearAgo })}><p className="hint">1년 전 오늘</p><p>{yearAgo.title || yearAgo.body.slice(0, 80)}</p></section>}
           {lastReply && <section className="card">
-            <div className="row"><h3>최근 답장</h3><span className="ai-badge">온이(AI)가 쓴 답장</span></div>
+            <div className="row"><h3>최근 답장</h3><ReplyBadge r={lastReply.reply!} /></div>
             <button className="reply-mini" onClick={() => openReply({ id: lastReply.id, crisis: false })}>
               <Oni light={mix(lastReply.emotions)} emotions={lastReply.emotions} className="tiny" /><span>{lastReply.reply!.text}</span>
             </button>
@@ -307,7 +321,17 @@ function Write({ ctx, init, onClose, onSave }: { ctx: Ctx; init: { doc?: EntryDo
     else { if (!has) set({ emotions: [...rest, { key, intensity: 3 }] }); setActive(key) }
   }
   const act = doc.emotions.find(e => e.key === active && e.key !== 'unsure')
-  const light = doc.emotions.length ? mix(doc.emotions) : null
+  // 감정 AI (E1 빛 미리보기, E2 추천 칩, E3 문장 빛, E6 제목 제안): analysed ~1 s after typing stops, in a worker.
+  const ai = useAiState()
+  const parts = useMemo(() => sentences(doc.body).slice(0, 40), [doc.body])
+  const res = useAnalysis(doc.body.trim().length >= 6 ? [doc.body, ...parts.map(p => p.text)] : [])
+  const whole = res?.[0], per = res && res.length === parts.length + 1 ? parts.map((p, i) => ({ ...p, a: res[i + 1] })) : null
+  const suggested = whole && whole.emotions[0].key !== 'unsure' ? whole.emotions : []
+  const preview = !doc.emotions.length && suggested.length ? suggested : null
+  const titleIdea = !doc.title.trim() && per && per.length >= 2 ? suggestTitle(per, (doc.emotions[0] ?? suggested[0])?.key) : ''
+  const [lit, setLit] = useState(false) // read view; never switches on by itself (would swap out the textarea mid-typing)
+  const toggleLit = () => setLit(!lit)
+  const light = doc.emotions.length ? mix(doc.emotions) : preview ? mix(preview) : null
   const finish = () => { store.set(draftKey, undefined); bump(); onSave(doc) }
   const discard = () => { store.set(draftKey, undefined); onClose() }
   const addTag = () => { const v = tagText.trim(); if (v && !doc.tags.some(t => t.value === v)) set({ tags: [...doc.tags, { kind: tagKind, value: v }] }); setTagText('') }
@@ -326,9 +350,16 @@ function Write({ ctx, init, onClose, onSave }: { ctx: Ctx; init: { doc?: EntryDo
         <div className="write-cols">
           <section className="pick">
             <div className="pick-head">
-              <Oni light={light} emotions={doc.emotions} expr={doc.emotions.length ? undefined : 'default'} className="mid" />
-              <div><h2>오늘 마음은<br />어떤 색이에요?</h2><p className="hint">여러 개 골라도 돼요. 빛이 섞여요.</p></div>
+              <Oni light={light} emotions={doc.emotions.length ? doc.emotions : preview ?? []} expr={doc.emotions.length || preview ? undefined : 'default'} className={'mid' + (preview ? ' preview' : '')} />
+              <div><h2>오늘 마음은<br />어떤 색이에요?</h2><p className="hint">{preview ? '글을 읽고 온이가 빛을 미리 켜 봤어요. 정하는 건 언제나 직접이에요.' : '여러 개 골라도 돼요. 빛이 섞여요.'}</p></div>
             </div>
+            {ai.on && ai.phase === 'loading' && ai.progress < 1 && <p className="hint ai-load">감정 AI를 준비하고 있어요 · {Math.round(ai.progress * 100)}% <small>(처음 한 번만 받아요)</small></p>}
+            {suggested.some(s => !doc.emotions.some(e => e.key === s.key)) && <div className="suggest">
+              <span className="hint">AI가 읽은 마음</span>
+              {suggested.filter(s => !doc.emotions.some(e => e.key === s.key)).map(s => { const g = groupOf(GROUP_OF[s.key]); return (
+                <button key={s.key} className="chip sugg" style={{ ['--l' as string]: g.light, ['--g' as string]: g.glow }}
+                  onClick={() => { set({ emotions: [...doc.emotions.filter(e => e.key !== 'unsure'), s] }); setActive(s.key) }}>+ {names[s.key]}</button>) })}
+            </div>}
             <div className="emo-grid">
               {GROUPS.map(g => (
                 <div className="emo-row" key={g.key}>
@@ -352,8 +383,13 @@ function Write({ ctx, init, onClose, onSave }: { ctx: Ctx; init: { doc?: EntryDo
             </div>}
           </section>
           <section className="editor">
+            {light && <Oni light={light} emotions={doc.emotions.length ? doc.emotions : preview ?? []} className={'tiny editor-oni' + (preview ? ' preview' : '')} />}
             <input className="title" placeholder="제목 (비워 두면 첫 문장)" value={doc.title} onChange={e => set({ title: e.target.value })} />
-            <textarea className="body" placeholder="오늘 있었던 일, 떠오르는 대로 적어 봐요." value={doc.body} onChange={e => set({ body: e.target.value })} />
+            {titleIdea && <button className="title-idea" onClick={() => set({ title: titleIdea })}><span className="hint">제목 제안</span> {titleIdea}</button>}
+            {lit && per
+              ? <div className="body lit" role="button" tabIndex={0} onClick={toggleLit} title="눌러서 이어 쓰기"><SentenceLight text={doc.body} parts={per} /></div>
+              : <textarea className="body" placeholder="오늘 있었던 일, 떠오르는 대로 적어 봐요." value={doc.body} onChange={e => set({ body: e.target.value })} />}
+            {ai.on && per && per.length > 0 && <label className="switch small-switch"><input type="checkbox" checked={lit} onChange={toggleLit} /><span>문장별 감정 빛 보기</span></label>}
             <div className="tags">
               {doc.tags.map(t => <button key={t.kind + t.value} className={'tag ' + (t.auto ? 'auto' : '')} onClick={() => set({ tags: doc.tags.filter(x => x !== t) })} title="눌러서 빼기">{TAG_LABEL[t.kind] ?? '태그'} · {t.value} ×</button>)}
               <span className="tag-add">
@@ -377,6 +413,19 @@ function Write({ ctx, init, onClose, onSave }: { ctx: Ctx; init: { doc?: EntryDo
   )
 }
 
+/** E3: sentences the classifier reads as clearly emotional get an underline in that emotion's light. */
+function SentenceLight({ text, parts }: { text: string; parts: { text: string; start: number; a: Analysis }[] }) {
+  const out: JSX.Element[] = []; let at = 0
+  parts.forEach((p, i) => {
+    if (p.start > at) out.push(<span key={'t' + i}>{text.slice(at, p.start)}</span>)
+    const k = p.a.emotions[0].key, g = GROUP_OF[k]
+    out.push(g && p.a.strength >= 0.45 ? <mark key={i} style={{ ['--g' as string]: groupOf(g).glow }} title={DEFAULT_NAMES[k]}>{p.text}</mark> : <span key={i}>{p.text}</span>)
+    at = p.start + p.text.length
+  })
+  out.push(<span key="end">{text.slice(at)}</span>)
+  return <>{out}</>
+}
+
 function Photos({ ids }: { ids: string[] }) {
   const [urls, setUrls] = useState<(string | null)[]>([])
   useEffect(() => { if (hasToken()) Promise.all(ids.map(photoUrl)).then(setUrls) }, [ids.join()])
@@ -384,9 +433,14 @@ function Photos({ ids }: { ids: string[] }) {
 }
 
 // ---------- 답장 / 위기 안내 ----------
-function ReplyView({ ctx, id, crisis, onClose }: { ctx: Ctx; id: string; crisis: boolean; onClose: () => void }) {
+function ReplyView({ ctx, id, crisis, writing, onClose }: ReplyFor & { ctx: Ctx; onClose: () => void }) {
   const e = ctx.store.entries.get(id)?.doc
   if (!e) return null
+  const report = () => {
+    if (!confirm('이 답장을 신고할까요? 신고한 답장은 숨겨요. 신고 내용은 어디에도 보내지 않고 이 기기에만 남겨요.')) return
+    try { const k = 'replyReports', list = JSON.parse(localStorage.getItem(k) ?? '[]'); list.push({ entryId: e.id, text: e.reply!.text, source: e.reply!.source, engine: e.reply!.engine ?? null, at: Date.now() }); localStorage.setItem(k, JSON.stringify(list)) } catch { /* ignore */ }
+    ctx.persist({ ...e, reply: { ...e.reply!, reported: true } }); onClose()
+  }
   const light = crisis ? mix([{ key: 'serene', intensity: 2 }, { key: 'sad', intensity: 3 }]) : mix(e.emotions)
   return (
     <div className="sheet" role="dialog" aria-modal aria-label={crisis ? '도움받을 수 있는 곳' : '온이 답장'}>
@@ -404,22 +458,47 @@ function ReplyView({ ctx, id, crisis, onClose }: { ctx: Ctx; id: string; crisis:
             <p className="hint small">문자·카카오톡 상담도 109 누리집에서 할 수 있어요.</p>
           </div>
           <button className="link center" onClick={onClose}>괜찮아요, 일기로 돌아갈게요</button>
+        </> : writing && !e.reply ? <>
+          <p className="center hint strong">온이가 일기를 읽고 답장을 쓰고 있어요…</p>
+          <p className="center hint small">이 기기의 크롬 안에서만 써요. 일기는 브라우저 밖으로 나가지 않아요.</p>
         </> : e.reply && !e.reply.reported ? <>
           <p className="center hint strong">오늘 빛이 바뀌었어요</p>
           <div className="card letter">
-            <div className="row"><span className="ai-badge">온이(AI)가 쓴 답장</span><span className="hint">{new Date(e.reply.createdAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' })}</span></div>
+            <div className="row"><ReplyBadge r={e.reply} /><span className="hint">{new Date(e.reply.createdAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' })}</span></div>
             <p className="say">{e.reply.text}</p>
             <p className="hint right">— 온이가</p>
             <div className="row">
-              <span className="hint small">{e.reply.source === 'llm' ? '앱의 대화형 AI가 쓴 답장이에요.' : '웹에서는 문구 라이브러리 답장이 와요. 대화형 AI 답장은 앱에서만 돼요.'}</span>
-              <button className="link" onClick={() => { if (confirm('이 답장을 신고할까요? 신고한 답장은 숨겨요.')) { ctx.persist({ ...e, reply: { ...e.reply!, reported: true } }); onClose() } }}>신고</button>
+              <span className="hint small">{e.reply.source !== 'llm' ? '온이의 한마디는 일기의 감정에 맞춰 고른, 미리 써 둔 문장이에요.'
+                : e.reply.engine === 'chrome-builtin' ? 'AI가 쓴 답장이에요. 크롬 내장 AI가 이 기기 안에서 썼고, 일기는 브라우저 밖으로 나가지 않았어요. 틀린 말이 있을 수 있어요.'
+                : 'AI가 쓴 답장이에요. 틀린 말이 있을 수 있어요.'}</span>
+              <button className="link" onClick={report}>신고</button>
             </div>
           </div>
+          <SimilarDays ctx={ctx} e={e} />
           <button className="primary" onClick={onClose}>고마워</button>
-        </> : <><p className="center">일기를 저장했어요</p><button className="primary" onClick={onClose}>닫기</button></>}
+        </> : <><p className="center">일기를 저장했어요</p><SimilarDays ctx={ctx} e={e} /><button className="primary" onClick={onClose}>닫기</button></>}
         <p className="disclaimer">온이는 의료·상담 서비스가 아니에요.</p>
       </div>
     </div>
+  )
+}
+
+/** Bodies for embedding-based features (E4/E5): newest first, capped. ponytail: cap 400, index if diaries get huge. */
+const bodies = (entries: EntryDoc[], skip?: string) => [...entries].filter(x => x.id !== skip && x.body.trim().length >= 10).sort(byTime).reverse().slice(0, 400)
+
+/** E4 비슷했던 날: only when the classifier has a sentence-embedding output (else hidden). */
+function SimilarDays({ ctx, e }: { ctx: Ctx; e: EntryDoc }) {
+  const { embedding } = useAiState()
+  const past = useMemo(() => bodies(ctx.entries, e.id).filter(x => x.date <= e.date), [ctx.entries, e.id])
+  const res = useAnalysis(embedding && e.body.trim().length >= 10 ? [e.body, ...past.map(x => x.body)] : [], 0)
+  const hits = res?.[0].embedding ? nearest(res[0].embedding, past.map((x, i) => ({ item: x, v: res[i + 1].embedding! })), 3, 0.6) : []
+  if (!hits.length) return null
+  return (
+    <section className="card">
+      <div className="row"><h3>비슷했던 날</h3><span className="ai-badge">AI</span></div>
+      <p className="hint">그때는 이렇게 지나갔어.</p>
+      <ul className="mini">{hits.map(h => <EntryRow key={h.item.id} e={h.item} names={ctx.names} onClick={() => ctx.openWrite({ doc: h.item })} />)}</ul>
+    </section>
   )
 }
 
@@ -438,8 +517,15 @@ function Calendar(ctx: Ctx) {
   const shift = (n: number) => { const d = new Date(y, mo - 1 + n, 1); setMonth(iso(d).slice(0, 7)) }
   const dayEntries = (byDate.get(sel) ?? []).sort(byTime)
   const ql = q.trim().toLowerCase()
-  const results = entries.filter(e => (!ql || `${e.title} ${e.body} ${e.tags.map(t => t.value).join(' ')}`.toLowerCase().includes(ql)) && (!emo || e.emotions.some(x => x.key === emo || GROUP_OF[x.key] === emo)))
+  const emoOk = (e: EntryDoc) => !emo || e.emotions.some(x => x.key === emo || GROUP_OF[x.key] === emo)
+  const results = entries.filter(e => (!ql || `${e.title} ${e.body} ${e.tags.map(t => t.value).join(' ')}`.toLowerCase().includes(ql)) && emoOk(e))
     .sort(byTime).reverse()
+  // E5 뜻으로 검색: entries close in meaning (embedding output only), added after the word matches.
+  const { embedding } = useAiState()
+  const pool = useMemo(() => bodies(entries), [entries])
+  const sem = useAnalysis(embedding && view === 'timeline' && [...ql].length >= 2 ? [q.trim(), ...pool.map(x => x.body)] : [], 600)
+  const shown = new Set(results.map(r => r.id))
+  const meaning = sem?.[0].embedding ? nearest(sem[0].embedding, pool.map((x, i) => ({ item: x, v: sem[i + 1].embedding! })), 10, 0.5).map(h => h.item).filter(x => !shown.has(x.id) && emoOk(x)) : []
   return (
     <div className="page">
       <header className="top">
@@ -477,15 +563,19 @@ function Calendar(ctx: Ctx) {
               {GROUPS.map(g => <optgroup key={g.key} label={g.name}><option value={g.key}>{g.name} 전체</option>{g.emotions.map(e => <option key={e.key} value={e.key}>{names[e.key]}</option>)}</optgroup>)}
             </select>
           </div>
-          {results.length === 0 && <p className="empty-text">찾는 기록이 없어요.</p>}
+          {results.length === 0 && !meaning.length && <p className="empty-text">찾는 기록이 없어요.</p>}
           <ul className="tl">{results.slice(0, 200).map(e => (
             <li key={e.id} className="card tl-item" onClick={() => openWrite({ doc: e })}>
               <div className="row"><span className="hint"><i className="dot" style={{ background: mix(e.emotions).glow }} /> {fmtDay(e.date)} {e.timeUnknown ? '' : e.time}</span><span className="hint">{e.emotions.map(x => names[x.key]).join(' · ')}</span></div>
               {e.title && <h3>{e.title}</h3>}
               {e.body && <p className="clamp">{e.body}</p>}
               {e.tags.length > 0 && <div className="tags">{e.tags.map(t => <span key={t.value} className="tag">{t.value}</span>)}</div>}
-              {e.reply && !e.reply.reported && <p className="tl-reply"><span className="ai-badge">온이(AI)</span> {e.reply.text}</p>}
+              {e.reply && !e.reply.reported && <p className="tl-reply"><ReplyBadge r={e.reply} /> {e.reply.text}</p>}
             </li>))}</ul>
+          {meaning.length > 0 && <><p className="hint tl-sem">뜻이 비슷한 기록 <span className="ai-badge">AI</span></p>
+            <ul className="tl">{meaning.map(e => <li key={e.id} className="card tl-item" onClick={() => openWrite({ doc: e })}>
+              <div className="row"><span className="hint"><i className="dot" style={{ background: mix(e.emotions).glow }} /> {fmtDay(e.date)}</span></div>
+              {e.title && <h3>{e.title}</h3>}{e.body && <p className="clamp">{e.body}</p>}</li>)}</ul></>}
         </section>
       )}
     </div>
@@ -509,6 +599,12 @@ function Report({ entries, names, premium }: Ctx) {
   const tagCount = new Map<string, number>(); for (const t of es.flatMap(e => e.tags)) tagCount.set(t.value, (tagCount.get(t.value) ?? 0) + 1)
   const topTags = [...tagCount].sort((a, b) => b[1] - a[1]).slice(0, 5)
   const light = es.length ? mixDay(es.map(e => e.emotions)) : null
+  const found = useMemo(() => causes(entries), [entries]) // E8 (all records: patterns need many days)
+  const words = useMemo(() => keywords(es), [month, entries]) // E13
+  const { embedding } = useAiState() // E7 이번 달의 한 줄 (embedding output only)
+  const lines = useMemo(() => es.flatMap(e => sentences(e.body).map(x => x.text)).filter(t => [...t].length >= 8).slice(0, 300), [month, entries])
+  const emb = useAnalysis(embedding && lines.length >= 3 ? lines : [], 0)
+  const line = emb?.[0]?.embedding ? central(lines.map((t, i) => ({ item: t, v: emb[i].embedding! }))) : null
   return (
     <div className="page">
       <header className="top"><div className="month-nav"><button className="icon-btn" onClick={() => shift(-1)} aria-label="이전 달"><Icon name="left" /></button><h1>{y}년 {mo}월 리포트</h1><button className="icon-btn" onClick={() => shift(1)} aria-label="다음 달"><Icon name="right" /></button></div></header>
@@ -531,12 +627,25 @@ function Report({ entries, names, premium }: Ctx) {
               return <li key={k}><span className="rank">{i + 1}</span><i className="orb-s" style={{ ['--l' as string]: g.light, ['--g' as string]: g.glow }} /><b>{names[k]}</b><span className="hint">{n}번</span></li> })}</ol>}
           </section>
           {topTags.length > 0 && <section className="card"><h3>자주 함께한 것</h3><div className="tags">{topTags.map(([t, n]) => <span key={t} className="tag">{t} · {n}</span>)}</div></section>}
+          <section className="card">
+            <h3>감정 원인 찾기</h3>
+            {found.length === 0 ? <p className="hint">기록이 더 쌓이면 어떤 날 어떤 빛이 자주 켜지는지 찾아 줄게요. 태그를 달면 더 잘 보여요.</p>
+              : <ul className="causes">{found.map(c => { const g = groupOf(c.group); return (
+                <li key={c.label + c.group}><i style={{ background: g.glow }} /><span><b>{c.label}</b>엔 <b>{g.name}</b> 빛이 더 자주 켜졌어요</span><em>+{Math.round(c.diff * 100)}%</em></li>) })}</ul>}
+            <p className="hint small">지금까지의 기록 전체에서 직접 고른 감정으로 계산해요. 같은 조건의 기록이 3개 이상일 때만 보여요.</p>
+          </section>
+          {words.length > 0 && <section className="card">
+            <h3>키워드 구름</h3>
+            <div className="cloud">{words.map((w, i) => <span key={w.word} className={w.tag ? 'tagw' : ''} style={{ fontSize: `${13 + Math.round(10 * w.n / words[0].n)}px`, opacity: 1 - i * 0.025 }}>{w.word}</span>)}</div>
+          </section>}
         </div>
         <div className="stack">
           <section className="card center-card">
             <Oni light={light} emotions={emos} expr={es.length ? undefined : 'sleep'} className="mid" />
             <p className="say">{es.length ? `${mo}월엔 ${days}일 동안 빛을 켜 줬어. 고마워.` : '이번 달 이야기도 기다릴게.'}</p>
+            {es.length > 0 && <button className="ghost" onClick={() => shareImage(monthCard(y, mo, es, !premium), `온이-${month}-빛캘린더.png`)}>{mo}월 빛 캘린더 카드 저장</button>}
           </section>
+          {line && <section className="card"><div className="row"><h3>이번 달의 한 줄</h3><span className="ai-badge">AI</span></div><p className="say">“{line}”</p></section>}
           <YearLight entries={entries} premium={premium} year={y} />
         </div>
       </div>
@@ -555,7 +664,8 @@ function YearLight({ entries, premium, year }: { entries: EntryDoc[]; premium: b
 }
 
 // ---------- 마이 ----------
-function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number; pending: number; onConnect: () => void; onDisconnect: () => void; onSync: () => void; authErr: string; theme: string; setTheme: (t: string) => void; demo: boolean; setDemoOn: (on: boolean) => void }) {
+function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number; pending: number; onConnect: () => void; onDisconnect: () => void; onSync: () => void; authErr: string; theme: string; setTheme: (t: string) => void; demo: boolean; setDemoOn: (on: boolean) => void; onIntro: () => void }) {
+  const ai = useAiState()
   return (
     <div className="page settings">
       <header className="top"><h1>마이</h1></header>
@@ -592,8 +702,17 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
         </div>
         <div className="stack">
           <section className="card">
-            <h3>온이(AI)</h3>
-            <p className="hint">웹에서는 위기 감지와 문구 라이브러리 답장만 동작해요. 모두 이 브라우저 안에서 처리돼요. 대화형 AI(답장·대화로 쓰기)는 지금은 Android 앱에서만 쓸 수 있어요.</p>
+            <h3>감정 AI</h3>
+            <p className="hint">쓰는 동안 빛 미리보기, 감정 추천, 문장별 감정 빛, 제목 제안을 해요. 앱과 같은 감정 분류 모델이 이 브라우저 안에서만 돌아가고, 일기는 어디로도 보내지 않아요.</p>
+            <label className="switch"><input type="checkbox" checked={ai.on} onChange={e => setEmotionAi(e.target.checked)} /><span>감정 AI 쓰기</span></label>
+            <p className="hint small">{ai.phase === 'ready' ? '준비됐어요. 다음부터는 받지 않아요.' : ai.phase === 'loading' ? `준비하고 있어요 · ${Math.round(ai.progress * 100)}%` : ai.phase === 'error' ? '이 브라우저에서는 감정 AI를 불러오지 못했어요. 직접 고르는 기능은 그대로 쓸 수 있어요.' : `처음 쓸 때 한 번만 약 ${FIRST_LOAD_MB}MB를 받아 이 브라우저에 저장해요.`}</p>
+          </section>
+          <section className="card">
+            <h3>온이의 답장</h3>
+            {p.webAi
+              ? <p className="hint">이 브라우저에서는 온이가 직접 답장을 써요(온이(AI) 표시). 크롬에 내장된 AI가 이 기기 안에서 처리하고, 일기는 브라우저 밖으로 나가지 않아요. 잘 안 되면 온이의 한마디로 대신해요.</p>
+              : <p className="hint">일기에 맞춰 고른 온이의 한마디(미리 써 둔 문장)가 와요. 크롬 내장 AI를 이미 쓸 수 있는 PC 크롬에서는 온이가 직접 답장을 써요.</p>}
+            <p className="hint">힘든 마음이 담긴 표현이 보이면 답장 대신 도움받을 곳을 먼저 알려 드려요. 이 확인도 브라우저 안에서만 해요.</p>
             <p className="hint">온이는 의료·상담 서비스가 아니에요. 힘든 마음이 계속되면 109(자살예방 상담) 또는 1577-0199(정신건강 위기상담)에 연락해 주세요.</p>
           </section>
           <section className="card">
@@ -601,6 +720,8 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
             <p className="hint">{p.premium ? '프리미엄이 적용돼 있어요. 고마워요!' : '프리미엄(평생 3,300원)은 Android 앱에서 구매할 수 있어요. 웹에는 광고가 없어요.'}</p>
           </section>
           <section className="card links">
+            <button className="link" onClick={p.onIntro}>온이 일기 소개 ›</button>
+            <a href={PLAY_URL} target="_blank" rel="noopener">Android 앱 받기 (Google Play) ›</a>
             <a href={`${BASE}legal/privacy.html`}>개인정보 처리방침 ›</a>
             <a href={`${BASE}legal/terms.html`}>이용약관 ›</a>
           </section>
@@ -650,5 +771,46 @@ function Export({ store, names }: Ctx) {
       <label className="switch"><input type="checkbox" checked={withTrash} onChange={e => setWithTrash(e.target.checked)} /><span>휴지통의 기록도 넣기</span></label>
       <div className="btns"><button className="ghost" onClick={download}>내보내기 (JSON+HTML zip)</button></div>
     </section>
+  )
+}
+
+// ---------- 소개 (W3: first screen before any diary / login, and 마이 › 온이 일기 소개) ----------
+const FEATURES = [
+  { t: '톡 누르면 빛이 켜져요', d: '지금 기분을 한 번 누르면 온이가 그 색으로 켜져요. 하루에 여러 번 남기면 하루의 빛이 이어져요.' },
+  { t: '쓰는 동안 빛이 변해요', d: '감정 AI가 글을 읽고 빛을 미리 켜 보고, 감정과 제목을 제안해요. 정하는 건 언제나 직접이에요.' },
+  { t: '문장마다 마음의 색', d: '마음이 진하게 담긴 문장에 그 감정의 빛으로 밑줄을 그어 줘요.' },
+  { t: '어떤 날 어떤 빛이 켜질까', d: '누구와, 어디서, 어떤 요일에 어떤 감정이 자주 켜지는지 리포트가 찾아 줘요.' },
+  { t: '온이의 답장', d: '일기를 저장하면 온이가 한마디 건네요. 힘든 말이 보이면 도움받을 곳부터 알려 줘요.' },
+  { t: '앱과 같은 일기장', d: 'Android 앱과 같은 Google 계정으로 로그인하면, 내 드라이브의 일기를 PC에서도 이어서 써요.' },
+]
+const INTRO_LIGHTS: Emo[][] = [[{ key: 'joy', intensity: 4 }], [{ key: 'serene', intensity: 4 }], [{ key: 'flutter', intensity: 4 }], [{ key: 'sad', intensity: 3 }], [{ key: 'tired', intensity: 4 }]]
+
+function Landing({ onStart, onDemo, onClose }: { onStart: () => void; onDemo: () => void; onClose: () => void }) {
+  const [i, setI] = useState(0)
+  useEffect(() => { const t = setInterval(() => setI(v => (v + 1) % INTRO_LIGHTS.length), 2600); return () => clearInterval(t) }, [])
+  const emos = INTRO_LIGHTS[i], light = mix(emos)
+  return (
+    <div className="landing" style={{ ['--amb' as string]: light.glow }}>
+      <header className="land-top"><span className="brand"><img src={`${BASE}oni-mark.svg`} alt="" /><b>온이 일기</b></span><button className="link" onClick={onClose}>건너뛰기</button></header>
+      <section className="land-hero">
+        <Oni light={light} emotions={emos} className="big" />
+        <div className="land-copy">
+          <h1>기분이 빛이 되는 일기장</h1>
+          <p className="say">무드등 온이가 오늘 마음의 색으로 켜져요. 감정 AI가 글을 읽고 빛을 미리 켜 보고, 기록이 쌓이면 내 마음의 패턴을 찾아 줘요.</p>
+          <div className="btns">
+            <button className="primary" onClick={onStart}>웹에서 바로 쓰기</button>
+            <button className="ghost" onClick={onDemo}>예시로 둘러보기</button>
+          </div>
+          <a className="play" href={PLAY_URL} target="_blank" rel="noopener">Android 앱 받기 · Google Play ›</a>
+        </div>
+      </section>
+      <section className="land-grid">{FEATURES.map((f, k) => { const g = GROUPS[k % GROUPS.length]; return (
+        <div key={f.t} className="card"><i className="orb-s" style={{ ['--l' as string]: g.light, ['--g' as string]: g.glow }} /><h3>{f.t}</h3><p className="hint">{f.d}</p></div>) })}</section>
+      <section className="card land-privacy">
+        <h3>일기는 내 것으로만 남아요</h3>
+        <p className="hint">일기는 이 브라우저와 내 Google 드라이브의 앱 전용 폴더에만 저장돼요. 우리 서버는 없어요. 감정 AI도 브라우저 안에서만 돌고, 일기를 어디로도 보내지 않아요. 로그인하지 않아도 이 브라우저에서 바로 쓸 수 있어요.</p>
+        <p className="hint small"><a href={`${BASE}legal/privacy.html`}>개인정보 처리방침</a> · <a href={`${BASE}legal/terms.html`}>이용약관</a> · 온이는 의료·상담 서비스가 아니에요.</p>
+      </section>
+    </div>
   )
 }

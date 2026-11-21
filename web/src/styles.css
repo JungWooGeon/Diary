@@ -236,3 +236,46 @@ button.sync.warn { background: var(--primary); color: var(--on-primary); }
 .trash-row { display: flex; align-items: center; gap: 10px; } .trash-row .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
 .trash-text { flex: 1; min-width: 0; display: grid; } .trash-text b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; } .trash-text span { color: var(--ink2); font-size: 12px; }
 .ghost.small { height: 34px; padding: 0 12px; border-radius: 12px; font-size: 13px; flex: none; }
+
+/* ---------- 감정 AI (W1) ---------- */
+.oni.preview { opacity: .78; transition: opacity .6s; }
+.oni.preview .halo { opacity: .7; }
+.oni :is(stop, ellipse, path, circle) { transition: stop-color 1.2s ease, fill 1.2s ease; }
+.ai-load { margin: 4px 0 -4px; } .ai-load small { color: var(--ink3); }
+.suggest { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0 4px; }
+.chip.sugg { min-height: 36px; padding: 0 14px; border-style: dashed; border-color: var(--g); }
+.title-idea { text-align: left; font-size: 14px; font-weight: 600; padding: 2px 0 6px; color: var(--ink); } .title-idea .hint { margin-right: 6px; }
+.editor .body.lit { white-space: pre-wrap; cursor: text; min-height: 300px; }
+.body.lit mark { background: none; color: inherit; text-decoration: underline; text-decoration-color: var(--g); text-decoration-thickness: 3px; text-underline-offset: 5px; text-decoration-skip-ink: none; }
+.small-switch { font-size: 13px; color: var(--ink2); } .small-switch input { width: 16px; height: 16px; }
+.tl-sem { margin: 18px 0 8px; display: flex; gap: 6px; align-items: center; }
+.causes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.causes li { display: grid; grid-template-columns: 14px 1fr auto; gap: 10px; align-items: center; font-size: 14px; }
+.causes i { width: 14px; height: 14px; border-radius: 50%; } .causes em { font-style: normal; font-weight: 700; color: var(--ink2); }
+.cloud { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; line-height: 1.4; }
+.cloud span { font-weight: 600; color: var(--ink); } .cloud .tagw { color: var(--ink); text-decoration: underline dotted var(--ink3); text-underline-offset: 4px; }
+.share-btn { margin-top: 10px; }
+
+/* ---------- 소개 (W3) ---------- */
+.landing { position: relative; isolation: isolate; max-width: 1080px; margin: 0 auto; padding: 0 20px 60px; display: grid; gap: 20px; }
+.landing::before { content: ''; position: absolute; inset: 0 -40px auto -40px; height: 640px; pointer-events: none; z-index: -1;
+  background: radial-gradient(ellipse 60% 70% at 50% 280px, color-mix(in srgb, var(--amb) var(--amb-a), transparent), transparent 70%); transition: background 1.2s; }
+.land-top { display: flex; justify-content: space-between; align-items: center; height: 64px; }
+.land-top .brand { display: flex; align-items: center; gap: 10px; font-size: 17px; } .land-top .brand img { width: 32px; height: 32px; }
+.land-hero { display: grid; gap: 12px; justify-items: center; text-align: center; }
+.land-hero h1 { font-size: 30px; line-height: 40px; }
+.land-copy { display: grid; gap: 16px; justify-items: center; max-width: 520px; }
+.land-copy .btns { justify-content: center; }
+.play { color: var(--ink2); font-weight: 600; font-size: 14px; text-decoration: none; }
+.land-grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
+.land-grid .card { gap: 8px; }
+.land-privacy a { color: inherit; }
+@media (min-width: 720px) { .land-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 960px) {
+  .land-hero { grid-template-columns: 1fr 1fr; text-align: left; justify-items: start; align-items: center; padding: 24px 0 12px; }
+  .land-copy { justify-items: start; } .land-copy .btns { justify-content: flex-start; } .land-hero h1 { font-size: 38px; line-height: 50px; }
+  .land-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.editor-oni { position: absolute; top: 10px; right: 12px; width: 44px; pointer-events: none; }
+@media (max-width: 959px) { .editor { position: relative; } .editor .title { padding-right: 52px; } }
+@media (min-width: 960px) { .editor-oni { display: none; } }
