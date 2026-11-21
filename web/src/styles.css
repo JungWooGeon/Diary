@@ -232,3 +232,7 @@ button.sync.warn { background: var(--primary); color: var(--on-primary); }
   .oni.mid { width: 120px; } .pick-head h2 { font-size: 20px; line-height: 28px; }
   .when input { padding: 6px; font-size: 14px; } .autosave { min-width: 0; }
 }
+
+.trash-row { display: flex; align-items: center; gap: 10px; } .trash-row .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.trash-text { flex: 1; min-width: 0; display: grid; } .trash-text b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; } .trash-text span { color: var(--ink2); font-size: 12px; }
+.ghost.small { height: 34px; padding: 0 12px; border-radius: 12px; font-size: 13px; flex: none; }

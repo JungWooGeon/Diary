@@ -2,10 +2,11 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { GROUPS, GROUP_OF, DEFAULT_NAMES, QUICK_MOODS, UNSURE, mix, mixDay, dayGradient, dominantGroup, groupOf, mixHex, type Emo, type Light, type GroupKey } from './light'
 import { oniSvg, BRAND, BLUSH, OFF_BLUSH, type Expr } from './oni'
 import { detectCrisis, reply as libraryReply, question, timeSlot, type Tag } from './ai'
-import { Store, SyncEngine, newEntry, VerifyError, type EntryDoc } from './sync'
+import { Store, SyncEngine, newEntry, VerifyError, TRASH_KEEP_MS, type EntryDoc } from './sync'
 import { driveApi, signIn, signOut, hasToken, accountEmail, AuthError, CLIENT_ID, photoUrl } from './drive'
 import { loadStore, clearDb } from './db'
 import { demoStore } from './demo'
+import { exportZip } from './archive'
 
 // ---------- helpers ----------
 const BASE = import.meta.env.BASE_URL
@@ -76,7 +77,7 @@ export default function App() {
   const [authErr, setAuthErr] = useState('')
   const engine = useMemo(() => real && new SyncEngine(driveApi, real), [real])
 
-  useEffect(() => { loadStore().then(s => { setReal(s); setStatus(s.get('email') ? 'needAuth' : 'local') }) }, [])
+  useEffect(() => { loadStore().then(s => { s.purgeTrash(); setReal(s); setStatus(s.get('email') ? 'needAuth' : 'local') }) }, [])
   useEffect(() => {
     localStorage.setItem('theme', theme)
     if (theme === 'system') delete document.documentElement.dataset.theme
@@ -150,7 +151,7 @@ export default function App() {
     setToast({ text: `${names[key]}(으)로 기록했어요`, undo: () => { store.remove(d.id); bump(); doSync() } })
   }
 
-  const ctx: Ctx = { store, entries, names, premium, bump, persist, openWrite: setWrite, openReply: setReplyFor }
+  const ctx: Ctx = { store, entries, names, premium, bump, persist, openWrite: setWrite, openReply: setReplyFor, notify: setToast, sync: doSync }
 
   return (
     <div className="app">
@@ -184,6 +185,7 @@ export default function App() {
 interface Ctx {
   store: Store; entries: EntryDoc[]; names: Record<string, string>; premium: boolean; bump: () => void
   persist: (d: EntryDoc) => EntryDoc; openWrite: (w: { doc?: EntryDoc; date?: string; title?: string }) => void; openReply: (r: { id: string; crisis: boolean }) => void
+  notify: (t: { text: string; undo?: () => void }) => void; sync: () => void
 }
 
 const NAV = [{ id: 'today', label: '오늘' }, { id: 'calendar', label: '캘린더' }, { id: 'report', label: '리포트' }, { id: 'settings', label: '마이' }] as const
@@ -361,7 +363,11 @@ function Write({ ctx, init, onClose, onSave }: { ctx: Ctx; init: { doc?: EntryDo
             </div>
             {doc.photos.length > 0 && <Photos ids={doc.photos.map(p => p.id)} />}
             <div className="actions">
-              {init.doc && <button className="ghost" onClick={() => { if (confirm('이 일기를 지울까요? 드라이브 백업에서도 지워져요.')) { ctx.store.remove(doc.id); store.set(draftKey, undefined); bump(); onClose() } }}>지우기</button>}
+              {init.doc && <button className="ghost" onClick={() => {
+                const id = doc.id
+                store.trash(id); store.set(draftKey, undefined); bump(); ctx.sync(); onClose()
+                ctx.notify({ text: '휴지통으로 옮겼어요', undo: () => { store.restore(id); bump(); ctx.sync() } })
+              }}>지우기</button>}
               <button className="primary" disabled={!doc.emotions.length && !doc.body.trim() && !doc.title.trim()} onClick={finish}>저장</button>
             </div>
           </section>
@@ -572,6 +578,8 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
               </>}
             {p.authErr && <p className="warn-text">{p.authErr}</p>}
           </section>
+          <Trash {...p} />
+          <Export {...p} />
           <section className="card">
             <h3>화면</h3>
             <div className="seg">{[['system', '시스템'], ['light', '라이트'], ['dark', '다크']].map(([k, v]) => <button key={k} className={p.theme === k ? 'on' : ''} onClick={() => p.setTheme(k)}>{v}</button>)}</div>
@@ -599,5 +607,48 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
         </div>
       </div>
     </div>
+  )
+}
+
+const daysLeft = (trashedAt: number) => Math.min(30, Math.max(1, Math.ceil((trashedAt + TRASH_KEEP_MS - Date.now()) / 86400000)))
+
+/** 설정 › 휴지통: 지운 일기는 30일 동안 여기 있다가 완전히 지워져요 (Android와 같은 규칙). */
+function Trash({ store, names, bump, sync }: Ctx) {
+  const list = store.trashed()
+  const act = (f: () => void) => { f(); bump(); sync() }
+  return (
+    <section className="card">
+      <h3>휴지통</h3>
+      <p className="hint">지운 기록은 30일 동안 여기 있다가 완전히 지워져요. 앱과 웹 어디서 지워도 같이 보여요.</p>
+      {list.length === 0 ? <p className="hint">휴지통이 비어 있어요</p> : <>
+        {list.map(d => (
+          <div key={d.id} className="trash-row">
+            <span className="dot" style={{ background: mix(d.emotions).glow }} />
+            <div className="trash-text"><b>{d.title.trim() || d.body.split('\n').find(l => l.trim()) || d.emotions.map(e => names[e.key]).join(' · ') || '빈 기록'}</b><span>{fmtDay(d.date)} {d.time} · {daysLeft(d.trashedAt!)}일 남음</span></div>
+            <button className="ghost small" onClick={() => act(() => store.restore(d.id))}>복원</button>
+            <button className="ghost small" onClick={() => confirm('이 기록을 영구 삭제할까요? 되돌릴 수 없어요.') && act(() => store.remove(d.id))}>영구 삭제</button>
+          </div>
+        ))}
+        <div className="btns"><button className="ghost" onClick={() => confirm(`휴지통의 기록 ${list.length}개를 완전히 지울까요? 되돌릴 수 없어요.`) && act(() => store.emptyTrash())}>비우기</button></div>
+      </>}
+    </section>
+  )
+}
+
+function Export({ store, names }: Ctx) {
+  const [withTrash, setWithTrash] = useState(false)
+  const download = () => {
+    const docs = [...store.entries.values()].map(r => r.doc).filter(d => !d.deleted || (withTrash && d.trashedAt != null))
+    const url = URL.createObjectURL(new Blob([exportZip(docs, names)], { type: 'application/zip' }))
+    const a = document.createElement('a'); a.href = url; a.download = `온이일기-${iso(new Date())}.zip`; a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+  return (
+    <section className="card">
+      <h3>내보내기</h3>
+      <p className="hint">일기를 zip 파일(JSON + 읽기용 HTML)로 내려받아요. 사진 원본은 Android 앱의 마이 › 내보내기에서 함께 저장할 수 있어요.</p>
+      <label className="switch"><input type="checkbox" checked={withTrash} onChange={e => setWithTrash(e.target.checked)} /><span>휴지통의 기록도 넣기</span></label>
+      <div className="btns"><button className="ghost" onClick={download}>내보내기 (JSON+HTML zip)</button></div>
+    </section>
   )
 }

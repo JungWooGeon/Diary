@@ -8,6 +8,8 @@ import type { Tag } from './ai'
 export interface EntryDoc {
   id: string; date: string; time: string; timeUnknown?: boolean
   createdAt: number; updatedAt: number; deleted: boolean
+  /** 휴지통: with deleted=true the content is kept until trashedAt + 30 days. */
+  trashedAt?: number | null
   title: string; body: string; template: string; source: string; weather?: string | null
   emotions: Emo[]; tags: Tag[]; photos: { id: string; w: number; h: number }[]
   reply?: { text: string; source: 'template' | 'llm'; templateId?: string | null; createdAt: number; reported?: boolean } | null
@@ -31,6 +33,7 @@ export class HttpError extends Error { constructor(public code: number, msg: str
 export class VerifyError extends Error {}
 
 export const LOSER_KEEP_MS = 30 * 24 * 3600 * 1000
+export const TRASH_KEEP_MS = 30 * 24 * 3600 * 1000
 export const entryPath = (d: EntryDoc) => `entries/${d.date.slice(0, 4)}/${d.date.slice(5, 7)}/${d.id}.json`
 export const md5 = (s: string) => SparkMD5.hash(unescape(encodeURIComponent(s))) // md5 of the UTF-8 bytes
 
@@ -52,10 +55,29 @@ export class Store {
     this.put({ ...old, doc: { ...old?.doc, ...doc, updatedAt } })
     return this.entries.get(doc.id)!.doc
   }
+  /** Permanent: a content-less tombstone (휴지통 › 영구 삭제, quick-mood undo). */
   remove(id: string, now = Date.now()) {
     const old = this.entries.get(id); if (!old) return
-    this.save({ ...old.doc, deleted: true, title: '', body: '', emotions: [], tags: [], photos: [], reply: null, chat: [] }, now)
+    this.save({ ...old.doc, deleted: true, trashedAt: undefined, title: '', body: '', weather: null, emotions: [], tags: [], photos: [], reply: null, chat: [] }, now)
   }
+  /** 지우기 → 휴지통: hidden everywhere, content kept 30 days. Same file format as Android. */
+  trash(id: string, now = Date.now()) {
+    const old = this.entries.get(id); if (!old || old.doc.deleted) return
+    this.save({ ...old.doc, deleted: true, trashedAt: now }, now)
+  }
+  restore(id: string, now = Date.now()) {
+    const old = this.entries.get(id); if (!old?.doc.deleted || old.doc.trashedAt == null) return
+    this.save({ ...old.doc, deleted: false, trashedAt: undefined }, now)
+  }
+  trashed() { return [...this.entries.values()].map(r => r.doc).filter(d => d.deleted && d.trashedAt != null).sort((a, b) => b.trashedAt! - a.trashedAt!) }
+  /**
+   * Trash older than 30 days becomes a tombstone with updatedAt = trashedAt + 30 days (like Android's EntryDao), so
+   * every device expiring it writes the same file instead of a conflict.
+   */
+  purgeTrash(now = Date.now()) {
+    for (const d of this.trashed()) if (d.trashedAt! + TRASH_KEEP_MS <= now) this.remove(d.id, d.trashedAt! + TRASH_KEEP_MS)
+  }
+  emptyTrash(now = Date.now()) { for (const d of this.trashed()) this.remove(d.id, now) }
   live() { return [...this.entries.values()].map(r => r.doc).filter(d => !d.deleted) }
 }
 
@@ -73,6 +95,7 @@ function parseEntry(json: string): EntryDoc | null {
 }
 
 const same = (a: EntryDoc, b: EntryDoc) => JSON.stringify(a) === JSON.stringify(b)
+const tomb = (d: EntryDoc) => d.deleted && d.trashedAt == null
 
 export class SyncEngine {
   private running: Promise<void> | null = null
@@ -130,6 +153,7 @@ export class SyncEngine {
     if (!rec) return apply()
     if (remote.updatedAt === rec.synced) return // our own upload echoing back
     if (rec.doc.updatedAt === rec.synced) return apply() // only remote changed: take it even if its clock is behind
+    if (tomb(rec.doc) && tomb(remote)) return apply() // the same deletion from two devices: nothing to keep
     if (same(rec.doc, remote)) return s.put({ ...rec, fileId: f.id, synced: remote.updatedAt })
     const keepUntil = this.now() + LOSER_KEEP_MS
     if (remote.updatedAt > rec.doc.updatedAt) { this.keepLoser(rec.doc, keepUntil); apply() }
