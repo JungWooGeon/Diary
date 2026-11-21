@@ -10,7 +10,7 @@ android {
         applicationId = "com.pass.diary"
         versionCode = 200
         versionName = "2.0.0"
-        // ONNX Runtime + LiteRT-LM natives: 64-bit only (LiteRT-LM ships no 32-bit; 32-bit phones fail the 8GB gate anyway).
+        // LiteRT + LiteRT-LM natives: 64-bit only (LiteRT-LM ships no 32-bit; 32-bit phones fail the 8GB gate anyway).
         // x86_64 keeps Intel emulators working.
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         // AdMob app id: Google's sample id for debug; 온이 일기's own from local.properties for release

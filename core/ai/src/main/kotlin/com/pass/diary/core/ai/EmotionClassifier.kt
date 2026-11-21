@@ -1,11 +1,12 @@
 package com.pass.diary.core.ai
 
-import ai.onnxruntime.OnnxTensor
-import ai.onnxruntime.OrtEnvironment
-import ai.onnxruntime.OrtSession
+import android.os.SystemClock
+import android.util.Log
 import com.pass.diary.core.model.EmotionKey
 import com.pass.diary.core.model.EntryEmotion
-import java.nio.LongBuffer
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import org.tensorflow.lite.Interpreter
 import kotlin.math.exp
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
@@ -98,35 +99,39 @@ class WordPieceTokenizer(tokenizerJson: JsonObject, private val maxLen: Int) {
         }
 }
 
-/** The ONNX graph: int64 [1,L] input_ids + attention_mask -> 21 logits. Faked in unit tests. */
+/** The classifier graph: token ids [CLS] .. [SEP] (<= maxLen) -> 21 logits. Faked in unit tests. */
 fun interface ClassifierModel {
     fun logits(inputIds: LongArray): FloatArray
 }
 
-class OrtClassifierModel(modelBytes: ByteArray) : ClassifierModel, AutoCloseable {
-    private val env = OrtEnvironment.getEnvironment()
-    private val session: OrtSession = env.createSession(modelBytes, OrtSession.SessionOptions())
+/**
+ * LiteRT (TFLite) model.tflite, signature "classify": int32 input_ids + attention_mask [1, maxLen] -> output_0 [1, 21].
+ * The graph has one fixed length, so ids are right-padded with 0 and masked out (tools/classifier/export_tflite.py).
+ */
+class LiteRtClassifierModel(modelBytes: ByteArray) : ClassifierModel, AutoCloseable {
+    private val interpreter = Interpreter(
+        ByteBuffer.allocateDirect(modelBytes.size).order(ByteOrder.nativeOrder()).put(modelBytes).apply { rewind() },
+    )
+    private val len = interpreter.getInputTensorFromSignature("input_ids", SIGNATURE).shape()[1]
+    private val output = interpreter.getSignatureOutputs(SIGNATURE).single()
 
+    @Synchronized // one Interpreter = one set of buffers
     override fun logits(inputIds: LongArray): FloatArray {
-        val shape = longArrayOf(1, inputIds.size.toLong())
-        val mask = LongArray(inputIds.size) { 1L }
-        OnnxTensor.createTensor(env, LongBuffer.wrap(inputIds), shape).use { ids ->
-            OnnxTensor.createTensor(env, LongBuffer.wrap(mask), shape).use { m ->
-                val feeds = buildMap { put("input_ids", ids); if ("attention_mask" in session.inputNames) put("attention_mask", m) }
-                session.run(feeds).use { r ->
-                    @Suppress("UNCHECKED_CAST")
-                    return (r[0].value as Array<FloatArray>)[0]
-                }
-            }
-        }
+        val ids = IntArray(len); val mask = IntArray(len)
+        for (i in 0 until minOf(len, inputIds.size)) { ids[i] = inputIds[i].toInt(); mask[i] = 1 }
+        val out = arrayOf(FloatArray(interpreter.getOutputTensorFromSignature(output, SIGNATURE).shape()[1]))
+        interpreter.runSignature(mapOf("input_ids" to arrayOf(ids), "attention_mask" to arrayOf(mask)), mapOf(output to out), SIGNATURE)
+        return out[0]
     }
 
-    override fun close() = session.close()
+    override fun close() = interpreter.close()
+
+    private companion object { const val SIGNATURE = "classify" }
 }
 
 /**
  * Emotion suggestion (ARCHITECTURE §5.1 ②). Decision rule = shared/ai/classifier/meta.json, mirrors tools/classifier/infer.py.
- * If the model files are missing (or ORT fails to load), falls back to [KeywordEmotionHeuristic].
+ * If the model files are missing (or LiteRT fails to load), falls back to [KeywordEmotionHeuristic].
  */
 class EmotionClassifier(
     private val model: ClassifierModel?,
@@ -151,7 +156,9 @@ class EmotionClassifier(
 
     fun classify(text: String): List<EntryEmotion> {
         if (!usesModel || text.isBlank()) return fallback.classify(text)
+        val t0 = SystemClock.elapsedRealtime()
         val logits = runCatching { model!!.logits(tokenizer!!.encode(text)) }.getOrElse { return fallback.classify(text) }
+        Log.d(TAG, "inference ${SystemClock.elapsedRealtime() - t0}ms")
         return decide(text, logits.map { 1.0 / (1.0 + exp(-it.toDouble())) })
     }
 
@@ -178,6 +185,7 @@ class EmotionClassifier(
     }
 
     companion object {
+        private const val TAG = "EmotionClassifier"
         private val NEGATED = Regex("(안|않|못|없)\\s?$")
 
         fun load(assets: AssetSource): EmotionClassifier {
@@ -185,13 +193,15 @@ class EmotionClassifier(
             val labels = assets.json("ai/classifier/labels.json")?.arr?.map { it.jsonPrimitive.content }
                 ?: EmotionKey.entries.map { it.key }
             val tok = assets.json("ai/classifier/tokenizer.json")?.obj?.let { WordPieceTokenizer(it, meta?.int("maxLen") ?: 192) }
-            val model = assets.bytes("ai/classifier/model.onnx")?.let { runCatching { OrtClassifierModel(it) }.getOrNull() }
+            val model = assets.bytes("ai/classifier/model.tflite")?.let { bytes ->
+                runCatching { LiteRtClassifierModel(bytes) }.onFailure { Log.w(TAG, "LiteRT load failed, keyword fallback", it) }.getOrNull()
+            }
             return EmotionClassifier(model, tok, labels, meta)
         }
     }
 }
 
-/** Fallback when the ONNX model is missing: keyword counts per emotion. ponytail: tiny lexicon, grow from real misses. */
+/** Fallback when the classifier model is missing: keyword counts per emotion. ponytail: tiny lexicon, grow from real misses. */
 class KeywordEmotionHeuristic {
     private val lexicon: Map<EmotionKey, Regex> = mapOf(
         EmotionKey.JOY to "기쁘|기뻤|좋았|행복|최고|신나|ㅎㅎ|맛있",

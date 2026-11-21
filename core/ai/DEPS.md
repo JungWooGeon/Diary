@@ -7,10 +7,16 @@
   - AAR에 `arm64-v8a`, `x86_64`만 들어 있다. 32비트 폰은 지원하지 않는다.
     - 32비트 폰은 어차피 RAM 8GB 게이트에서 걸러진다.
   - 따라오는 의존성: gson 2.14.0, kotlin-reflect 2.4.0, kotlinx-coroutines-android 1.11.0.
-- `com.microsoft.onnxruntime:onnxruntime-android:1.32.0` — 감정 분류기.
-- `noCompress += onnx, litertlm`, `assets.srcDirs(shared)` — `AndroidAssets`가 `ai/...`, `library/...` 경로로 읽는다.
+- `com.google.ai.edge.litert:litert:1.4.2` — 감정 분류기(`model.tflite`)를 TFLite `Interpreter`로 실행한다. arm64 `libtensorflowlite_jni.so` 4.5MB.
+  - 예전 `onnxruntime-android` 1.32.0은 arm64 36MB였다(2026-11-21 교체). 이것으로 바꿔 디버그 APK가 177MB → 110MB(x86_64 포함), arm64만 보면 약 30MB 줄었다.
+  - LiteRT-LM 0.19.1의 `liblitertlm_jni.so`에 LiteRT가 정적으로 들어 있지만, 내보내는 심볼은 LiteRT-LM JNI뿐이라 일반 `.tflite`를 돌릴 수 없다.
+    - `EmbeddingEngine`(텍스트 임베딩)으로 분류기를 우회해 돌리는 방법은 모델을 embedder/encoder 두 개로 쪼개 `.litertlm`로 묶어야 하고, 긴 입력은 에러가 난다(Kotlin에 overflow 옵션이 없음). 4.5MB를 아끼려고 실험 API에 기대지 않았다.
+  - `litert` 2.x(`libLiteRt.so` 5.6~5.9MB)는 더 크고, 이 모델엔 1.4.2 `Interpreter`로 충분하다.
+  - 모델이 길이 192 고정이라 짧은 일기도 192 토큰만큼 계산한다(노트20 약 75ms). 길이 64 시그니처를 더하면 짧은 일기가 빨라지지만 모델이 1.5MB 커진다.
+- `assets.srcDirs(shared)` (`core:data`) — `AndroidAssets`가 `ai/...`, `library/...` 경로로 읽는다.
 - `unitTests.isReturnDefaultValues = true` — JVM 테스트에서 android 스텁을 쓴다.
   - 네이티브 런타임은 쓰지 않고 가짜(`FakeLlm`, `ClassifierModel` 람다)로 대신한다.
+  - `classifier_reference.json`(토크나이저·결정 규칙 대조)은 `tools/classifier/export_tflite.py`가 다시 만든다.
 
 ## 앱(app) 매니페스트에 필요한 것 (A가 통합 때 추가)
 - `<uses-permission android:name="android.permission.INTERNET"/>`: 모델 받기에만 쓴다.

@@ -10,7 +10,7 @@
  Android 앱 (Kotlin · Compose)
  ├ Room (기기 안 DB, 원본)  ──자동 백업/동기화──▶  사용자 본인 Google 드라이브 "앱 전용 폴더"(appDataFolder)
  ├ 기본 AI (앱에 포함, ~30MB)                        ▲
- │   ├ 감정 분류기 (ONNX int8)                       │ v2.2 웹도 같은 폴더를 읽고 씀
+ │   ├ 감정 분류기 (LiteRT int8)                     │ v2.2 웹도 같은 폴더를 읽고 씀
  │   ├ 위기 감지 규칙 + 분류기                        │
  │   ├ 태그 추출 (형태소 + 사전)               PC 웹 (나중)
  │   └ 답장·질문·회고 문구 라이브러리
@@ -33,7 +33,7 @@
 | 저장 | **Room을 원본으로 (로컬 우선)** | Firestore 단독 저장: 무료 한도를 넘으면 과금되고, 사진 저장에는 Storage(유료 요금제)가 필요함 |
 | 백업·동기화 | **Google 드라이브 appDataFolder** | 우리 서버 없이 무제한으로 확장되고, "내 일기는 내 드라이브에만"이라 개인정보 측면에서도 장점. 웹도 브라우저에서 Drive API로 같은 폴더에 접근 가능. 실시간 동기화는 아니지만 일기 앱에는 충분함 |
 | 생성형 AI | **Gemma 4 E2B + LiteRT-LM (선택 다운로드)** | Gemini Nano(ML Kit GenAI): 약관상 18세 미만이 쓸 수 있는 앱에서 사용 금지, Galaxy A·S24 이하 미지원. EXAONE: 비상업 라이선스. 1B 이하 모델: 한국어 공감 답장이 어색함. Gemma 4 E2B는 Apache 2.0이고 Android와 웹(LiteRT-LM Web)을 모두 지원 |
-| 감정 분류 | **소형 인코더(KoELECTRA-small/KcELECTRA) 파인튜닝 → ONNX int8** | LLM으로 분류하면 느리고 저사양 폰에서 못 돌림. ONNX 파일 하나를 웹(onnxruntime-web)에서도 그대로 씀 |
+| 감정 분류 | **소형 인코더(KoELECTRA-small/KcELECTRA) 파인튜닝 → LiteRT(TFLite) int8** | LLM으로 분류하면 느리고 저사양 폰에서 못 돌림. Android는 LiteRT 인터프리터(arm64 4.5MB)로 실행: ONNX Runtime(arm64 36MB)을 빼서 APK가 약 30MB 줄었다. 같은 학습 결과에서 ONNX도 계속 뽑아 둔다(`tools/classifier/export.py`) — 웹은 onnxruntime-web(검증됨)과 LiteRT.js 중 v2.2 때 고른다 |
 | 위기 감지 | **규칙(사전·변형·초성) + 분류기, 놓치지 않는 쪽으로** | LLM에만 맡기면 놓치거나 출력이 막힘 |
 | 음성 인식 | **기기 내 인식기 (`createOnDeviceSpeechRecognizer`, API 31+)**, 지원하지 않으면 시스템 인식기 | Whisper는 140MB 이상 추가. 시스템 인식기가 없는 기기가 많다고 확인되면 v2.1에 선택 다운로드로 추가 |
 | 결제 확인 | **앱 안에서 Play Billing으로 확인** (퍼스널컬러와 같은 방식) | 서버 검증은 Functions(유료 요금제)가 필요. 3,300원 상품이라 위변조 위험 대비 비용이 맞지 않음 |
@@ -121,7 +121,7 @@ appDataFolder/
 
 | 구성 | 방법 | 크기 |
 |---|---|---|
-| 감정 분류기 | KOTE(43개 감정 라벨)로 소형 인코더 파인튜닝 → 우리 20개 감정으로 매핑, 다중 라벨 확률을 강도로 사용. 직접 만든 일기체 검증셋 300건으로 정확도 측정 | 15~30MB (int8) |
+| 감정 분류기 | KOTE(43개 감정 라벨)로 소형 인코더 파인튜닝 → 우리 20개 감정으로 매핑, 다중 라벨 확률을 강도로 사용. 직접 만든 일기체 검증셋 300건으로 정확도 측정. LiteRT(TFLite) int8, 입력 길이 192 고정(패딩+마스크), 노트20 약 75ms | 모델 16MB + 런타임 4.5MB(arm64) |
 | 위기 감지 | 표현 사전(변형·띄어쓰기·초성 포함) + 분류기 점수. **애매하면 안내 쪽으로** | <1MB |
 | 태그 추출 | 형태소 분석기(Kiwi 등) + 관계어 사전("엄마", "팀장님", "카페") + 사용자가 쓴 태그 학습 | ~10MB |
 | 답장 라이브러리 | 감정 그룹 × 강도 × 상황 태그별 답장 **400개 이상**, 질문 200개, 회고 문장 템플릿. 슬롯(`{사람}`, `{활동}`)에 일기 속 단어를 채움. 같은 문구는 30일 안에 반복하지 않음 | <1MB |
@@ -198,7 +198,7 @@ appDataFolder/
 
 - 데이터는 드라이브 JSON 스키마(§2.2)를 단일 기준으로 삼는다. Android 전용 형식을 만들지 않는다.
 - 빛 섞기 공식과 감정 정의는 플랫폼 중립 명세로 두고, 테스트 벡터 JSON을 함께 둔다.
-- 감정 분류기는 ONNX로 만든다(onnxruntime-web 호환).
+- 감정 분류기: 앱은 LiteRT(`model.tflite`), 웹용으로 ONNX(`tools/classifier/export.py` → `out/model_int8.onnx`, onnxruntime-web 호환)도 같은 체크포인트에서 뽑는다. 웹에서 LiteRT.js(TF.js 후속)를 쓰면 같은 `.tflite`를 그대로 쓸 수 있어 v2.2 때 크기·속도를 비교해 고른다.
 - 대화형 AI는 LiteRT-LM 형식을 쓴다(LiteRT-LM Web은 WebGPU로 Gemma 4 E2B를 지원하고, 아직 미리보기 단계).
 - 답장·질문 라이브러리는 JSON 리소스로 둔다. Kotlin 코드 안에 넣지 않는다.
 - 참고: Chrome 내장 AI는 한국어를 지원하지 않아 쓰지 않는다.
@@ -212,7 +212,7 @@ app/              셸(하단 탭), 내비게이션, 잠금 게이트, 강제 업
 core/model        Entry, Emotion, Light, Reply …
 core/data         Room, 설정(DataStore), 레포지토리
 core/sync         Drive appData 업·다운로드, WorkManager, 검증
-core/ai           위기 감지, 감정 분류기(ONNX), 태그, 답장 라이브러리, LLM 런타임(LiteRT-LM), 모델 다운로드
+core/ai           위기 감지, 감정 분류기(LiteRT), 태그, 답장 라이브러리, LLM 런타임(LiteRT-LM), 모델 다운로드
 core/light        LightMixer(OKLab), 감정 정의, 색 토큰
 core/designsystem 테마, 온이 캐릭터(Compose 렌더 + 애니메이션), 컴포넌트
 core/billing-ads  퍼스널컬러 core/ads 이식
@@ -223,7 +223,7 @@ shared/           schema/*.json, light-test-vectors.json, reply-library/*.json  
 tools/            classifier/(학습·변환 스크립트), reply-library/(작성·검수 도구)
 ```
 
-- 기술 스택: Kotlin 2.x, Compose, Hilt(KSP), Room, WorkManager, ONNX Runtime Android, LiteRT-LM, Credential Manager, Google Drive REST, AdMob, Play Billing, targetSdk 36, edge-to-edge.
+- 기술 스택: Kotlin 2.x, Compose, Hilt(KSP), Room, WorkManager, LiteRT(TFLite 인터프리터), LiteRT-LM, Credential Manager, Google Drive REST, AdMob, Play Billing, targetSdk 36, edge-to-edge.
 
 ## 11. 개인정보·안전
 

@@ -1,6 +1,6 @@
 """Evaluate out/model on eval/diary_val.jsonl, tune thresholds + intensity rule, write out/tuned.json.
 
-Run: .venv/bin/python -I evaluate.py [onnx_path]
+Run: .venv/bin/python -I evaluate.py [onnx_path]   (a .tflite path needs .venv-tfl)
 Metrics are 2-fold (tune on one half, score on the other) so they are not tuned-on-test.
 """
 import json, re, sys
@@ -31,7 +31,8 @@ def probs_torch(texts, path=None):
     return np.concatenate(out)
 
 
-def probs_onnx(texts, path):
+def probs_file(texts, path):
+    """shipped .tflite (needs .venv-tfl) or .onnx, through infer.py like the app."""
     sys.path.insert(0, str(HERE))
     from infer import Classifier
     c = Classifier(path, HERE / "out/model/tokenizer.json")
@@ -122,7 +123,7 @@ def main():
     rows = load_val()
     texts = [r["text"] for r in rows]
     arg = next((x for x in sys.argv[1:] if not x.startswith("--")), None)
-    P = probs_onnx(texts, arg) if arg and arg.endswith(".onnx") else probs_torch(texts, arg)
+    P = probs_file(texts, arg) if arg and arg.endswith((".onnx", ".tflite")) else probs_torch(texts, arg)
     lexBoost = float(next((x.split("=")[1] for x in sys.argv if x.startswith("--lex=")), 0.3))
     P = apply_lexicon(P, texts, lexBoost)
     Y = np.array([[k in r["labels"] for k in LABELS] for r in rows])
@@ -151,7 +152,7 @@ def main():
               "thresholds": th, "unsureFloor": fl, "lexiconBoost": lexBoost, "intensityRule": rule}
     print(json.dumps(report, ensure_ascii=False, indent=1))
     (HERE / "out").mkdir(exist_ok=True)
-    if (arg and not arg.endswith(".onnx")) or "--no-save" in sys.argv: return  # experiment run: don't overwrite shipped tuning
+    if (arg and not arg.endswith((".onnx", ".tflite"))) or "--no-save" in sys.argv: return  # experiment run: don't overwrite shipped tuning
     (HERE / "out/tuned.json").write_text(json.dumps(report, ensure_ascii=False, indent=1))
 
 

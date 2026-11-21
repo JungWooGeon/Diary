@@ -2,14 +2,16 @@
 
 ```
 python3.11 -m venv .venv && .venv/bin/pip install torch transformers onnx onnxruntime tokenizers scikit-learn
+python3.11 -m venv .venv-tfl && .venv-tfl/bin/pip install "torch==2.14.*" litert-torch tokenizers onnxruntime onnx   # TFLite 변환 (litert-torch는 torch<2.15)
 # data/ (gitignore): kote/repo (git clone searle-j/KOTE), kote/raw.json (HF), models/koelectra-small (HF 파일 4개)
 .venv/bin/python -I train.py 4 --distill      # 1단계: KOTE + 일기체 x6 + 증류셋 x2 -> out/model
 cp -r out/model out/model_stage1
 .venv/bin/python -I train.py 6 --stage2 --distill --src out/model_stage1   # 2단계: 일기체 x2 + 증류셋 + KOTE 3000줄 -> out/model
-.venv/bin/python -I export.py && cp ../../shared/ai/classifier/model.onnx out/model_int8.onnx
-.venv/bin/python -I evaluate.py out/model_int8.onnx   # 실제 배포 int8로 임계값·강도 규칙 조정 -> out/tuned.json
-.venv/bin/python -I export.py       # meta.json에 조정값 반영
-.venv/bin/python -I infer.py "오늘 너무 피곤했다"   # 참조 추론 (Kotlin이 따라 할 것)
+.venv/bin/python -I export.py              # -> out/model_int8.onnx (웹용, 앱엔 안 들어감) + tokenizer/labels/meta
+.venv-tfl/bin/python -I export_tflite.py   # -> shared/.../model.tflite (앱이 LiteRT로 실행) + Kotlin 참조 테스트 갱신, ONNX와 그룹 top-1 일치율 출력
+.venv-tfl/bin/python -I evaluate.py ../../shared/ai/classifier/model.tflite   # 실제 배포 int8로 임계값·강도 규칙 조정 -> out/tuned.json
+.venv/bin/python -I export.py && .venv-tfl/bin/python -I export_tflite.py   # meta.json에 조정값 반영, 참조 테스트 다시 생성
+.venv-tfl/bin/python -I infer.py "오늘 너무 피곤했다"   # 참조 추론 (Kotlin이 따라 할 것)
 python3 test_crisis.py              # 위기 감지 참조 구현 + 테스트
 ```
 

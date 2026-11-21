@@ -47,7 +47,7 @@ internal val ossNotices = listOf(
         "Apache-2.0", "Copyright 2020 Jangwon Park (monologg)", "Apache-2.0.txt",
     ),
     OssNotice("Gemma 4 (E2B · E4B)", "온이 깨우기에서 내려받는 대화형 AI 모델", "Apache-2.0", "Copyright Google LLC", "Apache-2.0.txt"),
-    OssNotice("ONNX Runtime", "기기 안 감정 분류 실행", "MIT", "Copyright (c) Microsoft Corporation", "MIT.txt"),
+    OssNotice("LiteRT (TensorFlow Lite)", "기기 안 감정 분류 실행", "Apache-2.0", "Copyright The TensorFlow Authors", "Apache-2.0.txt"),
     OssNotice("LiteRT-LM", "기기 안 대화형 AI 실행", "Apache-2.0", "Copyright Google LLC", "Apache-2.0.txt"),
     OssNotice("Open-Meteo", "날씨 기록 데이터", "CC BY 4.0", "Weather data by Open-Meteo.com", "CC-BY-4.0.txt"),
     OssNotice("AndroidX · Jetpack Compose · Glance · WorkManager · Room · DataStore", "앱 화면과 저장", "Apache-2.0", "Copyright The Android Open Source Project", "Apache-2.0.txt"),

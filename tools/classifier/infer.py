@@ -1,29 +1,39 @@
 """Reference inference for shared/ai/classifier (D mirrors this in Kotlin).
-Deps: onnxruntime, tokenizers, numpy.   python3 infer.py "오늘 너무 피곤했다"
-Steps: tokenize (BERT WordPiece, [CLS] .. [SEP], truncate to maxLen) -> model(input_ids, attention_mask) int64 [1,L]
+Deps: ai-edge-litert (shipped model.tflite) or onnxruntime (a .onnx path), tokenizers, numpy.   .venv-tfl/bin/python -I infer.py "오늘 너무 피곤했다"
+Steps: tokenize (BERT WordPiece, [CLS] .. [SEP], truncate to maxLen) -> model(input_ids, attention_mask) [1,L]
+(TFLite: int32, right-padded to maxLen with mask 0; ONNX: int64, unpadded)
 -> logits[21] -> sigmoid -> lexicon boost -> unsure check -> top emotion + keys with p >= thresholds[key] -> intensity rule -> sort by p, max 3.
 """
 import json, re, sys
 from pathlib import Path
 
 import numpy as np
-import onnxruntime as ort
 from tokenizers import Tokenizer
 
 SHARED = Path(__file__).resolve().parents[2] / "shared/ai/classifier"
 
 
 class Classifier:
-    def __init__(self, model=SHARED / "model.onnx", tokenizer=SHARED / "tokenizer.json", meta=SHARED / "meta.json"):
-        self.sess = ort.InferenceSession(str(model), providers=["CPUExecutionProvider"])
+    def __init__(self, model=SHARED / "model.tflite", tokenizer=SHARED / "tokenizer.json", meta=SHARED / "meta.json"):
+        if str(model).endswith(".onnx"):
+            import onnxruntime as ort
+            self.sess = ort.InferenceSession(str(model), providers=["CPUExecutionProvider"])
+        else:
+            from ai_edge_litert.interpreter import Interpreter
+            self.run = Interpreter(model_path=str(model)).get_signature_runner("classify")
         self.tok = Tokenizer.from_file(str(tokenizer))
         self.meta = json.loads(Path(meta).read_text()) if Path(meta).exists() else {"maxLen": 192}
         self.tok.enable_truncation(self.meta["maxLen"]); self.tok.no_padding()
-        self.labels = json.loads((Path(model).parent / "labels.json").read_text()) if (Path(model).parent / "labels.json").exists() else None
+        self.labels = json.loads((SHARED / "labels.json").read_text())
 
     def probs(self, text):
-        ids = np.array([self.tok.encode(text).ids], dtype=np.int64)
-        logits = self.sess.run(None, {"input_ids": ids, "attention_mask": np.ones_like(ids)})[0][0]
+        ids = self.tok.encode(text).ids
+        if hasattr(self, "sess"):
+            a = np.array([ids], dtype=np.int64)
+            logits = self.sess.run(None, {"input_ids": a, "attention_mask": np.ones_like(a)})[0][0]
+        else:
+            x = np.zeros((1, self.meta["maxLen"]), np.int32); x[0, :len(ids)] = ids
+            logits = next(iter(self.run(input_ids=x, attention_mask=(x != 0).astype(np.int32)).values()))[0]
         return 1 / (1 + np.exp(-logits))
 
     def boosted(self, text):

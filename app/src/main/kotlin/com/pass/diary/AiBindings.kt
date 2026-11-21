@@ -75,7 +75,7 @@ import com.pass.diary.core.ai.ChatResponder as CoreChat
 
 /*
  * core:ai behind the feature seams (feature/write AiHooks.kt, feature/my ModelState.kt). core:ai objects are taken as
- * dagger.Lazy: building them reads the 14 MB classifier, which must not happen on the main thread when a screen opens.
+ * dagger.Lazy: building them reads the 16 MB classifier, which must not happen on the main thread when a screen opens.
  */
 
 // ---------------------------------------------------------------------------------------------------- 답장 (§5.1)
@@ -97,7 +97,7 @@ class AiReplyProvider @Inject constructor(
         fun pipeline(llm: Boolean) = AiPipeline(crisis.get(), classifier.get(), tags.get(), template.get()) { if (llm && s.aiChat) oni.get().engine() else null }
             .onSave(entry.aiText(), entry.emotions, entry.tags, recentTemplateIds)
         val t0 = System.currentTimeMillis()
-        val tLoaded = classifier.get().let { System.currentTimeMillis() } // cold start: ORT session + tokenizer
+        val tLoaded = classifier.get().let { System.currentTimeMillis() } // cold start: LiteRT interpreter + tokenizer
         replyWithFallback(pipeline(llm = true), { pipeline(llm = false) }, REPLY_TIMEOUT_MS).collect {
             if (it is ReplyResult.Letter) Log.i("AiReply", "${it.source} reply in ${System.currentTimeMillis() - t0} ms (AI load ${tLoaded - t0} ms)")
             emit(it)
@@ -164,7 +164,7 @@ class AiWritingAssistant @Inject constructor(
         scope.launch {
             val s = settings.settings.first()
             if (!s.aiSuggest && !s.aiReply) return@launch
-            classifier.get() // ORT session + tokenizer: seconds on a cold start, so not when the reply screen opens
+            classifier.get() // LiteRT interpreter + tokenizer: seconds on a cold start, so not when the reply screen opens
             // tidy / title / chat also use the LLM, but only the reply is worth holding ~3 GB for while typing
             if (s.aiReply) runCatching { oni.get().engine()?.warmUp() }.onFailure { Log.w("AiWrite", "LLM warm-up failed: ${it.javaClass.simpleName}") }
         }

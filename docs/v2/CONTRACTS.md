@@ -40,7 +40,7 @@
 ## 4. 공유 파일 형식 (C가 만들고 D가 읽음)
 
 ```
-shared/ai/classifier/model.onnx        # int8, 입력: 토큰 ID, 출력: 21개 감정 키 로짓(sigmoid 다중 라벨)
+shared/ai/classifier/model.tflite      # LiteRT int8, 시그니처 classify: input_ids·attention_mask int32 [1,192](오른쪽 0 패딩) → 21개 감정 키 로짓(sigmoid 다중 라벨)
 shared/ai/classifier/tokenizer.json    # HF tokenizers 형식 (또는 vocab.txt + 설정)
 shared/ai/classifier/labels.json       # ["joy","proud",...,"unsure"] 출력 순서
 shared/ai/classifier/meta.json         # {maxLen, thresholds{key:float}, intensityRule, version}

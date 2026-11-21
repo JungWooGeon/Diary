@@ -14,7 +14,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.onnxruntime.android)
+    implementation(libs.litert)
     implementation(libs.litertlm.android)
     testImplementation(libs.kotlinx.coroutines.test)
 }
