@@ -39,6 +39,7 @@ def main():
     tuned = json.loads((HERE / "out/tuned.json").read_text())
     meta = {"version": 1, "base": "monologg/koelectra-small-v3-discriminator (Apache-2.0)", "train": "KOTE (MIT) + diary_train (self-written) + distill (Gemma 4 E4B generated+labeled, Apache-2.0)",
             "maxLen": MAXLEN, "inputs": ["input_ids", "attention_mask"], "output": "logits[21] -> sigmoid",
+            "embedding": "embedding[256]: masked mean of hidden layers 4-6, L2-normalised (cosine = dot); same graph/run as logits",
             "thresholds": tuned["thresholds"], "unsureFloor": tuned["unsureFloor"],
             "lexicon": json.loads((HERE / "lexicon.json").read_text()), "lexiconBoost": tuned["lexiconBoost"],
             "lexiconRule": "p[key] = min(0.99, p[key] + lexiconBoost) when re.search(lexicon[key], text) and the 2 chars before the match do not end with 안|않|못|없 (+ optional space)",

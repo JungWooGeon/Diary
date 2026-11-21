@@ -1,6 +1,7 @@
 """out/model -> shared/ai/classifier/model.tflite (int8 dynamic-range weights); checks it against PyTorch and the int8 ONNX.
 Separate venv (litert-torch pins torch<2.15):  .venv-tfl/bin/python -I export_tflite.py
-Graph (signature "classify"): int32 input_ids [1,192] + attention_mask [1,192] (0 = padding) -> logits [1,21].
+Graph (signature "classify"): int32 input_ids [1,192] + attention_mask [1,192] (0 = padding) -> logits [1,21] + embedding [1,256].
+embedding = masked mean of hidden states of layers EMB_LAYERS, L2-normalised (same weights, no extra params; see embed_check.py).
 One fixed length: each extra signature (e.g. 64 for short diaries) costs +1.5MB of per-subgraph quant params.
 export.py still writes the ONNX to out/ (kept for a future web build: onnxruntime-web) and meta.json.
 Also rewrites core/ai's classifier_reference.json (Kotlin tokenizer + decision parity test) from the new model.
@@ -25,10 +26,17 @@ ONNX = HERE / "out/model_int8.onnx"  # export.py (web build); the app ships mode
 REF = HERE.parents[1] / "core/ai/src/test/resources/classifier_reference.json"
 
 
+EMB_LAYERS = (4, 5, 6)  # mid layers: the last ones only know the feeling (embed_check.py: L12 hardAuc 0.50, L4-6 0.78)
+
+
 class Wrap(torch.nn.Module):
     def __init__(self, m): super().__init__(); self.m = m
     def forward(self, input_ids, attention_mask):
-        return self.m(input_ids=input_ids.long(), attention_mask=attention_mask.long()).logits
+        o = self.m(input_ids=input_ids.long(), attention_mask=attention_mask.long(), output_hidden_states=True)
+        mask = attention_mask.float().unsqueeze(-1)
+        h = sum(o.hidden_states[i] for i in EMB_LAYERS)
+        v = (h * mask).sum(1) / mask.sum(1).clamp(min=1.0)
+        return {"logits": o.logits, "embedding": v / v.norm(dim=-1, keepdim=True).clamp(min=1e-6)}
 
 
 def main():

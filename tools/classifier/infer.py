@@ -2,7 +2,7 @@
 Deps: ai-edge-litert (shipped model.tflite) or onnxruntime (a .onnx path), tokenizers, numpy.   .venv-tfl/bin/python -I infer.py "오늘 너무 피곤했다"
 Steps: tokenize (BERT WordPiece, [CLS] .. [SEP], truncate to maxLen) -> model(input_ids, attention_mask) [1,L]
 (TFLite: int32, right-padded to maxLen with mask 0; ONNX: int64, unpadded)
--> logits[21] -> sigmoid -> lexicon boost -> unsure check -> top emotion + keys with p >= thresholds[key] -> intensity rule -> sort by p, max 3.
+-> logits[21] (+ embedding[256]) -> sigmoid -> lexicon boost -> unsure check -> top emotion + keys with p >= thresholds[key] -> intensity rule -> sort by p, max 3.
 """
 import json, re, sys
 from pathlib import Path
@@ -32,9 +32,16 @@ class Classifier:
             a = np.array([ids], dtype=np.int64)
             logits = self.sess.run(None, {"input_ids": a, "attention_mask": np.ones_like(a)})[0][0]
         else:
-            x = np.zeros((1, self.meta["maxLen"]), np.int32); x[0, :len(ids)] = ids
-            logits = next(iter(self.run(input_ids=x, attention_mask=(x != 0).astype(np.int32)).values()))[0]
+            logits = self._tflite(ids)["logits"][0]
         return 1 / (1 + np.exp(-logits))
+
+    def _tflite(self, ids):
+        x = np.zeros((1, self.meta["maxLen"]), np.int32); x[0, :len(ids)] = ids
+        return self.run(input_ids=x, attention_mask=(x != 0).astype(np.int32))
+
+    def embedding(self, text):
+        """256-d L2-normalised sentence vector (tflite only): cosine = dot product."""
+        return self._tflite(self.tok.encode(text).ids)["embedding"][0]
 
     def boosted(self, text):
         p, m = self.probs(text).copy(), self.meta
