@@ -40,27 +40,25 @@
 - [ ] 설정 → 라이선스 테스트에 테스트 계정을 등록하세요. 4절 내부 테스트에서 구매와 재설치 후 자동 복원을 확인해요.
 
 ### AdMob
-- [ ] AdMob → 앱 추가 → Play에 게시된 앱 `com.pass.diary` 연결 → **앱 ID**
-- [ ] **광고 단위 3개** 만들기
-  - 배너 (캘린더·리포트 하단)
-  - 네이티브 고급형 (타임라인)
-  - 보상형 (특별 빛 팔레트 하루 써 보기)
-- [ ] 개발 PC의 `local.properties`에 아래 4줄을 넣으세요. 하나라도 비면 release 빌드가 일부러 실패해요.
-  ```
-  admob_app_id=ca-app-pub-XXXX~YYYY
-  banner_ad_unit_id=ca-app-pub-XXXX/...
-  native_ad_unit_id=ca-app-pub-XXXX/...
-  reward_ad_unit_id=ca-app-pub-XXXX/...
-  ```
-- [ ] **app-ads.txt**
-  - Play 등록정보의 **웹사이트** 루트에 `google.com, pub-XXXX, DIRECT, f08c47fec0942fa0` 줄을 두세요.
+- [x] AdMob 앱 등록 (2026-11-21): Play 앱 `com.pass.diary`(AI 일기장)와 연결했어요.
+  - 앱 ID: `ca-app-pub-2864408286392678~1347735982`
+- [x] **광고 단위 3개** 생성 (2026-11-21)
+  | 광고 단위 | 이름 | 위치 | ID |
+  |---|---|---|---|
+  | 배너 | `oni_banner_calendar_report` | 캘린더·리포트 하단 | `ca-app-pub-2864408286392678/4297780062` |
+  | 네이티브 고급형 | `oni_native_timeline` | 타임라인 | `ca-app-pub-2864408286392678/3031306561` |
+  | 보상형 | `oni_reward_palette_trial` | 특별 빛 팔레트 하루 써 보기 (리워드 `palette_day` ×1) | `ca-app-pub-2864408286392678/4152816541` |
+- [x] 개발 PC `local.properties`에 ID 4줄을 넣었어요(git 제외 파일). 이 값으로 release 빌드가 성공하고, 매니페스트에 앱 ID가 들어간 것까지 확인했어요.
+  - 다른 PC에서 빌드할 때는 위 표의 값을 같은 키 이름(`admob_app_id`, `banner_ad_unit_id`, `native_ad_unit_id`, `reward_ad_unit_id`)으로 넣으세요.
+- [ ] **app-ads.txt** — AdMob에 지금 "앱을 확인할 수 없음 / 광고 게재 제한"으로 표시돼요. 이 항목을 끝내야 풀려요.
+  - Play 등록정보의 **웹사이트** 루트에 `google.com, pub-2864408286392678, DIRECT, f08c47fec0942fa0` 줄을 두세요.
   - 퍼스널컬러와 같은 AdMob 계정이고 같은 웹사이트(`tintycolor.com`)를 쓴다면, 이미 있는 `app-ads.txt`를 그대로 쓰면 돼요.
   - 며칠 뒤 AdMob → 앱 → app-ads.txt 상태가 '확인됨'인지 보세요.
 - [ ] **UMP 동의 메시지**
   - AdMob → 개인정보 보호 및 메시지 → **유럽 규정(GDPR) 메시지**를 만들어 이 앱에 게시하세요.
   - 언어는 한국어·영어예요. 필요하면 미국 주 규정 메시지도 만드세요.
   - 메시지가 없으면 EEA 사용자에게 광고가 나가지 않아요(앱은 정상 동작).
-- [ ] ⚠️ 마이 화면에 '개인정보 옵션'(UMP 재선택) 줄을 추가하세요. `AdManager.showPrivacyOptions`는 있는데 연결이 안 되어 있어요.
+- [x] 마이 화면의 '광고 개인정보 옵션'(UMP 재선택) 연결 완료 (QA 커밋 50f6fb1).
 
 ## 3. Google Cloud: 드라이브 백업 로그인
 
