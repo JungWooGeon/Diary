@@ -45,7 +45,15 @@ android {
             matchingFallbacks += listOf("debug") // libraries' debug variants carry the test ad unit ids
         }
     }
-    androidResources { localeFilters += listOf("ko") }
+    androidResources {
+        localeFilters += listOf("ko")
+        // shared/ is packaged whole (core:data); these parts are for tests, tools and the web only (ai/llm: the removed
+        // on-device LLM's prompts). aapt's default patterns first: setting any replaces them.
+        ignoreAssetsPatterns += listOf(
+            "!.svn", "!.git", "!.ds_store", "!*.scc", ".*", "<dir>_*", "!CVS", "!thumbs.db", "!picasa.ini", "!*~",
+            "<dir>llm", "<dir>fixtures", "<dir>schema", "light-test-vectors.json",
+        )
+    }
     buildFeatures { buildConfig = true }
     testOptions { unitTests.isReturnDefaultValues = true } // android.util.Log in JVM tests
 }
