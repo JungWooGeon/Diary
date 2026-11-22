@@ -22,5 +22,5 @@ export function AdSlot({ on }: { on: boolean }) {
   }, [on])
   if (!on) return null
   const { client, slot } = env()
-  return <div className="ad"><ins className="adsbygoogle" style={{ display: 'block' }} data-ad-client={client} data-ad-slot={slot} data-ad-format="auto" data-full-width-responsive="true" /></div>
+  return <div className="ad"><span className="ad-label">광고</span><ins className="adsbygoogle" style={{ display: 'block' }} data-ad-client={client} data-ad-slot={slot} data-ad-format="auto" data-full-width-responsive="true" /></div>
 }

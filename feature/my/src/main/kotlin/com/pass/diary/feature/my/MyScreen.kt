@@ -334,7 +334,7 @@ private fun WipeDialog(vm: MyViewModel, onDismiss: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     "이 폰의 일기·사진·답장·설정이 모두 지워지고 처음 화면으로 돌아가요." +
-                        (if (signedIn) " 구글 드라이브에 백업된 일기도 함께 지워지고 백업 연결이 해제돼요." else "") +
+                        (if (signedIn) " 구글 드라이브에 백업된 일기도 함께 지워지고 백업 연결이 해제돼요. 온이 서버의 프리미엄 연결 정보도 함께 지워요." else "") +
                         " 지운 기록은 되돌릴 수 없어요.",
                     style = OdType.body2, color = c.ink2,
                 )

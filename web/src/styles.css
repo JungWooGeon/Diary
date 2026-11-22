@@ -283,3 +283,5 @@ button.sync.warn { background: var(--primary); color: var(--on-primary); }
 .confirm { background: var(--surface2); box-shadow: none; }
 .land-foot { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: center; font-size: 14px; }
 .land-foot a { color: var(--ink2); text-underline-offset: 3px; }
+
+.ad-label { display: block; font-size: 11px; opacity: .6; margin-bottom: 4px; }

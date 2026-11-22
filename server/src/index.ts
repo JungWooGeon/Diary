@@ -12,7 +12,10 @@ export interface Env {
 const ORIGINS = ["https://jungwoogeon.github.io", "http://localhost:5173"];
 const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
 const GOOGLE_REVOKE = "https://oauth2.googleapis.com/revoke";
-const DRIVE_ABOUT = "https://www.googleapis.com/drive/v3/about?fields=user(permissionId,emailAddress)";
+const DRIVE_ABOUT = "https://www.googleapis.com/drive/v3/about?fields=user(permissionId)";
+const DRIVE_ABOUT_EMAIL = "https://www.googleapis.com/drive/v3/about?fields=user(permissionId,emailAddress)";
+// 1년 동안 안 쓴 웹 로그인 세션은 KV가 지운다(쓸 때마다 연장). 방침 제3조와 맞출 것.
+const SESSION_TTL = 365 * 24 * 3600;
 const RECHECK_MS = 7 * 24 * 3600 * 1000;
 const MAX_BODY = 8192;
 
@@ -97,8 +100,9 @@ async function revoke(token: string) {
   }
 }
 
-async function about(accessToken: string) {
-  const r = await fetch(DRIVE_ABOUT, { headers: { authorization: `Bearer ${accessToken}` } });
+// 이메일은 웹 로그인(/v1/auth/code)에서만 받는다. 앱 요청은 permissionId만.
+async function about(accessToken: string, withEmail = false) {
+  const r = await fetch(withEmail ? DRIVE_ABOUT_EMAIL : DRIVE_ABOUT, { headers: { authorization: `Bearer ${accessToken}` } });
   if (r.status === 401 || r.status === 403) throw new HttpError(401, "unauthorized");
   if (!r.ok) throw new HttpError(502, "google_unavailable");
   const d = (await r.json()) as { user?: { permissionId?: string; emailAddress?: string } };
@@ -185,10 +189,10 @@ async function authCode(req: Request, env: Env) {
   if (!r.ok) throw new HttpError(400, "code_invalid");
   const t = (await r.json()) as { access_token: string; expires_in: number; refresh_token?: string };
   if (!t.refresh_token) throw new HttpError(400, "no_refresh_token");
-  const { uid, email } = await about(t.access_token);
+  const { uid, email } = await about(t.access_token, true);
   const sid = b64url(crypto.getRandomValues(new Uint8Array(32)));
   const sess: Sess = { uid, rt: t.refresh_token, email, createdAt: Date.now() };
-  await env.ONI.put(`sess:${sid}`, JSON.stringify(sess));
+  await env.ONI.put(`sess:${sid}`, JSON.stringify(sess), { expirationTtl: SESSION_TTL });
   await addSession(env, uid, sid);
   return json({ session: sid, access_token: t.access_token, expires_in: t.expires_in, email });
 }
@@ -210,6 +214,7 @@ async function authToken(req: Request, env: Env) {
   }
   if (!r.ok) throw new HttpError(502, "google_unavailable");
   const t = (await r.json()) as { access_token: string; expires_in: number };
+  await env.ONI.put(`sess:${sid}`, JSON.stringify(sess), { expirationTtl: SESSION_TTL }); // 쓰면 1년 연장
   return json({ access_token: t.access_token, expires_in: t.expires_in });
 }
 

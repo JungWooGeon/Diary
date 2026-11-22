@@ -662,7 +662,7 @@ function Report({ entries, names, premium, ads }: Ctx) {
 function YearLight({ entries, premium, year }: { entries: EntryDoc[]; premium: boolean; year: number }) {
   if (!premium) return (
     <section className="card locked">
-      <Icon name="lock" /><div><h3>올해의 빛</h3><p className="hint">365칸 빛 모자이크는 프리미엄 기능이에요. 앱에서 프리미엄을 구매하면 웹에서도 열려요.</p></div>
+      <Icon name="lock" /><div><h3>올해의 빛</h3><p className="hint">365칸 빛 모자이크는 프리미엄 기능이에요. 앱에서 프리미엄을 구매하고 같은 Google 계정으로 로그인하면 웹에서도 열려요.</p></div>
     </section>)
   const byDate = new Map<string, Emo[]>(); for (const e of entries) if (e.date.startsWith(String(year))) byDate.set(e.date, [...(byDate.get(e.date) ?? []), ...e.emotions])
   const cells = []; for (let d = new Date(year, 0, 1); d.getFullYear() === year; d.setDate(d.getDate() + 1)) { const k = iso(d); const em = byDate.get(k); cells.push(<i key={k} title={k} style={{ background: em ? mix(em).glow : undefined }} />) }
@@ -690,7 +690,7 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
                 </div>
                 {API && <Unlink onUnlink={p.onUnlink} />}
               </> : <>
-                <p className="hint">앱과 같은 Google 계정으로 로그인하면, 앱에서 쓴 일기를 여기서도 읽고 쓸 수 있어요. 일기는 내 Google 드라이브에만 저장되고, 우리 서버는 거치지 않아요. 로그인하지 않으면 방문 기록을 지우거나 다른 기기에서 열 때 일기가 사라져요.</p>
+                <p className="hint">앱과 같은 Google 계정으로 로그인하면, 앱에서 쓴 일기를 여기서도 읽고 쓸 수 있어요. 일기는 내 Google 드라이브에만 저장되고 우리 서버로 보내지 않아요. 로그인 유지와 프리미엄 확인에만 우리 서버를 써요. 로그인하지 않으면 방문 기록을 지우거나 다른 기기에서 열 때 일기가 사라져요.</p>
                 <button className="primary google" onClick={p.onConnect}>Google로 로그인</button>
               </>}
             {p.authErr && <p className="warn-text">{p.authErr}</p>}
@@ -752,7 +752,7 @@ function Unlink({ onUnlink }: { onUnlink: () => Promise<void> }) {
   return (
     <div className="card confirm" role="alertdialog" aria-label="계정 연동 해제">
       <p><b>계정 연동을 해제할까요?</b></p>
-      <p className="hint">이 Google 계정과 온이 서버의 로그인 유지 연결, 프리미엄 연결을 지워요. 드라이브에 있는 일기는 그대로 남아요. Play에서 산 프리미엄은 앱에서 같은 계정으로 다시 로그인하면 다시 연결돼요.</p>
+      <p className="hint">이 Google 계정과 온이 서버의 로그인 유지 연결, 프리미엄 연결을 지워요. 드라이브에 있는 일기는 그대로 남아요. 결제 기록(주문번호·시각)은 법에 따라 5년간 계정과 분리해 보관해요. Play에서 산 프리미엄은 앱에서 같은 계정으로 다시 로그인하면 다시 연결돼요.</p>
       {err && <p className="warn-text">{err}</p>}
       <div className="btns">
         <button className="ghost" onClick={() => setAsk(false)} disabled={busy}>취소</button>
@@ -839,7 +839,7 @@ function Landing({ ads, onStart, onDemo, onClose }: { ads: boolean; onStart: () 
         <div key={f.t} className="card"><i className="orb-s" style={{ ['--l' as string]: g.light, ['--g' as string]: g.glow }} /><h3>{f.t}</h3><p className="hint">{f.d}</p></div>) })}</section>
       <section className="card land-privacy">
         <h3>일기는 내 것으로만 남아요</h3>
-        <p className="hint">Google로 로그인하면 일기가 내 Google 드라이브에 안전하게 저장되고, 앱과 같은 일기장을 써요. 우리 서버로는 보내지 않아요. 로그인 없이도 바로 써 볼 수 있지만, 그때는 방문 기록을 지우거나 다른 기기에서 열면 일기가 사라져요. 감정 AI도 이 기기 안에서만 돌아요.</p>
+        <p className="hint">Google로 로그인하면 일기가 내 Google 드라이브에 안전하게 저장되고, 앱과 같은 일기장을 써요. 일기는 우리 서버로 보내지 않아요(로그인 유지와 프리미엄 확인만 서버를 거쳐요). 로그인 없이도 바로 써 볼 수 있지만, 그때는 방문 기록을 지우거나 다른 기기에서 열면 일기가 사라져요. 감정 AI도 이 기기 안에서만 돌아요. 만 14세 이상만 이용할 수 있어요.</p>
         <p className="hint small"><a href={`${BASE}legal/privacy.html`}>개인정보 처리방침</a> · <a href={`${BASE}legal/terms.html`}>이용약관</a> · 온이는 의료·상담 서비스가 아니에요.</p>
       </section>
       <AdSlot on={ads} />
