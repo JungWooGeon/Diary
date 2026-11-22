@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { GROUPS, GROUP_OF, DEFAULT_NAMES, QUICK_MOODS, UNSURE, mix, mixDay, dayGradient, dominantGroup, groupOf, mixHex, type Emo, type Light, type GroupKey } from './light'
 import { oniSvg, BRAND, exprFor, moodOf, type Expr } from './oni'
 import { detectCrisis, reply as libraryReply, question, timeSlot, type Tag } from './ai'
@@ -568,14 +568,16 @@ function Calendar(ctx: Ctx) {
             </select>
           </div>
           {results.length === 0 && !meaning.length && <p className="empty-text">찾는 기록이 없어요.</p>}
-          <ul className="tl">{results.slice(0, 200).map(e => (
-            <li key={e.id} className="card tl-item" onClick={() => openWrite({ doc: e })}>
+          <ul className="tl">{results.slice(0, 200).map((e, i) => (<Fragment key={e.id}>
+            {i === 2 && <li className="tl-ad"><AdSlot on={ctx.ads} feed /></li>}
+            <li className="card tl-item" onClick={() => openWrite({ doc: e })}>
               <div className="row"><span className="hint"><i className="dot" style={{ background: mix(e.emotions).glow }} /> {fmtDay(e.date)} {e.timeUnknown ? '' : e.time}</span><span className="hint">{e.emotions.map(x => names[x.key]).join(' · ')}</span></div>
               {e.title && <h3>{e.title}</h3>}
               {e.body && <p className="clamp">{e.body}</p>}
               {e.tags.length > 0 && <div className="tags">{e.tags.map(t => <span key={t.value} className="tag">{t.value}</span>)}</div>}
               {e.reply && !e.reply.reported && <p className="tl-reply"><ReplyBadge r={e.reply} /> {e.reply.text}</p>}
-            </li>))}</ul>
+            </li></Fragment>))}
+            {results.length === 2 && <li className="tl-ad"><AdSlot on={ctx.ads} feed /></li>}</ul>
           {meaning.length > 0 && <><p className="hint tl-sem">뜻이 비슷한 기록 <span className="ai-badge">AI</span></p>
             <ul className="tl">{meaning.map(e => <li key={e.id} className="card tl-item" onClick={() => openWrite({ doc: e })}>
               <div className="row"><span className="hint"><i className="dot" style={{ background: mix(e.emotions).glow }} /> {fmtDay(e.date)}</span></div>

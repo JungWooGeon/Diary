@@ -36,6 +36,8 @@ jobs:
           VITE_API_BASE: ${{ vars.VITE_API_BASE }}
           VITE_ADSENSE_CLIENT: ${{ vars.VITE_ADSENSE_CLIENT }}
           VITE_ADSENSE_SLOT_BANNER: ${{ vars.VITE_ADSENSE_SLOT_BANNER }}
+          VITE_ADSENSE_SLOT_FEED: ${{ vars.VITE_ADSENSE_SLOT_FEED }}
+          VITE_ADSENSE_FEED_LAYOUT: ${{ vars.VITE_ADSENSE_FEED_LAYOUT }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web/dist

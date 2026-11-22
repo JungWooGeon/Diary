@@ -289,3 +289,5 @@ button.sync.warn { background: var(--primary); color: var(--on-primary); }
 .house-ad { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 16px; background: var(--card, rgba(0,0,0,.04)); color: inherit; text-decoration: none; }
 .house-ad b { font-size: 15px; }
 .house-ad span { font-size: 13px; opacity: .75; }
+.tl-ad { list-style: none; }
+.ad-feed.ad-empty { padding: 0; background: none; }

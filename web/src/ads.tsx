@@ -8,10 +8,12 @@ declare global { interface Window { adsbygoogle?: unknown[] } }
 
 const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.pass.diary'
 const env = () => ({ client: import.meta.env.VITE_ADSENSE_CLIENT ?? '', slot: import.meta.env.VITE_ADSENSE_SLOT_BANNER ?? '' })
+// In-feed (native) unit for the timeline list, like the Android calendar timeline's AdNative.
+const FEED = { slot: import.meta.env.VITE_ADSENSE_SLOT_FEED ?? '', layoutKey: import.meta.env.VITE_ADSENSE_FEED_LAYOUT ?? '' }
 export const adsOn = (premium: boolean, demo: boolean) => { const { client, slot } = env(); return !!client && !!slot && !premium && !demo }
 
 let loaded = false
-export function AdSlot({ on }: { on: boolean }) {
+export function AdSlot({ on, feed = false }: { on: boolean; feed?: boolean }) {
   const ins = useRef<HTMLModElement>(null)
   const [empty, setEmpty] = useState(false)
   useEffect(() => {
@@ -33,12 +35,14 @@ export function AdSlot({ on }: { on: boolean }) {
     const t = setTimeout(() => { if (!el.getAttribute('data-ad-status')) setEmpty(true) }, 6000)
     return () => { mo.disconnect(); clearTimeout(t) }
   }, [on])
-  if (!on) return null
-  const { client, slot } = env()
+  if (!on || (feed && !FEED.slot)) return null
+  const { client } = env()
+  const slot = feed ? FEED.slot : env().slot
+  const fmt = feed ? { 'data-ad-format': 'fluid', 'data-ad-layout-key': FEED.layoutKey } : { 'data-ad-format': 'auto', 'data-full-width-responsive': 'true' }
   return (
-    <div className={empty ? 'ad ad-empty' : 'ad'}>
+    <div className={(feed ? 'ad ad-feed card tl-item' : 'ad') + (empty ? ' ad-empty' : '')}>
       {!empty && <span className="ad-label">광고</span>}
-      <ins ref={ins} className="adsbygoogle" style={{ display: empty ? 'none' : 'block' }} data-ad-client={client} data-ad-slot={slot} data-ad-format="auto" data-full-width-responsive="true" />
+      <ins ref={ins} className="adsbygoogle" style={{ display: empty ? 'none' : 'block' }} data-ad-client={client} data-ad-slot={slot} {...fmt} />
       {empty && (
         <a className="house-ad" href={PLAY_URL} target="_blank" rel="noopener">
           <b>폰에서도 온이와 함께</b>
