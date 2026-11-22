@@ -848,6 +848,11 @@ function Landing({ ads, onStart, onDemo, onClose }: { ads: boolean; onStart: () 
       <footer className="land-foot">
         <a href={`${BASE}guide/how-to.html`}>감정일기 쓰는 법</a>
         <a href={`${BASE}guide/mood-tracker.html`}>무드트래커로 마음 돌보기</a>
+        <a href={`${BASE}guide/start-emotion-diary.html`}>감정일기 처음 시작하기</a>
+        <a href={`${BASE}guide/three-line-diary.html`}>하루 3줄 일기</a>
+        <a href={`${BASE}guide/choose-mood-tracker.html`}>무드트래커 앱 고르는 법</a>
+        <a href={`${BASE}guide/why-mood-log.html`}>기분 기록이 좋은 이유</a>
+        <a href={`${BASE}guide/year-review.html`}>연말 1년 돌아보기</a>
         <a href={`${BASE}guide/faq.html`}>자주 묻는 질문</a>
       </footer>
     </div>

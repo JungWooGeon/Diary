@@ -1,0 +1,6 @@
+# jungwoogeon.github.io 루트 사이트 저장소(보통 JungWooGeon.github.io)의 최상위에 robots.txt로 두세요.
+# 크롤러는 도메인 루트의 robots.txt만 읽어요. /Diary/robots.txt는 참고용이에요.
+User-agent: *
+Allow: /
+
+Sitemap: https://jungwoogeon.github.io/Diary/sitemap.xml
