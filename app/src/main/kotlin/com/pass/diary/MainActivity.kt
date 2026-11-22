@@ -45,6 +45,7 @@ import com.pass.diary.core.designsystem.currentWindowLayout
 import com.pass.diary.core.light.Palette
 import com.pass.diary.core.model.Gating
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import com.pass.diary.core.legacy.LegacyMigrationResult
 import com.pass.diary.core.model.Settings
@@ -68,7 +69,8 @@ class MainViewModel @Inject constructor(
     startup: Startup,
     private val settingsRepo: SettingsRepository,
     billing: Billing,
-    entries: EntryRepository,
+    private val entries: EntryRepository,
+    private val crisis: com.pass.diary.feature.today.TodayAi,
     @dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context,
 ) : ViewModel() {
     private val prefs = AppPrefs(context)
@@ -84,6 +86,24 @@ class MainViewModel @Inject constructor(
     val look = combine(settingsRepo.settings, billing.isPremium, entries.observeRange("0000-01-01", "9999-12-31").map { l -> Gating.Progress.of(l.map { it.date }) }) { s, p, progress ->
         Gating.effective(s, p, progress, System.currentTimeMillis())
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /**
+     * After the reply to a save was closed: is this the moment for Play's review card? Marks it asked when yes
+     * (Play never says whether it showed). First launch ≈ first install (older app versions count too).
+     */
+    suspend fun reviewDue(entryId: String, firstLaunchAt: Long): Boolean {
+        val all = entries.observeRange("0000-01-01", "9999-12-31").first()
+        val e = all.firstOrNull { it.id == entryId } ?: return false
+        val now = System.currentTimeMillis()
+        val due = shouldAskReview(
+            now = now, firstLaunchAt = firstLaunchAt, lastPromptAt = prefs.reviewAskedAt.first(),
+            streak = Gating.streak(all.map { java.time.LocalDate.parse(it.date) }.toSet(), java.time.LocalDate.now()),
+            totalEntries = all.size, lastEntryPositive = e.topEmotionPositive(),
+            lastEntryCrisis = runCatching { crisis.isCrisis(e.aiText()) }.getOrDefault(true), // unsure = don't ask
+        )
+        if (due) prefs.reviewAsked(now)
+        return due
+    }
 
     init {
         viewModelScope.launch {
@@ -114,6 +134,7 @@ class MainActivity : FragmentActivity() {
     @Inject lateinit var entries: com.pass.diary.core.data.EntryRepository
     private val vm: MainViewModel by viewModels()
     private val forcedUpdate = ForcedUpdate(this)
+    private val review = InAppReview(this)
     /** 기록 알림 tap target (Reminders.EXTRA_OPEN) or debug `--es nav`, cleared once DiaryApp has navigated. */
     private val openNav = MutableStateFlow<String?>(null)
 
@@ -164,7 +185,7 @@ class MainActivity : FragmentActivity() {
                     if (onboarded == false) Onboarding(onDone = vm::finishOnboarding)
                     else {
                         val open by openNav.collectAsStateWithLifecycle()
-                        DiaryApp(debugNav = open, adsAllowed = !locked, entries = entries) // no ad under the lock
+                        DiaryApp(debugNav = open, adsAllowed = !locked, entries = entries, onReplyClosed = ::maybeAskReview) // no ad under the lock
                         LaunchedEffect(open) { openNav.value = null }
                     }
                 }
@@ -196,6 +217,14 @@ class MainActivity : FragmentActivity() {
                 }
               }
             }
+        }
+    }
+
+    /** Write/reply are gone by now (the caller pops first); never under the lock. No "rate us" dialog before it (Play policy). */
+    private fun maybeAskReview(entryId: String) {
+        lifecycleScope.launch {
+            val installed = runCatching { packageManager.getPackageInfo(packageName, 0).firstInstallTime }.getOrDefault(System.currentTimeMillis())
+            if (!lock.locked.value && vm.reviewDue(entryId, installed) && !lock.locked.value) review.launch()
         }
     }
 

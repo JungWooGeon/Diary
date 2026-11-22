@@ -60,6 +60,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.runtime.CompositionLocalProvider
@@ -126,6 +127,8 @@ private val tabs = listOf(
 fun DiaryApp(
     start: Any = TodayRoute, nav: NavHostController = rememberNavController(), debugNav: String? = null, adsAllowed: Boolean = true,
     entries: com.pass.diary.core.data.EntryRepository? = null,
+    /** The reply to a just-saved entry was closed (back on the screen under it): the In-App Review moment. */
+    onReplyClosed: (entryId: String) -> Unit = {},
 ) {
     // Debug builds: `adb shell am start -n com.pass.diary/.MainActivity --es nav reply:<id>`. Any build: 기록 알림 taps
     // (Reminders.EXTRA_OPEN: "write", "write:<id>", "today").
@@ -238,9 +241,10 @@ fun DiaryApp(
                     },
                 )
             }
-            composable<ReplyRoute> {
+            composable<ReplyRoute> { e ->
+                val id = e.toRoute<ReplyRoute>().entryId
                 ReplyScreen(
-                    onClose = { nav.popBackStack() },
+                    onClose = { nav.popBackStack(); onReplyClosed(id) },
                     onOpenEntry = { id -> nav.navigate(WriteRoute(entryId = id)) { popUpTo<ReplyRoute> { inclusive = true } } },
                     onLetters = { nav.navigate(LettersRoute) { popUpTo<ReplyRoute> { inclusive = true } } },
                     onOpenSimilar = { id -> nav.navigate(EntryViewRoute(id)) },

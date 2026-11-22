@@ -10,7 +10,7 @@ android {
     namespace = "com.pass.diary"
     defaultConfig {
         applicationId = "com.pass.diary"
-        versionCode = 206
+        versionCode = 207
         versionName = "2.0.1"
         // 32-bit arm kept since the LLM (64-bit only) was removed: ~3,000 budget phones. x86_64 keeps Intel emulators working.
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
@@ -76,6 +76,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons)
     implementation(libs.play.app.update)
     implementation(libs.play.app.update.ktx)
+    implementation(libs.play.review.ktx)
     implementation(libs.work.runtime)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)

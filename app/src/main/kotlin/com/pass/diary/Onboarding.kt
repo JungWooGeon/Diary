@@ -85,6 +85,7 @@ import kotlinx.coroutines.flow.map
 
 private val Context.appPrefs by preferencesDataStore("app_prefs")
 private val ONBOARDED = booleanPreferencesKey("onboarded")
+private val REVIEW_ASKED_AT = androidx.datastore.preferences.core.longPreferencesKey("review_asked_at")
 
 /** App-level flags (onboarding consent). Lives in :app; settings that features need stay in core:data. */
 class AppPrefs(private val context: Context) {
@@ -93,6 +94,9 @@ class AppPrefs(private val context: Context) {
         if (reminder) com.pass.diary.core.reminder.Reminders.update(context) { it.copy(enabled = true) }
         context.appPrefs.edit { it[ONBOARDED] = true }
     }
+    /** Last In-App Review request (epoch millis), 0 = never. */
+    val reviewAskedAt: Flow<Long> = context.appPrefs.data.map { it[REVIEW_ASKED_AT] ?: 0L }
+    suspend fun reviewAsked(at: Long) { context.appPrefs.edit { it[REVIEW_ASKED_AT] = at } }
 }
 
 /** 온보딩 3장 (시안 01): 온이 소개 → 기분은 빛 → 만 14세·약관·AI 안내 동의. */
