@@ -1,0 +1,11 @@
+name = "oni-api"
+main = "src/index.ts"
+compatibility_date = "2025-11-01"
+
+[vars]
+PACKAGE_NAME = "com.pass.diary"
+PRODUCT_ID = "premium"
+
+[[kv_namespaces]]
+binding = "ONI"
+id = "2641b22a74d442df87b10cd9ae80f1f3"
