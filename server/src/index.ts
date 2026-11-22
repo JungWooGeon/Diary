@@ -186,7 +186,12 @@ async function authCode(req: Request, env: Env) {
     grant_type: "authorization_code",
   });
   if (r.status >= 500) throw new HttpError(502, "google_unavailable");
-  if (!r.ok) throw new HttpError(400, "code_invalid");
+  if (!r.ok) {
+    // Google의 오류 종류만 남긴다(invalid_client=비밀값 문제, invalid_grant=코드 만료/재사용, redirect_uri_mismatch 등). 값·코드는 기록하지 않음.
+    const e = (await r.json().catch(() => ({}))) as { error?: string };
+    console.warn("code exchange failed:", r.status, e.error ?? "?");
+    throw new HttpError(400, "code_invalid");
+  }
   const t = (await r.json()) as { access_token: string; expires_in: number; refresh_token?: string };
   if (!t.refresh_token) throw new HttpError(400, "no_refresh_token");
   const { uid, email } = await about(t.access_token, true);
