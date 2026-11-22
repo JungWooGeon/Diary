@@ -113,7 +113,7 @@ export default function App() {
   const disconnect = async () => {
     if (!real) return
     const n = real.pending().length
-    if (n && !confirm(`아직 드라이브에 올리지 못한 기록이 ${n}개 있어요. 로그아웃하면 이 브라우저에서 지워져요. 계속할까요?`)) return
+    if (n && !confirm(`아직 드라이브에 올리지 못한 기록이 ${n}개 있어요. 로그아웃하면 이 기기에서 지워져요. 계속할까요?`)) return
     signOut(); real.entries.clear(); real.meta.clear(); await clearDb(); setStatus('local'); bump()
   }
 
@@ -220,7 +220,7 @@ function Icon({ name }: { name: string }) {
 }
 
 function SyncBadge({ status, onConnect }: { status: Status; onConnect: () => void }) {
-  const t: Record<Status, string> = { local: '이 브라우저에만 저장 중', syncing: '드라이브와 맞추는 중…', ok: '드라이브 백업됨', error: '백업 안 됨 · 다시 시도할게요', verify: '백업 확인 실패 · 다시 시도할게요', needAuth: '드라이브 다시 연결', offline: '오프라인 · 연결되면 올릴게요', demo: '체험 모드' }
+  const t: Record<Status, string> = { local: '로그인 전 · 기록이 사라질 수 있어요', syncing: '드라이브와 맞추는 중…', ok: '드라이브 백업됨', error: '백업 안 됨 · 다시 시도할게요', verify: '백업 확인 실패 · 다시 시도할게요', needAuth: '드라이브 다시 연결', offline: '오프라인 · 연결되면 올릴게요', demo: '체험 모드' }
   return status === 'needAuth'
     ? <button className="sync warn" onClick={onConnect}>{t[status]}</button>
     : <div className={'sync ' + (status === 'ok' ? 'ok' : status === 'error' || status === 'verify' ? 'warn' : '')}>{t[status]}</div>
@@ -460,7 +460,7 @@ function ReplyView({ ctx, id, crisis, writing, onClose }: ReplyFor & { ctx: Ctx;
           <button className="link center" onClick={onClose}>괜찮아요, 일기로 돌아갈게요</button>
         </> : writing && !e.reply ? <>
           <p className="center hint strong">온이가 일기를 읽고 답장을 쓰고 있어요…</p>
-          <p className="center hint small">이 기기의 크롬 안에서만 써요. 일기는 브라우저 밖으로 나가지 않아요.</p>
+          <p className="center hint small">이 기기 안에서만 써요. 일기는 밖으로 나가지 않아요.</p>
         </> : e.reply && !e.reply.reported ? <>
           <p className="center hint strong">오늘 빛이 바뀌었어요</p>
           <div className="card letter">
@@ -469,7 +469,7 @@ function ReplyView({ ctx, id, crisis, writing, onClose }: ReplyFor & { ctx: Ctx;
             <p className="hint right">— 온이가</p>
             <div className="row">
               <span className="hint small">{e.reply.source !== 'llm' ? '온이의 한마디는 일기의 감정에 맞춰 고른, 미리 써 둔 문장이에요.'
-                : e.reply.engine === 'chrome-builtin' ? 'AI가 쓴 답장이에요. 크롬 내장 AI가 이 기기 안에서 썼고, 일기는 브라우저 밖으로 나가지 않았어요. 틀린 말이 있을 수 있어요.'
+                : e.reply.engine === 'chrome-builtin' ? 'AI가 쓴 답장이에요. 이 기기 안에서 썼고, 일기는 밖으로 나가지 않았어요. 틀린 말이 있을 수 있어요.'
                 : 'AI가 쓴 답장이에요. 틀린 말이 있을 수 있어요.'}</span>
               <button className="link" onClick={report}>신고</button>
             </div>
@@ -673,7 +673,7 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
         <div className="stack">
           <section className="card">
             <h3>백업 · 계정</h3>
-            {!CLIENT_ID ? <p className="warn-text">설정 필요: Google 로그인 클라이언트 ID가 아직 없어요. 지금은 이 브라우저에만 저장돼요.</p>
+            {!CLIENT_ID ? <p className="warn-text">설정 필요: Google 로그인 클라이언트 ID가 아직 없어요. 지금은 이 기기에만 잠시 저장돼요.</p>
               : p.email ? <>
                 <p className="kv"><span>Google 계정</span><b>{p.email}</b></p>
                 <p className="kv"><span>마지막 백업</span><b>{ago(p.lastBackup)}</b></p>
@@ -683,7 +683,7 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
                   <button className="ghost" onClick={p.onDisconnect}>로그아웃</button>
                 </div>
               </> : <>
-                <p className="hint">앱과 같은 Google 계정으로 로그인하면, 드라이브의 앱 전용 폴더에 있는 일기를 이 브라우저에서 읽고 쓸 수 있어요. 우리 서버는 거치지 않아요.</p>
+                <p className="hint">앱과 같은 Google 계정으로 로그인하면, 앱에서 쓴 일기를 여기서도 읽고 쓸 수 있어요. 일기는 내 Google 드라이브에만 저장되고, 우리 서버는 거치지 않아요. 로그인하지 않으면 방문 기록을 지우거나 다른 기기에서 열 때 일기가 사라져요.</p>
                 <button className="primary google" onClick={p.onConnect}>Google로 로그인</button>
               </>}
             {p.authErr && <p className="warn-text">{p.authErr}</p>}
@@ -703,16 +703,16 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
         <div className="stack">
           <section className="card">
             <h3>감정 AI</h3>
-            <p className="hint">쓰는 동안 빛 미리보기, 감정 추천, 문장별 감정 빛, 제목 제안을 해요. 앱과 같은 감정 분류 모델이 이 브라우저 안에서만 돌아가고, 일기는 어디로도 보내지 않아요.</p>
+            <p className="hint">쓰는 동안 빛 미리보기, 감정 추천, 문장별 감정 빛, 제목 제안을 해요. 앱과 같은 감정 AI가 이 기기 안에서만 돌아가고, 일기는 어디로도 보내지 않아요.</p>
             <label className="switch"><input type="checkbox" checked={ai.on} onChange={e => setEmotionAi(e.target.checked)} /><span>감정 AI 쓰기</span></label>
-            <p className="hint small">{ai.phase === 'ready' ? '준비됐어요. 다음부터는 받지 않아요.' : ai.phase === 'loading' ? `준비하고 있어요 · ${Math.round(ai.progress * 100)}%` : ai.phase === 'error' ? '이 브라우저에서는 감정 AI를 불러오지 못했어요. 직접 고르는 기능은 그대로 쓸 수 있어요.' : `처음 쓸 때 한 번만 약 ${FIRST_LOAD_MB}MB를 받아 이 브라우저에 저장해요.`}</p>
+            <p className="hint small">{ai.phase === 'ready' ? '준비됐어요. 다음부터는 받지 않아요.' : ai.phase === 'loading' ? `준비하고 있어요 · ${Math.round(ai.progress * 100)}%` : ai.phase === 'error' ? '이 기기에서는 감정 AI를 불러오지 못했어요. 직접 고르는 기능은 그대로 쓸 수 있어요.' : `처음 쓸 때 한 번만 약 ${FIRST_LOAD_MB}MB를 받아 이 기기에 저장해요.`}</p>
           </section>
           <section className="card">
             <h3>온이의 답장</h3>
             {p.webAi
-              ? <p className="hint">이 브라우저에서는 온이가 직접 답장을 써요(온이(AI) 표시). 크롬에 내장된 AI가 이 기기 안에서 처리하고, 일기는 브라우저 밖으로 나가지 않아요. 잘 안 되면 온이의 한마디로 대신해요.</p>
+              ? <p className="hint">여기서는 온이가 직접 답장을 써요(온이(AI) 표시). 이 기기 안의 AI가 처리하고, 일기는 밖으로 나가지 않아요. 잘 안 되면 온이의 한마디로 대신해요.</p>
               : <p className="hint">일기에 맞춰 고른 온이의 한마디(미리 써 둔 문장)가 와요. 크롬 내장 AI를 이미 쓸 수 있는 PC 크롬에서는 온이가 직접 답장을 써요.</p>}
-            <p className="hint">힘든 마음이 담긴 표현이 보이면 답장 대신 도움받을 곳을 먼저 알려 드려요. 이 확인도 브라우저 안에서만 해요.</p>
+            <p className="hint">힘든 마음이 담긴 표현이 보이면 답장 대신 도움받을 곳을 먼저 알려 드려요. 이 확인도 이 기기 안에서만 해요.</p>
             <p className="hint">온이는 의료·상담 서비스가 아니에요. 힘든 마음이 계속되면 109(자살예방 상담) 또는 1577-0199(정신건강 위기상담)에 연락해 주세요.</p>
           </section>
           <section className="card">
@@ -721,7 +721,7 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
           </section>
           <section className="card links">
             <button className="link" onClick={p.onIntro}>온이 일기 소개 ›</button>
-            <a href={PLAY_URL} target="_blank" rel="noopener">Android 앱 받기 (Google Play) ›</a>
+            <a href={PLAY_URL} target="_blank" rel="noopener">Android 앱 다운로드 (Google Play) ›</a>
             <a href={`${BASE}legal/privacy.html`}>개인정보 처리방침 ›</a>
             <a href={`${BASE}legal/terms.html`}>이용약관 ›</a>
           </section>
@@ -801,14 +801,14 @@ function Landing({ onStart, onDemo, onClose }: { onStart: () => void; onDemo: ()
             <button className="primary" onClick={onStart}>웹에서 바로 쓰기</button>
             <button className="ghost" onClick={onDemo}>예시로 둘러보기</button>
           </div>
-          <a className="play" href={PLAY_URL} target="_blank" rel="noopener">Android 앱 받기 · Google Play ›</a>
+          <a className="play" href={PLAY_URL} target="_blank" rel="noopener">Android 앱 다운로드 · Google Play ›</a>
         </div>
       </section>
       <section className="land-grid">{FEATURES.map((f, k) => { const g = GROUPS[k % GROUPS.length]; return (
         <div key={f.t} className="card"><i className="orb-s" style={{ ['--l' as string]: g.light, ['--g' as string]: g.glow }} /><h3>{f.t}</h3><p className="hint">{f.d}</p></div>) })}</section>
       <section className="card land-privacy">
         <h3>일기는 내 것으로만 남아요</h3>
-        <p className="hint">일기는 이 브라우저와 내 Google 드라이브의 앱 전용 폴더에만 저장돼요. 우리 서버는 없어요. 감정 AI도 브라우저 안에서만 돌고, 일기를 어디로도 보내지 않아요. 로그인하지 않아도 이 브라우저에서 바로 쓸 수 있어요.</p>
+        <p className="hint">Google로 로그인하면 일기가 내 Google 드라이브에 안전하게 저장되고, 앱과 같은 일기장을 써요. 우리 서버로는 보내지 않아요. 로그인 없이도 바로 써 볼 수 있지만, 그때는 방문 기록을 지우거나 다른 기기에서 열면 일기가 사라져요. 감정 AI도 이 기기 안에서만 돌아요.</p>
         <p className="hint small"><a href={`${BASE}legal/privacy.html`}>개인정보 처리방침</a> · <a href={`${BASE}legal/terms.html`}>이용약관</a> · 온이는 의료·상담 서비스가 아니에요.</p>
       </section>
     </div>

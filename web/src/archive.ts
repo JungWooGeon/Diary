@@ -67,7 +67,7 @@ export function diaryHtml(docs: EntryDoc[], names: Record<string, string>): stri
 const README = `온이 일기 내보내기 (웹)
 ==================
 
-diary.html   브라우저로 열면 날짜별로 읽을 수 있어요. 인쇄(PDF로 저장)도 돼요.
+diary.html   열면 날짜별로 읽을 수 있어요. 인쇄(PDF로 저장)도 돼요.
 entries.json 일기 원본 데이터예요 (구글 드라이브 백업과 같은 형식).
 
 사진 원본은 Android 앱의 마이 › 내보내기에서 함께 저장할 수 있어요.

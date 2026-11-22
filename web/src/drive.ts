@@ -11,7 +11,13 @@ export class AuthError extends Error {}
 
 declare global { interface Window { google?: any } }
 
-let token: { value: string; exp: number } | null = null
+// Kept across reloads until it expires (Google gives 1h; no refresh token without a server).
+// ponytail: 1h ceiling, a server-held refresh token removes the reconnect click entirely.
+const KEY = 'oni-drive-token'
+let token: { value: string; exp: number } | null = (() => {
+  try { const t = JSON.parse(localStorage.getItem(KEY) ?? 'null'); return t && t.exp > Date.now() ? t : null } catch { return null }
+})()
+const keep = (t: typeof token) => { token = t; try { t ? localStorage.setItem(KEY, JSON.stringify(t)) : localStorage.removeItem(KEY) } catch { /* private mode */ } }
 let gisLoad: Promise<void> | null = null
 
 function loadGis() {
@@ -34,7 +40,7 @@ export async function signIn(hint?: string): Promise<void> {
       callback: (r: any) => {
         if (r.error || !r.access_token) return fail(new AuthError(r.error_description || r.error || '로그인 실패'))
         if (!window.google.accounts.oauth2.hasGrantedAllScopes(r, SCOPE)) return fail(new AuthError('드라이브 앱 데이터 권한을 허용해 주세요'))
-        token = { value: r.access_token, exp: Date.now() + (Number(r.expires_in) - 60) * 1000 }
+        keep({ value: r.access_token, exp: Date.now() + (Number(r.expires_in) - 60) * 1000 })
         ok()
       },
       error_callback: (e: any) => fail(new AuthError(e?.message || e?.type || '로그인 창이 닫혔어요')),
@@ -45,7 +51,7 @@ export async function signIn(hint?: string): Promise<void> {
 
 export function signOut() {
   if (token && window.google) window.google.accounts.oauth2.revoke(token.value, () => {})
-  token = null
+  keep(null)
 }
 
 export const hasToken = () => !!token && token.exp > Date.now()
@@ -53,7 +59,7 @@ export const hasToken = () => !!token && token.exp > Date.now()
 async function call(url: string, init: RequestInit = {}): Promise<Response> {
   if (!hasToken()) throw new AuthError('다시 연결이 필요해요')
   const r = await fetch(url, { ...init, headers: { ...init.headers, Authorization: `Bearer ${token!.value}` } })
-  if (r.status === 401) { token = null; throw new AuthError('다시 연결이 필요해요') }
+  if (r.status === 401) { keep(null); throw new AuthError('다시 연결이 필요해요') }
   if (!r.ok) throw new HttpError(r.status, (await r.text()).slice(0, 300))
   return r
 }
