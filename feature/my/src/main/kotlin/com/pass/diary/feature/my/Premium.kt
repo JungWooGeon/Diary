@@ -71,7 +71,7 @@ internal fun won(price: String?): String {
 
 
 @Composable
-fun PremiumScreen(onClose: () -> Unit, vm: PremiumViewModel = hiltViewModel()) {
+fun PremiumScreen(onClose: () -> Unit, vm: PremiumViewModel = hiltViewModel(), my: MyViewModel = hiltViewModel()) {
     val c = Od.c
     val ctx = LocalContext.current
     val activity = LocalActivity.current
@@ -79,6 +79,7 @@ fun PremiumScreen(onClose: () -> Unit, vm: PremiumViewModel = hiltViewModel()) {
     val price by vm.purchases.price.collectAsStateWithLifecycle()
     var restoring by remember { mutableStateOf(false) }
     val toast = { msg: String -> Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show() }
+    val signIn = rememberDriveSignIn(my)
     BackHandler(onBack = onClose)
     Box(Modifier.fillMaxSize().background(c.bg).ambient(OdColors.BrandGlow, 1.3f, centerY = 170.dp, radius = 460.dp)) {
         Column(Modifier.fillMaxSize().statusBarsPadding()) {
@@ -101,6 +102,7 @@ fun PremiumScreen(onClose: () -> Unit, vm: PremiumViewModel = hiltViewModel()) {
                 OniFigure(null, OniExpression.CHEER, 150.dp, Modifier.offset(y = (-6).dp))
                 Text(if (premium) "프리미엄을\n쓰고 있어요" else "한 번 ${won(price)},\n평생 그대로예요", style = OdType.display, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 2.dp))
                 Text("구독이 아니에요. 다시 결제할 일 없어요.", style = OdType.caption1, color = c.ink2, modifier = Modifier.padding(top = 6.dp))
+                if (premium) PremiumLinkLine(my, signIn, Modifier.padding(horizontal = 32.dp).padding(top = 10.dp), center = true)
                 Column(Modifier.padding(horizontal = 20.dp).padding(top = 16.dp)) {
                     val inv = if (c.dark) OdColors.BrandLight to OdColors.Ink else OdColors.Ink to OdColors.Paper
                     Row(

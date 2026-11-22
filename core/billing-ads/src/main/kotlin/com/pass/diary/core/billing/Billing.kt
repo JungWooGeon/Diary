@@ -52,7 +52,16 @@ class Billing @Inject constructor(@ApplicationContext private val context: Conte
     private val prefs = context.getSharedPreferences("billing", Context.MODE_PRIVATE)
     /** Debug builds only, for screenshots/QA without a Play account: `debug_force` in shared_prefs/billing.xml. */
     private val forced = BuildConfig.DEBUG && prefs.getBoolean("debug_force", false)
-    private val _premium = MutableStateFlow(forced || prefs.getBoolean(KEY_PREMIUM, false))
+    /** Play's own answer on this phone. Always wins: a local owner is never downgraded by the server. */
+    private val _local = MutableStateFlow(prefs.getBoolean(KEY_PREMIUM, false))
+    val localOwned: StateFlow<Boolean> = _local.asStateFlow()
+    /** The owned purchase's token (null = not owned, or owned before 2.0.1 stored it: the next restore fills it in). */
+    private val _token = MutableStateFlow(if (_local.value) prefs.getString(KEY_TOKEN, null) else null)
+    val ownedToken: StateFlow<String?> = _token.asStateFlow()
+    /** oni-api `/v1/entitlement` for the signed-in Google account (cached; see [PremiumLink]). */
+    private val _server = MutableStateFlow(prefs.getBoolean(KEY_SERVER, false))
+    val serverPremium: Boolean get() = _server.value
+    private val _premium = MutableStateFlow(forced || _local.value || _server.value)
     override val isPremium: StateFlow<Boolean> = _premium.asStateFlow()
 
     private val _price = MutableStateFlow<String?>(null)
@@ -67,7 +76,7 @@ class Billing @Inject constructor(@ApplicationContext private val context: Conte
 
     val entitlement: Entitlement
         get() = Entitlement(
-            _premium.value, prefs.getString(KEY_ORDER, null), prefs.getLong(KEY_AT, 0).takeIf { it > 0 }, prefs.getLong(KEY_UPDATED, 0),
+            _local.value, prefs.getString(KEY_ORDER, null), prefs.getLong(KEY_AT, 0).takeIf { it > 0 }, prefs.getLong(KEY_UPDATED, 0),
         )
 
     /** Connects, loads the price and restores an existing purchase (ARCHITECTURE §7: on every app open). Safe to repeat. */
@@ -126,12 +135,24 @@ class Billing @Inject constructor(@ApplicationContext private val context: Conte
     }
 
     private fun setPremium(v: Boolean, p: Purchase?) {
-        val changed = _premium.value != v || (p != null && prefs.getString(KEY_ORDER, null) != p.orderId)
-        _premium.value = v || forced
+        val changed = _local.value != v || (p != null && prefs.getString(KEY_ORDER, null) != p.orderId)
+        if (prefs.getString(KEY_TOKEN, null) != p?.purchaseToken) prefs.edit().putString(KEY_TOKEN, p?.purchaseToken).apply()
+        _local.value = v
+        _token.value = if (v) p?.purchaseToken else null
+        publish()
         if (!changed) return
         prefs.edit().putBoolean(KEY_PREMIUM, v).putString(KEY_ORDER, p?.orderId).putLong(KEY_AT, p?.purchaseTime ?: 0)
             .putLong(KEY_UPDATED, System.currentTimeMillis()).apply()
     }
+
+    fun setServerPremium(v: Boolean) {
+        if (_server.value == v) return
+        _server.value = v
+        prefs.edit().putBoolean(KEY_SERVER, v).apply()
+        publish()
+    }
+
+    private fun publish() { _premium.value = forced || _local.value || _server.value }
 
     companion object {
         /** Create in Play Console → 수익 창출 → 인앱 상품 (one-time, ₩3,300). */
@@ -141,6 +162,8 @@ class Billing @Inject constructor(@ApplicationContext private val context: Conte
         private const val KEY_ORDER = "order_id"
         private const val KEY_AT = "purchased_at"
         private const val KEY_UPDATED = "updated_at"
+        private const val KEY_TOKEN = "purchase_token"
+        private const val KEY_SERVER = "server_premium"
         private const val RESTORE_TIMEOUT_MS = 6_000L
     }
 }

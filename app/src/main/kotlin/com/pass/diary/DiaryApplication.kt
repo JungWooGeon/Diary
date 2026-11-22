@@ -51,6 +51,7 @@ class Startup @Inject constructor(
     private val settings: com.pass.diary.core.data.SettingsRepository,
     private val billing: com.pass.diary.core.billing.Billing,
     private val embeddings: EmbeddingStore,
+    private val premiumLink: com.pass.diary.core.billing.PremiumLink,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
@@ -64,6 +65,7 @@ class Startup @Inject constructor(
         File(context.filesDir, "datastore/password_settings.preferences_pb").delete()
         done = true
         embeddings.start()
+        scope.launch { premiumLink.run() } // Play premium -> Google account (SERVER.md); offline = silently retried next start
         scope.launch {
             // The on-device LLM is gone (versionCode 202): free a model downloaded by an earlier build (~2.6 GB).
             File(context.filesDir, "models").deleteRecursively()

@@ -19,6 +19,8 @@ val testAdIds = mapOf(
 android {
     namespace = "com.pass.diary.core.billing"
     buildFeatures { buildConfig = true }
+    // oni-api Worker (docs/v2/SERVER.md): links the Play purchase to the Google account. Fill in the real subdomain.
+    defaultConfig { buildConfigField("String", "API_BASE", "\"https://oni-api.oni-api.workers.dev\"") }
     buildTypes {
         debug { testAdIds.forEach { (key, id) -> buildConfigField("String", key.uppercase(), "\"$id\"") } }
         release {
@@ -38,10 +40,14 @@ tasks.matching { it.name == "preReleaseBuild" }.configureEach {
 
 dependencies {
     implementation(project(":core:designsystem"))
+    implementation(project(":core:sync")) // Drive sign-in = the Google account premium is linked to
+    implementation(libs.okhttp)
+    implementation(libs.kotlinx.serialization.json) // JsonObject only: no @Serializable classes, nothing for R8 to keep
     api(libs.kotlinx.coroutines.android)
     implementation(libs.play.services.ads)
     implementation(libs.ump)
     implementation(libs.billing)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

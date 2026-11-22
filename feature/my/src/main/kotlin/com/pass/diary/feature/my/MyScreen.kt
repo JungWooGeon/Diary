@@ -133,10 +133,13 @@ class MyViewModel @Inject constructor(
     private val store: SyncLocalStore,
     private val repository: EntryRepository,
     private val ink: Handwriting,
+    private val premiumLink: com.pass.diary.core.billing.PremiumLink,
 ) : ViewModel() {
     val settings = settingsRepo.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Settings())
     val syncStatus = sync.status
     val account = MutableStateFlow<String?>(null)
+    /** Whether the Play premium also reaches the Google account (web). */
+    val link = premiumLink.state
 
     /** (diaries, photos) for the backup card. */
     val counts = repository.observeRange("0000-01-01", "9999-12-31")
@@ -204,13 +207,19 @@ class MyViewModel @Inject constructor(
         auth.connect(email)
         account.value = store.meta(DriveAuth.META_ACCOUNT)
         val consent = auth.authorize()
-        if (consent != null) launchConsent(consent) else SyncScheduler.syncNow(context)
+        if (consent != null) launchConsent(consent) else { SyncScheduler.syncNow(context); premiumLink.sync(reconnected = true) }
     }
+
+    /** 프리미엄 카드's 다시 연결 after 계정 연동 해제 (already signed in to Drive). */
+    fun relink() = viewModelScope.launch { premiumLink.sync(reconnected = true) }
+
+    /** 계정 연동 해제: the server link only (premium link + web login). Diaries, Drive backup and the Play purchase stay. */
+    fun unlink(onResult: (Boolean) -> Unit) = viewModelScope.launch { onResult(premiumLink.unlink()) }
 
     fun onConsent(data: Intent?) {
         val ok = auth.onConsentResult(data)
         if (switchAfterConsent) { switchAfterConsent = false; if (ok) viewModelScope.launch { wipeForRestore() }; return }
-        if (ok) SyncScheduler.syncNow(context)
+        if (ok) { SyncScheduler.syncNow(context); viewModelScope.launch { premiumLink.sync(reconnected = true) } }
     }
 
     /** Keeps sync_meta (the new account, its consent already given); on restart the full listing restores. */
@@ -227,7 +236,7 @@ class MyViewModel @Inject constructor(
     fun syncNow() = SyncScheduler.syncNow(context)
     fun setPhotosOff(off: Boolean) = viewModelScope.launch { sync.setPhotosOff(off); if (!off) SyncScheduler.syncNow(context) }
     fun photosOffAndBackUp() = viewModelScope.launch { sync.setPhotosOff(true); SyncScheduler.syncNow(context) }
-    fun signOut() = viewModelScope.launch { auth.signOut(); SyncScheduler.cancelAll(context); refresh() }
+    fun signOut() = viewModelScope.launch { auth.signOut(); SyncScheduler.cancelAll(context); refresh(); premiumLink.sync() }
 
     val deleting = MutableStateFlow(false)
 
@@ -240,6 +249,7 @@ class MyViewModel @Inject constructor(
         deleting.value = true
         if (auth.isSignedIn()) {
             if (runCatching { sync.deleteRemote() }.isFailure) { deleting.value = false; onFailed(); return@launch }
+            premiumLink.unlink() // best effort: the server's premium link + web login go too
             auth.revokeAndSignOut()
         }
         SyncScheduler.cancelAll(context)
@@ -268,11 +278,12 @@ fun MyScreen(
     val trashCount by vm.trashCount.collectAsStateWithLifecycle()
     var confirmWipe by remember { mutableStateOf(false) }
     if (confirmWipe) WipeDialog(vm, onDismiss = { confirmWipe = false })
+    val signIn = rememberDriveSignIn(vm)
     Column(Modifier.fillMaxSize().background(c.bg).verticalScroll(rememberScrollState()).statusBarsPadding()) {
         TabHeader("마이")
         Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            PremiumHero(onPremium)
-            BackupCard(vm)
+            PremiumHero(onPremium, vm, signIn)
+            BackupCard(vm, signIn)
             OdCard(padding = PaddingValues(horizontal = 18.dp, vertical = 2.dp)) {
                 ListRow(OdIcon.Lock, "잠금", if (!lockOn) "꺼짐" else if (bio) "PIN · 지문" else "PIN", onLock)
                 ListRow(OdIcon.Palette, "꾸미기", themeName(settings.themeMode), onDecorate)
@@ -306,7 +317,7 @@ fun openUrl(ctx: Context, url: String) {
     // Custom Tabs: the legal pages live on the web, so policy edits never need an app update.
     runCatching { androidx.browser.customtabs.CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(ctx, android.net.Uri.parse(url)) }
         .recoverCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))) }
-        .onFailure { Toast.makeText(ctx, "브라우저를 열 수 없어요", Toast.LENGTH_SHORT).show() }
+        .onFailure { Toast.makeText(ctx, "링크를 열 수 없어요", Toast.LENGTH_SHORT).show() }
 }
 
 @Composable
@@ -355,8 +366,54 @@ private fun aiValue(s: Settings) = listOf(s.aiReply, s.aiSuggest, s.aiHighlight,
 private fun themeName(m: ThemeMode) = when (m) { ThemeMode.SYSTEM -> "시스템"; ThemeMode.LIGHT -> "라이트"; ThemeMode.DARK -> "다크"; ThemeMode.PAPER -> "종이" }
 
 
+/**
+ * The Drive connect flow (account picker → account-change question → drive.appdata consent → first backup), shared by
+ * 자동 백업 and the premium link line. Call once per screen: it also shows the account-change dialog.
+ */
 @Composable
-private fun PremiumHero(onPremium: () -> Unit) {
+internal fun rememberDriveSignIn(vm: MyViewModel): (onError: () -> Unit) -> Unit {
+    val activity = LocalActivity.current
+    val ctx = LocalContext.current
+    val clientId = stringResource(R.string.google_web_client_id)
+    val consent = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { vm.onConsent(it.data) }
+    val launchConsent: (android.app.PendingIntent) -> Unit = { pi -> consent.launch(IntentSenderRequest.Builder(pi).build()) }
+    vm.accountChange.collectAsStateWithLifecycle().value?.let { change ->
+        AccountChangeDialog(change, onMerge = { vm.mergeInto(change, launchConsent) }, onSwitch = { vm.switchTo(change, launchConsent) }, onDismiss = { vm.accountChange.value = null })
+    }
+    return { onError ->
+        if (clientId.isBlank()) Toast.makeText(ctx, "로그인 설정이 아직 준비되지 않았어요", Toast.LENGTH_SHORT).show()
+        else activity?.let { vm.signIn(it, clientId, launchConsent, onError) }
+    }
+}
+
+/** Under "프리미엄 사용 중": does it reach the Google account too? Never mentions buying anywhere but Play (Play policy). */
+@Composable
+internal fun PremiumLinkLine(vm: MyViewModel, signIn: (onError: () -> Unit) -> Unit, modifier: Modifier = Modifier, center: Boolean = false) {
+    val ctx = LocalContext.current
+    val state by vm.link.collectAsStateWithLifecycle()
+    val account by vm.account.collectAsStateWithLifecycle()
+    val text = when (state) {
+        com.pass.diary.core.billing.LinkState.SIGNED_OUT -> "이 휴대폰에서 적용 중 · Google로 로그인하면 웹에서도 광고가 사라져요"
+        com.pass.diary.core.billing.LinkState.LINKED -> "Google 계정에 연결됨 · 웹에서도 적용돼요"
+        com.pass.diary.core.billing.LinkState.ELSEWHERE -> "이 휴대폰에서 적용 중 · 이미 다른 Google 계정에 연결된 구매예요"
+        com.pass.diary.core.billing.LinkState.LOCAL_ONLY -> "이 휴대폰에서 적용 중이에요"
+        com.pass.diary.core.billing.LinkState.PENDING -> "이 휴대폰에서 적용 중 · 인터넷에 연결되면 Google 계정에도 연결할게요"
+    }
+    Column(modifier, horizontalAlignment = if (center) Alignment.CenterHorizontally else Alignment.Start) {
+        Text(text, style = OdType.caption2, color = Od.c.ink2, textAlign = if (center) TextAlign.Center else TextAlign.Start)
+        if (state == com.pass.diary.core.billing.LinkState.SIGNED_OUT) OdButton(
+            if (account == null) "Google로 로그인" else "Google 계정에 연결",
+            {
+                if (account == null) signIn { Toast.makeText(ctx, "로그인하지 못했어요. 다시 시도해 주세요", Toast.LENGTH_SHORT).show() }
+                else vm.relink()
+            },
+            Modifier.padding(top = 10.dp), kind = ButtonKind.Secondary, small = true, height = 36.dp,
+        )
+    }
+}
+
+@Composable
+private fun PremiumHero(onPremium: () -> Unit, vm: MyViewModel, signIn: (onError: () -> Unit) -> Unit) {
     val c = Od.c
     val brush = Brush.linearGradient(if (c.dark) listOf(Color(0xFF3A2F55), Color(0xFF2B2444)) else listOf(Color(0xFFFFF4DE), Color(0xFFFFE8C7)))
     Box(Modifier.fillMaxWidth().cardShadow().clip(RoundedCornerShape(20.dp)).background(brush)) {
@@ -366,6 +423,7 @@ private fun PremiumHero(onPremium: () -> Unit) {
             if (Od.premium) {
                 Text("프리미엄 사용 중", style = OdType.title2, modifier = Modifier.padding(top = 8.dp))
                 Text("광고 없이, 평생 그대로예요", style = OdType.caption1, modifier = Modifier.padding(top = 4.dp))
+                PremiumLinkLine(vm, signIn, Modifier.padding(top = 8.dp, end = 72.dp))
             } else {
                 Text("3,300원으로\n평생 광고 없이", style = OdType.title2, modifier = Modifier.padding(top = 8.dp).width(200.dp))
                 Text("폰을 바꿔도 그대로예요", style = OdType.caption1, color = c.ink, modifier = Modifier.padding(top = 4.dp))
@@ -391,21 +449,16 @@ private fun backupTime(at: Long): String {
 }
 
 @Composable
-private fun BackupCard(vm: MyViewModel) {
+private fun BackupCard(vm: MyViewModel, driveSignIn: (onError: () -> Unit) -> Unit) {
     val c = Od.c
     val status by vm.syncStatus.collectAsStateWithLifecycle()
     val account by vm.account.collectAsStateWithLifecycle()
     val counts by vm.counts.collectAsStateWithLifecycle()
-    val activity = LocalActivity.current
-    val clientId = stringResource(R.string.google_web_client_id)
+    val ctx = LocalContext.current
     var message by remember { mutableStateOf<String?>(null) }
-    val consent = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { vm.onConsent(it.data) }
+    var confirmUnlink by remember { mutableStateOf(false) }
     LaunchedEffect(status.running) { if (!status.running) vm.refresh() }
-    val launchConsent: (android.app.PendingIntent) -> Unit = { pi -> consent.launch(IntentSenderRequest.Builder(pi).build()) }
-    val signIn = {
-        activity?.let { vm.signIn(it, clientId, launchConsent, { message = "로그인하지 못했어요. 다시 시도해 주세요" }) }
-        Unit
-    }
+    val signIn = { driveSignIn { message = "로그인하지 못했어요. 다시 시도해 주세요" } }
     OdCard(padding = PaddingValues(horizontal = 18.dp, vertical = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("자동 백업", style = OdType.title3)
@@ -420,7 +473,7 @@ private fun BackupCard(vm: MyViewModel) {
                 }
             }
             Spacer(Modifier.weight(1f))
-            OdToggle(account != null, { on -> if (on) { if (clientId.isNotBlank()) signIn() else message = "로그인 설정이 아직 준비되지 않았어요" } else vm.signOut() })
+            OdToggle(account != null, { on -> if (on) signIn() else vm.signOut() })
         }
         val countText = counts?.let { (n, p) -> " · 일기 ${n}개, 사진 ${p}장" } ?: ""
         val line = when {
@@ -468,10 +521,33 @@ private fun BackupCard(vm: MyViewModel) {
             }
             OdToggle(!status.photosOff, { on -> vm.setPhotosOff(!on) })
         }
+        if (account != null) Row(Modifier.padding(top = 4.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Action("계정 연동 해제") { confirmUnlink = true }
+        }
     }
-    vm.accountChange.collectAsStateWithLifecycle().value?.let { change ->
-        AccountChangeDialog(change, onMerge = { vm.mergeInto(change, launchConsent) }, onSwitch = { vm.switchTo(change, launchConsent) }, onDismiss = { vm.accountChange.value = null })
-    }
+    if (confirmUnlink) UnlinkDialog(onDismiss = { confirmUnlink = false }, onConfirm = {
+        confirmUnlink = false
+        vm.unlink { ok -> Toast.makeText(ctx, if (ok) "계정 연동을 해제했어요" else "연동을 해제하지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요", Toast.LENGTH_SHORT).show() }
+    })
+}
+
+@Composable
+private fun UnlinkDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    val c = Od.c
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("계정 연동을 해제할까요?", style = OdType.title3) },
+        text = {
+            Text(
+                "온이 서버에 있는 이 Google 계정의 연결 정보(프리미엄 연결·웹 로그인)를 지워요. " +
+                    "일기와 드라이브 백업, Play에서 구매한 프리미엄은 그대로예요. 이 휴대폰에서는 프리미엄이 계속 적용돼요.",
+                style = OdType.body2, color = c.ink2,
+            )
+        },
+        confirmButton = { androidx.compose.material3.TextButton(onClick = onConfirm) { Text("해제하기", color = c.ink, fontWeight = FontWeight.Bold) } },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text("취소", color = c.ink2) } },
+        containerColor = c.surface,
+    )
 }
 
 @Composable

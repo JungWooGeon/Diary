@@ -10,8 +10,8 @@ android {
     namespace = "com.pass.diary"
     defaultConfig {
         applicationId = "com.pass.diary"
-        versionCode = 205
-        versionName = "2.0.0"
+        versionCode = 206
+        versionName = "2.0.1"
         // 32-bit arm kept since the LLM (64-bit only) was removed: ~3,000 budget phones. x86_64 keeps Intel emulators working.
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
         // AdMob app id: Google's sample id for debug; 온이 일기's own from local.properties for release
