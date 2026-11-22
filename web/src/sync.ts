@@ -35,7 +35,7 @@ export class VerifyError extends Error {}
 export const LOSER_KEEP_MS = 30 * 24 * 3600 * 1000
 export const TRASH_KEEP_MS = 30 * 24 * 3600 * 1000
 export const entryPath = (d: EntryDoc) => `entries/${d.date.slice(0, 4)}/${d.date.slice(5, 7)}/${d.id}.json`
-export const md5 = (s: string) => SparkMD5.hash(unescape(encodeURIComponent(s))) // md5 of the UTF-8 bytes
+export const md5 = (s: string) => SparkMD5.hash(s) // md5 of the UTF-8 bytes (SparkMD5 encodes non-ASCII itself; pre-encoding hashed it twice)
 
 type Persist = (kind: 'entry' | 'meta', key: string, value: unknown) => void
 

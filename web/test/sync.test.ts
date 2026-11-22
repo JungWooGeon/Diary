@@ -139,3 +139,8 @@ test('unparseable remote file is skipped, settings/entitlement absorbed by updat
   expect(store.get<{ premium: boolean }>('entitlement')!.premium).toBe(true)
   expect(store.entries.size).toBe(1)
 })
+
+test('md5 matches what Drive computes for UTF-8 text (Korean)', () => {
+  // Drive's md5Checksum of the bytes `printf '%s' '{"t":"고마웠던 일"}' | md5`
+  expect(md5('{"t":"고마웠던 일"}')).toBe('625526eefeee8e776e08de34f65a6802')
+})
