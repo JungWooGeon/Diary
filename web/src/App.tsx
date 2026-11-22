@@ -3,7 +3,8 @@ import { GROUPS, GROUP_OF, DEFAULT_NAMES, QUICK_MOODS, UNSURE, mix, mixDay, dayG
 import { oniSvg, BRAND, exprFor, moodOf, type Expr } from './oni'
 import { detectCrisis, reply as libraryReply, question, timeSlot, type Tag } from './ai'
 import { Store, SyncEngine, newEntry, VerifyError, TRASH_KEEP_MS, type EntryDoc } from './sync'
-import { driveApi, signIn, signOut, hasToken, accountEmail, AuthError, CLIENT_ID, photoUrl } from './drive'
+import { driveApi, signIn, signOut, connected, accountEmail, AuthError, CLIENT_ID, API, photoUrl, restore, refreshPremium, cachedPremium, unlinkAccount } from './drive'
+import { AdSlot, adsOn } from './ads'
 import { loadStore, clearDb } from './db'
 import { demoStore } from './demo'
 import { exportZip } from './archive'
@@ -69,6 +70,8 @@ export default function App() {
   const [toast, setToast] = useState<{ text: string; undo?: () => void } | null>(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') ?? 'system')
   const [authErr, setAuthErr] = useState('')
+  const [premium, setPremium] = useState(cachedPremium)
+  const checkPremium = useCallback(() => { refreshPremium().then(setPremium) }, [])
   const engine = useMemo(() => real && new SyncEngine(driveApi, real), [real])
 
   useEffect(() => { loadStore().then(s => { s.purgeTrash(); setReal(s); setStatus(s.get('email') ? 'needAuth' : 'local'); setIntro(!s.get('introSeen') && !s.get('email') && !s.live().length) }) }, [])
@@ -83,7 +86,7 @@ export default function App() {
   const doSync = useCallback(async () => {
     if (demo || !real || !engine || !real.get('email')) return
     if (!navigator.onLine) return setStatus('offline')
-    if (!hasToken()) return setStatus('needAuth')
+    if (!connected()) return setStatus('needAuth')
     setStatus('syncing')
     try { await engine.sync(); setStatus('ok') } catch (e) {
       setStatus(e instanceof AuthError ? 'needAuth' : e instanceof VerifyError ? 'verify' : 'error')
@@ -93,10 +96,11 @@ export default function App() {
   useEffect(() => {
     const on = () => doSync()
     const vis = () => document.visibilityState === 'visible' && doSync()
-    window.addEventListener('online', on); document.addEventListener('visibilitychange', vis)
+    window.addEventListener('online', on); document.addEventListener('visibilitychange', vis); window.addEventListener('focus', checkPremium)
     const t = setInterval(doSync, 5 * 60000)
-    return () => { window.removeEventListener('online', on); document.removeEventListener('visibilitychange', vis); clearInterval(t) }
-  }, [doSync])
+    return () => { window.removeEventListener('online', on); document.removeEventListener('visibilitychange', vis); window.removeEventListener('focus', checkPremium); clearInterval(t) }
+  }, [doSync, checkPremium])
+  useEffect(() => { if (engine) restore().then(() => { doSync(); checkPremium() }) }, [engine]) // silent: session → fresh token
 
   const connect = async () => {
     if (!real) return
@@ -107,21 +111,21 @@ export default function App() {
       const email = await accountEmail()
       if (prev && prev !== email) { real.entries.clear(); real.meta.clear(); await clearDb() } // another account: never mix diaries
       real.set('email', email)
-      setDemo(null); bump(); await doSync()
+      setDemo(null); bump(); checkPremium(); await doSync()
     } catch (e) { setAuthErr((e as Error).message); setStatus(real.get('email') ? 'needAuth' : 'local') }
   }
   const disconnect = async () => {
     if (!real) return
     const n = real.pending().length
     if (n && !confirm(`아직 드라이브에 올리지 못한 기록이 ${n}개 있어요. 로그아웃하면 이 기기에서 지워져요. 계속할까요?`)) return
-    signOut(); real.entries.clear(); real.meta.clear(); await clearDb(); setStatus('local'); bump()
+    signOut(); setPremium(false); real.entries.clear(); real.meta.clear(); await clearDb(); setStatus('local'); bump()
   }
+  const unlink = async () => { await unlinkAccount(); setPremium(false); setToast({ text: '계정 연동을 해제했어요' }) }
 
   if (!store) return <div className="boot"><Oni light={null} emotions={[]} expr="sleep" /></div>
 
   const names: Record<string, string> = { ...DEFAULT_NAMES }
   for (const d of store.get<{ emotionDefs?: { key: string; name: string }[] }>('settings')?.emotionDefs ?? []) if (d.name) names[d.key] = d.name
-  const premium = !!store.get<{ premium: boolean }>('entitlement')?.premium
   const entries = store.live()
   const readOnly = !!store.get('readOnly')
 
@@ -157,10 +161,10 @@ export default function App() {
     setToast({ text: `${names[key]}(으)로 기록했어요`, undo: () => { store.remove(d.id); bump(); doSync() } })
   }
 
-  const ctx: Ctx = { store, entries, names, premium, bump, persist, openWrite: setWrite, openReply: setReplyFor, notify: setToast, sync: doSync, webAi }
+  const ctx: Ctx = { store, entries, names, premium, bump, persist, openWrite: setWrite, openReply: setReplyFor, notify: setToast, sync: doSync, webAi, ads: adsOn(premium, !!demo) }
   const closeIntro = () => { store.set('introSeen', true); setIntro(false) }
 
-  if (intro) return <Landing onStart={() => { closeIntro(); setWrite({}) }} onDemo={() => { closeIntro(); setDemo(demoStore()); setTab('today') }} onClose={closeIntro} />
+  if (intro) return <Landing ads={ctx.ads} onStart={() => { closeIntro(); setWrite({}) }} onDemo={() => { closeIntro(); setDemo(demoStore()); setTab('today') }} onClose={closeIntro} />
 
   return (
     <div className="app">
@@ -176,7 +180,7 @@ export default function App() {
         {tab === 'calendar' && <Calendar {...ctx} />}
         {tab === 'report' && <Report {...ctx} />}
         {tab === 'settings' && <Settings {...ctx} status={demo ? 'demo' : status} email={real?.get<string>('email')} lastBackup={real?.get<number>('lastBackupAt')} pending={real?.pending().length ?? 0}
-          onConnect={connect} onDisconnect={disconnect} onSync={doSync} authErr={authErr} theme={theme} setTheme={setTheme}
+          onConnect={connect} onDisconnect={disconnect} onUnlink={unlink} onSync={doSync} authErr={authErr} theme={theme} setTheme={setTheme}
           demo={!!demo} setDemoOn={on => { setDemo(on ? demoStore() : null); setTab('today') }} onIntro={() => setIntro(true)} />}
       </main>
       <nav className="tabbar">
@@ -195,7 +199,7 @@ type ReplyFor = { id: string; crisis: boolean; writing?: boolean }
 interface Ctx {
   store: Store; entries: EntryDoc[]; names: Record<string, string>; premium: boolean; bump: () => void
   persist: (d: EntryDoc) => EntryDoc; openWrite: (w: { doc?: EntryDoc; date?: string; title?: string }) => void; openReply: (r: ReplyFor) => void
-  notify: (t: { text: string; undo?: () => void }) => void; sync: () => void; webAi: boolean
+  notify: (t: { text: string; undo?: () => void }) => void; sync: () => void; webAi: boolean; ads: boolean
 }
 
 /** 온이(AI) only for model-written replies; library replies are 온이의 한마디 (AI_GROWTH §1). */
@@ -428,7 +432,7 @@ function SentenceLight({ text, parts }: { text: string; parts: { text: string; s
 
 function Photos({ ids }: { ids: string[] }) {
   const [urls, setUrls] = useState<(string | null)[]>([])
-  useEffect(() => { if (hasToken()) Promise.all(ids.map(photoUrl)).then(setUrls) }, [ids.join()])
+  useEffect(() => { if (connected()) Promise.all(ids.map(photoUrl)).then(setUrls) }, [ids.join()])
   return <div className="photos">{ids.map((id, i) => urls[i] ? <img key={id} src={urls[i]!} alt="" /> : <span key={id} className="ph">사진</span>)}</div>
 }
 
@@ -578,12 +582,13 @@ function Calendar(ctx: Ctx) {
               {e.title && <h3>{e.title}</h3>}{e.body && <p className="clamp">{e.body}</p>}</li>)}</ul></>}
         </section>
       )}
+      <AdSlot on={ctx.ads} />
     </div>
   )
 }
 
 // ---------- 리포트 ----------
-function Report({ entries, names, premium }: Ctx) {
+function Report({ entries, names, premium, ads }: Ctx) {
   const [month, setMonth] = useState(() => iso(new Date()).slice(0, 7))
   const [y, mo] = month.split('-').map(Number)
   const shift = (n: number) => setMonth(iso(new Date(y, mo - 1 + n, 1)).slice(0, 7))
@@ -649,6 +654,7 @@ function Report({ entries, names, premium }: Ctx) {
           <YearLight entries={entries} premium={premium} year={y} />
         </div>
       </div>
+      <AdSlot on={ads} />
     </div>
   )
 }
@@ -664,7 +670,7 @@ function YearLight({ entries, premium, year }: { entries: EntryDoc[]; premium: b
 }
 
 // ---------- 마이 ----------
-function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number; pending: number; onConnect: () => void; onDisconnect: () => void; onSync: () => void; authErr: string; theme: string; setTheme: (t: string) => void; demo: boolean; setDemoOn: (on: boolean) => void; onIntro: () => void }) {
+function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number; pending: number; onConnect: () => void; onDisconnect: () => void; onUnlink: () => Promise<void>; onSync: () => void; authErr: string; theme: string; setTheme: (t: string) => void; demo: boolean; setDemoOn: (on: boolean) => void; onIntro: () => void }) {
   const ai = useAiState()
   return (
     <div className="page settings">
@@ -679,9 +685,10 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
                 <p className="kv"><span>마지막 백업</span><b>{ago(p.lastBackup)}</b></p>
                 <p className="kv"><span>올릴 기록</span><b>{p.pending}개</b></p>
                 <div className="btns">
-                  {hasToken() ? <button className="ghost" onClick={p.onSync}>지금 백업</button> : <button className="primary" onClick={p.onConnect}>드라이브 다시 연결</button>}
+                  {connected() && p.status !== 'needAuth' ? <button className="ghost" onClick={p.onSync}>지금 백업</button> : <button className="primary" onClick={p.onConnect}>드라이브 다시 연결</button>}
                   <button className="ghost" onClick={p.onDisconnect}>로그아웃</button>
                 </div>
+                {API && <Unlink onUnlink={p.onUnlink} />}
               </> : <>
                 <p className="hint">앱과 같은 Google 계정으로 로그인하면, 앱에서 쓴 일기를 여기서도 읽고 쓸 수 있어요. 일기는 내 Google 드라이브에만 저장되고, 우리 서버는 거치지 않아요. 로그인하지 않으면 방문 기록을 지우거나 다른 기기에서 열 때 일기가 사라져요.</p>
                 <button className="primary google" onClick={p.onConnect}>Google로 로그인</button>
@@ -717,7 +724,11 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
           </section>
           <section className="card">
             <h3>프리미엄</h3>
-            <p className="hint">{p.premium ? '프리미엄이 적용돼 있어요. 고마워요!' : '프리미엄(평생 3,300원)은 Android 앱에서 구매할 수 있어요. 웹에는 광고가 없어요.'}</p>
+            {p.premium ? <><p className="kv"><span>상태</span><b>프리미엄 적용 중</b></p><p className="hint">광고 없이 쓰고, 올해의 빛도 열려요. 고마워요!</p></> : <>
+              <p className="kv"><span>가격</span><b>₩3,300 · 평생</b></p>
+              <p className="hint">프리미엄은 Android 앱에서 구매할 수 있어요. 앱과 같은 Google 계정으로 로그인하면 웹에서도 광고가 사라지고 프리미엄이 적용돼요.</p>
+              <a className="link" href={PLAY_URL} target="_blank" rel="noopener">Android 앱 다운로드 (Google Play) ›</a>
+            </>}
           </section>
           <section className="card links">
             <button className="link" onClick={p.onIntro}>온이 일기 소개 ›</button>
@@ -726,6 +737,26 @@ function Settings(p: Ctx & { status: Status; email?: string; lastBackup?: number
             <a href={`${BASE}legal/terms.html`}>이용약관 ›</a>
           </section>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/** 마이 › 백업·계정 › 계정 연동 해제 (in-page confirm). */
+function Unlink({ onUnlink }: { onUnlink: () => Promise<void> }) {
+  const [ask, setAsk] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const go = async () => { setBusy(true); setErr(''); try { await onUnlink(); setAsk(false) } catch (e) { setErr((e as Error).message) } finally { setBusy(false) } }
+  if (!ask) return <div className="btns"><button className="link" onClick={() => setAsk(true)}>계정 연동 해제</button></div>
+  return (
+    <div className="card confirm" role="alertdialog" aria-label="계정 연동 해제">
+      <p><b>계정 연동을 해제할까요?</b></p>
+      <p className="hint">이 Google 계정과 온이 서버의 로그인 유지 연결, 프리미엄 연결을 지워요. 드라이브에 있는 일기는 그대로 남아요. Play에서 산 프리미엄은 앱에서 같은 계정으로 다시 로그인하면 다시 연결돼요.</p>
+      {err && <p className="warn-text">{err}</p>}
+      <div className="btns">
+        <button className="ghost" onClick={() => setAsk(false)} disabled={busy}>취소</button>
+        <button className="primary" onClick={go} disabled={busy}>{busy ? '해제하는 중…' : '연동 해제'}</button>
       </div>
     </div>
   )
@@ -785,7 +816,7 @@ const FEATURES = [
 ]
 const INTRO_LIGHTS: Emo[][] = [[{ key: 'joy', intensity: 4 }], [{ key: 'serene', intensity: 4 }], [{ key: 'flutter', intensity: 4 }], [{ key: 'sad', intensity: 3 }], [{ key: 'tired', intensity: 4 }]]
 
-function Landing({ onStart, onDemo, onClose }: { onStart: () => void; onDemo: () => void; onClose: () => void }) {
+function Landing({ ads, onStart, onDemo, onClose }: { ads: boolean; onStart: () => void; onDemo: () => void; onClose: () => void }) {
   const [i, setI] = useState(0)
   useEffect(() => { const t = setInterval(() => setI(v => (v + 1) % INTRO_LIGHTS.length), 2600); return () => clearInterval(t) }, [])
   const emos = INTRO_LIGHTS[i], light = mix(emos)
@@ -811,6 +842,12 @@ function Landing({ onStart, onDemo, onClose }: { onStart: () => void; onDemo: ()
         <p className="hint">Google로 로그인하면 일기가 내 Google 드라이브에 안전하게 저장되고, 앱과 같은 일기장을 써요. 우리 서버로는 보내지 않아요. 로그인 없이도 바로 써 볼 수 있지만, 그때는 방문 기록을 지우거나 다른 기기에서 열면 일기가 사라져요. 감정 AI도 이 기기 안에서만 돌아요.</p>
         <p className="hint small"><a href={`${BASE}legal/privacy.html`}>개인정보 처리방침</a> · <a href={`${BASE}legal/terms.html`}>이용약관</a> · 온이는 의료·상담 서비스가 아니에요.</p>
       </section>
+      <AdSlot on={ads} />
+      <footer className="land-foot">
+        <a href={`${BASE}guide/how-to.html`}>감정일기 쓰는 법</a>
+        <a href={`${BASE}guide/mood-tracker.html`}>무드트래커로 마음 돌보기</a>
+        <a href={`${BASE}guide/faq.html`}>자주 묻는 질문</a>
+      </footer>
     </div>
   )
 }

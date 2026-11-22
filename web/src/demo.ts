@@ -37,6 +37,5 @@ export function demoStore(): Store {
       s.put({ doc: e })
     }
   }
-  s.set('entitlement', { premium: false, updatedAt: 0 })
   return s
 }

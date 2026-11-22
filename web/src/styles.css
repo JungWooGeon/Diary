@@ -279,3 +279,7 @@ button.sync.warn { background: var(--primary); color: var(--on-primary); }
 .editor-oni { position: absolute; top: 10px; right: 12px; width: 44px; pointer-events: none; }
 @media (max-width: 959px) { .editor { position: relative; } .editor .title { padding-right: 52px; } }
 @media (min-width: 960px) { .editor-oni { display: none; } }
+.ad { min-height: 0; margin-top: 16px; overflow: hidden; } /* AdSense banner (calendar · report · landing only) */
+.confirm { background: var(--surface2); box-shadow: none; }
+.land-foot { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: center; font-size: 14px; }
+.land-foot a { color: var(--ink2); text-underline-offset: 3px; }

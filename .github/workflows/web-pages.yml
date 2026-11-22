@@ -33,6 +33,9 @@ jobs:
       - run: npm run build
         env:
           VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+          VITE_API_BASE: ${{ vars.VITE_API_BASE }}
+          VITE_ADSENSE_CLIENT: ${{ vars.VITE_ADSENSE_CLIENT }}
+          VITE_ADSENSE_SLOT_BANNER: ${{ vars.VITE_ADSENSE_SLOT_BANNER }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web/dist

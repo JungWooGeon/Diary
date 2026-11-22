@@ -1,26 +1,38 @@
-// Google Identity Services (token model) + the slice of Drive REST v3 that sync needs. Browser → Google only, no server.
+// Google sign-in + the slice of Drive REST v3 that sync needs. Diaries go browser → Google only.
+// Login: GIS code client → oni-api (docs/v2/SERVER.md) keeps the refresh token, so the login survives the 1h access token.
+// Fallback (no VITE_API_BASE, or the server is down): GIS token model, 1h token cached in localStorage.
 import { HttpError, type DriveApi, type DriveFile } from './sync'
 
 export const CLIENT_ID: string = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''
+export const API: string = (import.meta.env.VITE_API_BASE ?? '').replace(/\/$/, '')
 const SCOPE = 'https://www.googleapis.com/auth/drive.appdata'
 const BASE = 'https://www.googleapis.com/drive/v3'
 const UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files'
 const FIELDS = 'id,name,md5Checksum,modifiedTime,appProperties'
 
 export class AuthError extends Error {}
+/** oni-api unreachable / 5xx. An AuthError: with no live token the user has to reconnect (token model). */
+class ServerDown extends AuthError { constructor() { super('로그인 유지 서버에 연결하지 못했어요. 잠시 후 다시 해 주세요.') } }
 
 declare global { interface Window { google?: any } }
 
-// Kept across reloads until it expires (Google gives 1h; no refresh token without a server).
-// ponytail: 1h ceiling, a server-held refresh token removes the reconnect click entirely.
-const KEY = 'oni-drive-token'
+const ls = {
+  get: (k: string) => { try { return localStorage.getItem(k) } catch { return null } },
+  set: (k: string, v: string | null) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v) } catch { /* private mode */ } },
+}
+const KEY = 'oni-drive-token', SKEY = 'oni-session', PKEY = 'oni-entitlement'
 let token: { value: string; exp: number } | null = (() => {
-  try { const t = JSON.parse(localStorage.getItem(KEY) ?? 'null'); return t && t.exp > Date.now() ? t : null } catch { return null }
+  try { const t = JSON.parse(ls.get(KEY) ?? 'null'); return t && t.exp > Date.now() ? t : null } catch { return null }
 })()
-const keep = (t: typeof token) => { token = t; try { t ? localStorage.setItem(KEY, JSON.stringify(t)) : localStorage.removeItem(KEY) } catch { /* private mode */ } }
+const keep = (t: typeof token) => { token = t; ls.set(KEY, t && JSON.stringify(t)) }
+let session = ls.get(SKEY)
+const keepSession = (s: string | null) => { session = s; ls.set(SKEY, s) }
+let tokenOnly = false // server down / no refresh token this page load → next click uses the token model
+let needConsent = false
 let gisLoad: Promise<void> | null = null
 
 function loadGis() {
+  if (window.google?.accounts) return Promise.resolve()
   gisLoad ??= new Promise((ok, fail) => {
     const s = document.createElement('script')
     s.src = 'https://accounts.google.com/gsi/client'; s.async = true
@@ -30,36 +42,138 @@ function loadGis() {
   return gisLoad
 }
 
-/** Must run from a click (popup). Resolves with an access token for drive.appdata. */
+async function api(path: string, init: RequestInit = {}): Promise<{ status: number; ok: boolean; body: any }> {
+  if (!API) throw new ServerDown()
+  let r: Response
+  try { r = await fetch(API + path, { ...init, headers: { 'Content-Type': 'application/json', ...init.headers } }) } catch { tokenOnly = true; throw new ServerDown() }
+  const body = await r.json().catch(() => ({}))
+  // 5xx (502 google_unavailable …) or 403 origin_not_allowed: server unusable → token-model fallback
+  if (r.status >= 500 || body.error === 'origin_not_allowed') { tokenOnly = true; throw new ServerDown() }
+  return { status: r.status, ok: r.ok, body }
+}
+const bearer = () => ({ Authorization: `Bearer ${token!.value}` })
+/** Bearer call to oni-api; a 401 unauthorized (token revoked early) gets one silent refresh. */
+async function authed(path: string, init: RequestInit = {}, retry = true): ReturnType<typeof api> {
+  await ensureToken()
+  const r = await api(path, { ...init, headers: { ...init.headers, ...bearer() } })
+  if (r.status === 401 && retry && session) { keep(null); return authed(path, init, false) }
+  return r
+}
+
+let timer: ReturnType<typeof setTimeout> | undefined
+const schedule = () => { clearTimeout(timer); if (session && token) timer = setTimeout(() => refresh().catch(() => {}), Math.max(0, token.exp - Date.now())) }
+const setToken = (value: string, expiresIn: unknown) => { keep({ value, exp: Date.now() + (Number(expiresIn) - 60) * 1000 }); schedule() } // exp = 1 min early
+
+let refreshing: Promise<void> | null = null
+function refresh() {
+  return refreshing ??= (async () => {
+    const r = await api('/v1/auth/token', { method: 'POST', body: JSON.stringify({ session }) })
+    if (r.status === 401 || r.status === 400) { keepSession(null); keep(null); throw new AuthError('다시 연결이 필요해요') } // session_invalid / invalid_*
+    if (!r.ok || !r.body.access_token) throw new ServerDown()
+    setToken(r.body.access_token, r.body.expires_in)
+  })().finally(() => { refreshing = null })
+}
+
+async function ensureToken() {
+  if (hasToken()) return
+  if (session && API) return refresh()
+  throw new AuthError('다시 연결이 필요해요')
+}
+
+/** On startup: get a fresh access token from the session (silent). Never throws. */
+export async function restore() {
+  if (!session || !API) return
+  if (hasToken()) return schedule()
+  await refresh().catch(() => {})
+}
+
+/** Must run from a click (popup). */
 export async function signIn(hint?: string): Promise<void> {
   if (!CLIENT_ID) throw new AuthError('설정 필요: Google 클라이언트 ID가 없어요')
   await loadGis()
-  await new Promise<void>((ok, fail) => {
+  if (API && !tokenOnly) {
+    try { return await codeSignIn(hint) } catch (e) { if (!(e instanceof ServerDown)) throw e }
+    // tokenOnly is now set; a second popup can't open without a new click
+    throw new AuthError('지금은 로그인 유지 서버에 연결되지 않아요. 한 번 더 눌러 주세요(이번엔 1시간 동안 연결돼요).')
+  }
+  await tokenSignIn(hint)
+}
+
+const popupError = (e: any) => new AuthError(e?.type === 'popup_failed_to_open' ? '로그인 창이 열리지 않았어요. 한 번 더 눌러 주세요.' : e?.message || '로그인 창이 닫혔어요')
+
+async function codeSignIn(hint?: string): Promise<void> {
+  const code = await new Promise<string>((ok, fail) => {
+    window.google.accounts.oauth2.initCodeClient({
+      client_id: CLIENT_ID, scope: SCOPE, ux_mode: 'popup', login_hint: hint,
+      select_account: !hint && !needConsent, ...(needConsent ? { prompt: 'consent' } : {}),
+      callback: (r: any) => {
+        if (r.error || !r.code) return fail(new AuthError(r.error_description || r.error || '로그인 실패'))
+        if (r.scope && !String(r.scope).split(' ').includes(SCOPE)) return fail(new AuthError('드라이브 앱 데이터 권한을 허용해 주세요'))
+        ok(r.code)
+      },
+      error_callback: (e: any) => fail(popupError(e)),
+    }).requestCode()
+  })
+  const r = await api('/v1/auth/code', { method: 'POST', body: JSON.stringify({ code }) })
+  if (r.body.error === 'no_refresh_token') {
+    if (needConsent) { tokenOnly = true; throw new AuthError('로그인을 유지하지 못했어요. 한 번 더 눌러 주세요(이번엔 1시간 동안 연결돼요).') }
+    needConsent = true // ask Google again with prompt=consent; if the popup is blocked the next click does it
+    return codeSignIn(hint)
+  }
+  if (!r.ok || !r.body.session || !r.body.access_token) throw new AuthError('로그인하지 못했어요. 잠시 후 다시 해 주세요.')
+  needConsent = false
+  keepSession(r.body.session); setToken(r.body.access_token, r.body.expires_in)
+}
+
+function tokenSignIn(hint?: string) {
+  return new Promise<void>((ok, fail) => {
     const client = window.google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID, scope: SCOPE, login_hint: hint,
       callback: (r: any) => {
         if (r.error || !r.access_token) return fail(new AuthError(r.error_description || r.error || '로그인 실패'))
         if (!window.google.accounts.oauth2.hasGrantedAllScopes(r, SCOPE)) return fail(new AuthError('드라이브 앱 데이터 권한을 허용해 주세요'))
-        keep({ value: r.access_token, exp: Date.now() + (Number(r.expires_in) - 60) * 1000 })
+        setToken(r.access_token, r.expires_in)
         ok()
       },
-      error_callback: (e: any) => fail(new AuthError(e?.message || e?.type || '로그인 창이 닫혔어요')),
+      error_callback: (e: any) => fail(popupError(e)),
     })
     client.requestAccessToken({ prompt: hint ? '' : 'select_account' })
   })
 }
 
 export function signOut() {
+  if (session) api('/v1/auth/logout', { method: 'POST', body: JSON.stringify({ session }) }).catch(() => {})
   if (token && window.google) window.google.accounts.oauth2.revoke(token.value, () => {})
-  keep(null)
+  clearTimeout(timer); keepSession(null); keep(null); ls.set(PKEY, null)
 }
 
 export const hasToken = () => !!token && token.exp > Date.now()
+/** Signed in now, or can get a token silently from the server session. */
+export const connected = () => hasToken() || (!!session && !!API)
 
-async function call(url: string, init: RequestInit = {}): Promise<Response> {
-  if (!hasToken()) throw new AuthError('다시 연결이 필요해요')
-  const r = await fetch(url, { ...init, headers: { ...init.headers, Authorization: `Bearer ${token!.value}` } })
-  if (r.status === 401) { keep(null); throw new AuthError('다시 연결이 필요해요') }
+// ---------- 프리미엄 (account-linked, server only; Drive entitlement.json is user-writable and never trusted) ----------
+export const cachedPremium = () => { try { return !!JSON.parse(ls.get(PKEY) ?? 'null')?.premium } catch { return false } }
+/** GET /v1/entitlement; on any failure keeps the last answer. */
+export async function refreshPremium(): Promise<boolean> {
+  if (!API) return cachedPremium()
+  try {
+    const r = await authed('/v1/entitlement')
+    if (r.ok && typeof r.body.premium === 'boolean') ls.set(PKEY, JSON.stringify(r.body))
+  } catch { /* offline / server down: last value */ }
+  return cachedPremium()
+}
+
+/** DELETE /v1/me: server session, refresh token and premium link go away. Drive diaries stay. */
+export async function unlinkAccount() {
+  const r = await authed('/v1/me', { method: 'DELETE' })
+  if (!r.ok) throw new Error('연동을 해제하지 못했어요. 잠시 후 다시 해 주세요.')
+  clearTimeout(timer); keepSession(null); ls.set(PKEY, null)
+}
+
+async function call(url: string, init: RequestInit = {}, retry = true): Promise<Response> {
+  await ensureToken()
+  const r = await fetch(url, { ...init, headers: { ...init.headers, ...bearer() } })
+  if (r.status === 401) { keep(null); if (retry && session && API) return call(url, init, false); throw new AuthError('다시 연결이 필요해요') }
   if (!r.ok) throw new HttpError(r.status, (await r.text()).slice(0, 300))
   return r
 }
