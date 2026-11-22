@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>온이 일기</title>
+  <title>온이 일기 — 기분이 빛이 되는 AI 감정일기·무드트래커</title>
   <meta name="description" content="기분이 빛이 되는 감정 일기장. 쓰는 동안 감정 AI가 글을 읽고 무드등 온이의 빛을 켜요. 감정 캘린더, 감정 원인 리포트, 앱과 같은 Google 드라이브 일기." />
   <meta name="theme-color" content="#FBF7F1" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#1C1830" media="(prefers-color-scheme: dark)" />
@@ -11,10 +11,46 @@
   <link rel="apple-touch-icon" href="/Diary/icon-192.png" />
   <link rel="manifest" href="/Diary/manifest.webmanifest" />
   <meta name="google-adsense-account" content="%VITE_ADSENSE_CLIENT%" />
+  <link rel="canonical" href="https://jungwoogeon.github.io/Diary/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="온이 일기" />
+  <meta property="og:title" content="온이 일기 — 기분이 빛이 되는 AI 감정일기" />
+  <meta property="og:description" content="쓰는 동안 AI가 마음의 색을 읽고, 무드등 온이가 그 빛으로 켜져요. 감정 캘린더·월간 리포트·Google 드라이브 백업." />
+  <meta property="og:url" content="https://jungwoogeon.github.io/Diary/" />
+  <meta property="og:image" content="https://jungwoogeon.github.io/Diary/icon-512.png" />
+  <meta name="twitter:card" content="summary" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"온이 일기","alternateName":"온이 - AI 일기장, 감정일기 다이어리","applicationCategory":"LifestyleApplication","operatingSystem":"Android, Web","url":"https://jungwoogeon.github.io/Diary/","downloadUrl":"https://play.google.com/store/apps/details?id=com.pass.diary","description":"쓰는 동안 AI가 마음의 색을 읽고 무드등 온이가 그 빛으로 켜지는 감정일기·무드트래커","inLanguage":"ko","offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"}}</script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <!-- 검색엔진·JS 없는 환경용 정적 소개. React가 뜨면 이 내용을 앱 화면으로 바꿔요. -->
+    <main style="max-width:720px;margin:0 auto;padding:32px 20px;font-family:system-ui,sans-serif;color:#2b2420;line-height:1.7">
+      <h1>온이 일기 — 기분이 빛이 되는 AI 감정일기</h1>
+      <p>일기를 쓰는 동안 감정 AI가 글에서 마음의 색을 읽고, 무드등 「온이」가 그 빛으로 켜져요. 쓰고 싶은 날엔 길게, 바쁜 날엔 탭 한 번으로 기분을 남겨요.</p>
+      <h2>할 수 있는 것</h2>
+      <ul>
+        <li>쓰는 동안 빛이 바뀌는 감정 AI, 감정·제목·태그 추천 (AI는 기기 안에서 실행)</li>
+        <li>감정 20가지와 강도, 하루의 빛, 무드 캘린더</li>
+        <li>월간 리포트, 감정 원인 찾기, 주간 온이 편지</li>
+        <li>내 Google 드라이브 앱 전용 공간에 자동 백업, 앱과 웹이 같은 일기장</li>
+        <li>종이 일기 옮기기, 사진 태그, 위젯 1초 기록 (Android 앱)</li>
+      </ul>
+      <p><a href="https://play.google.com/store/apps/details?id=com.pass.diary">Android 앱 다운로드 (Google Play)</a></p>
+      <h2>감정일기 가이드</h2>
+      <ul>
+        <li><a href="/Diary/guide/how-to.html">감정일기 쓰는 법</a></li>
+        <li><a href="/Diary/guide/start-emotion-diary.html">감정일기 처음 시작하기</a></li>
+        <li><a href="/Diary/guide/three-line-diary.html">하루 3줄 일기</a></li>
+        <li><a href="/Diary/guide/mood-tracker.html">무드트래커로 마음 돌보기</a></li>
+        <li><a href="/Diary/guide/choose-mood-tracker.html">무드트래커 앱 고르는 법</a></li>
+        <li><a href="/Diary/guide/why-mood-log.html">기분 기록이 도움이 되는 이유</a></li>
+        <li><a href="/Diary/guide/year-review.html">연말 1년 돌아보기 일기</a></li>
+        <li><a href="/Diary/guide/faq.html">자주 묻는 질문</a></li>
+      </ul>
+      <p><a href="/Diary/legal/privacy.html">개인정보처리방침</a> · <a href="/Diary/legal/terms.html">이용약관</a></p>
+    </main>
+  </div>
   <noscript>온이 일기 웹은 JavaScript가 필요해요. <a href="/Diary/legal/">약관·개인정보 처리방침</a></noscript>
   <script type="module" src="/src/main.tsx"></script>
 </body>
